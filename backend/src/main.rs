@@ -39,7 +39,7 @@ async fn main() {
         tracing::warn!("VOTE_IP_SALT not set; using insecure default for development");
         "dev-insecure-salt-change-me".to_string()
     });
-    let ip_daily_limit = env_i64("VOTE_IP_DAILY_LIMIT", 5);
+    let ip_daily_limit = env_i64("VOTE_IP_DAILY_LIMIT", 100);
     let ip_min_interval_secs = env_i64("VOTE_IP_MIN_INTERVAL_SECS", 10);
 
     let pool = db::connect(&database_url)
