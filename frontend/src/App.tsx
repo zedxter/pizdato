@@ -80,7 +80,7 @@ export default function App() {
           <section className={`results ${justVoted ? 'reveal' : ''}`} aria-live="polite">
             <p className="voted-note">
               {stats?.choice === 'pizdato'
-                ? 'Готово. Вселенная чуть-чуть выровнялась в сторону пиздато.'
+                ? 'Ты сделал этот мир чуточку пиздатее. Спасибо, герой.'
                 : stats?.choice === 'huyevo'
                   ? 'Ты сознательно сделал хуёво. Смелость тоже считается.'
                   : 'Вы уже проголосовали.'}
