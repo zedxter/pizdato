@@ -258,7 +258,7 @@ button {
 }
 
 .quotes-heading {
-  margin: 0 0 0.9rem;
+  margin: 0 0 0.75rem;
   font-size: 0.75rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -266,34 +266,43 @@ button {
   font-weight: 700;
 }
 
-.quotes-list {
+.quote-block {
+  position: relative;
   margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.95rem;
-}
-
-.quote {
-  margin: 0;
-  font-size: clamp(0.98rem, 2.2vw, 1.08rem);
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--ink);
-  opacity: 0.92;
+  padding: 0.4rem 0 0 0.15rem;
   animation: rise 0.55s ease both;
 }
 
-.quote::before {
-  content: '«';
+.quote-mark {
+  position: absolute;
+  top: -0.35rem;
+  left: -0.05rem;
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 16vw, 7rem);
+  line-height: 0.75;
   color: var(--good);
-  margin-right: 0.15em;
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
 }
 
-.quote::after {
-  content: '»';
-  color: var(--bad);
-  margin-left: 0.15em;
+.quote-text {
+  position: relative;
+  margin: 0;
+  padding-left: 0.15rem;
+  font-size: clamp(1.05rem, 2.4vw, 1.2rem);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.quote-author {
+  position: relative;
+  margin: 0.85rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  font-style: italic;
 }
 
 .error {

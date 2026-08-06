@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { castVote, fetchStats, type Choice, type Stats } from './api'
-import { pickQuotes } from './quotes'
+import { pickQuotes, type Wisdom } from './quotes'
 import './App.css'
 
 function pct(part: number, total: number): number {
@@ -13,7 +13,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [justVoted, setJustVoted] = useState(false)
-  const [quotes, setQuotes] = useState<string[]>(() => pickQuotes(1))
+  const [quotes, setQuotes] = useState<Wisdom[]>(() => pickQuotes(1))
 
   useEffect(() => {
     let cancelled = false
@@ -126,19 +126,17 @@ export default function App() {
 
             <p className="total">Всего голосов: {stats?.total ?? 0}</p>
 
-            <aside className="quotes" aria-label="Цитаты">
+            <aside className="quotes" aria-label="Мудрость дня">
               <p className="quotes-heading">Мудрость дня</p>
-              <ul className="quotes-list">
-                {quotes.map((quote, i) => (
-                  <li
-                    key={`${i}-${quote}`}
-                    className="quote"
-                    style={{ animationDelay: `${0.12 + i * 0.08}s` }}
-                  >
-                    {quote}
-                  </li>
-                ))}
-              </ul>
+              {quotes.map((item) => (
+                <blockquote key={item.text} className="quote-block">
+                  <span className="quote-mark" aria-hidden="true">
+                    „
+                  </span>
+                  <p className="quote-text">{item.text}</p>
+                  <footer className="quote-author">— {item.author}</footer>
+                </blockquote>
+              ))}
             </aside>
           </section>
         )}
