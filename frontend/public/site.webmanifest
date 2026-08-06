@@ -1,0 +1,24 @@
+{
+  "name": "pizdato",
+  "short_name": "pizdato",
+  "description": "Сделать пиздато или сделать хуёво — голосование на pizdato.net",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c1210",
+  "theme_color": "#0c1210",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/og.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

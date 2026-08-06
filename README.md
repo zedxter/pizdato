@@ -46,6 +46,15 @@ That builds the app, installs the systemd service, writes `/etc/caddy/Caddyfile`
 
 Env file: `/etc/pizdato.env` (see [deploy/pizdato.env.example](deploy/pizdato.env.example)).
 
+## SEO
+
+Technical SEO is set up (`robots.txt`, `sitemap.xml`, Open Graph, JSON-LD, canonical). To appear in search:
+
+1. [Google Search Console](https://search.google.com/search-console) — add `https://pizdato.net/`, submit sitemap `https://pizdato.net/sitemap.xml`
+2. [Yandex Webmaster](https://webmaster.yandex.ru/) — same site + sitemap; optional meta verification tag can go in `frontend/index.html`
+
+Ranking still depends on links, demand, and time — this only makes the site crawlable and understandable.
+
 ## License
 
 MIT

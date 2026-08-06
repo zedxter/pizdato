@@ -14,6 +14,10 @@ pizdato.net {
 		root * /var/www/pizdato
 		try_files {path} /index.html
 		file_server
+		header {
+			X-Content-Type-Options nosniff
+			Referrer-Policy strict-origin-when-cross-origin
+		}
 	}
 }
 
