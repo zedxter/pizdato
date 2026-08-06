@@ -131,7 +131,7 @@ export default function App() {
               {quotes.map((item) => (
                 <blockquote key={item.text} className="quote-block">
                   <span className="quote-mark" aria-hidden="true">
-                    «
+                    „
                   </span>
                   <div className="quote-body">
                     <p className="quote-text">{item.text}</p>
