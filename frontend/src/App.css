@@ -250,6 +250,52 @@ button {
   font-size: 0.95rem;
 }
 
+.quotes {
+  margin-top: 2rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+  max-width: 34rem;
+}
+
+.quotes-heading {
+  margin: 0 0 0.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.quotes-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.95rem;
+}
+
+.quote {
+  margin: 0;
+  font-size: clamp(0.98rem, 2.2vw, 1.08rem);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+  opacity: 0.92;
+  animation: rise 0.55s ease both;
+}
+
+.quote::before {
+  content: '«';
+  color: var(--good);
+  margin-right: 0.15em;
+}
+
+.quote::after {
+  content: '»';
+  color: var(--bad);
+  margin-left: 0.15em;
+}
+
 .error {
   margin-top: 1.2rem;
   color: #ffb4ab;

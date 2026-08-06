@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { castVote, fetchStats, type Choice, type Stats } from './api'
+import { pickQuotes } from './quotes'
 import './App.css'
 
 function pct(part: number, total: number): number {
@@ -12,6 +13,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [justVoted, setJustVoted] = useState(false)
+  const [quotes, setQuotes] = useState<string[]>(() => pickQuotes(3))
 
   useEffect(() => {
     let cancelled = false
@@ -35,6 +37,7 @@ export default function App() {
       const next = await castVote(choice)
       setStats(next)
       setJustVoted(true)
+      setQuotes(pickQuotes(3))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
     } finally {
@@ -122,6 +125,21 @@ export default function App() {
             </div>
 
             <p className="total">Всего голосов: {stats?.total ?? 0}</p>
+
+            <aside className="quotes" aria-label="Цитаты">
+              <p className="quotes-heading">Мудрость дня</p>
+              <ul className="quotes-list">
+                {quotes.map((quote, i) => (
+                  <li
+                    key={`${i}-${quote}`}
+                    className="quote"
+                    style={{ animationDelay: `${0.12 + i * 0.08}s` }}
+                  >
+                    {quote}
+                  </li>
+                ))}
+              </ul>
+            </aside>
           </section>
         )}
 
