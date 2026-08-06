@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Prefer askpass when available (non-interactive / Cursor agent)
+if [[ -n "${SUDO_ASKPASS:-}" ]]; then
+  sudo() { command sudo -A "$@"; }
+fi
+
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FRONTEND_DIST="$ROOT/frontend/dist"
 BACKEND_BIN="$ROOT/backend/target/release/backend"
@@ -23,7 +28,8 @@ echo "==> Installing files"
 sudo install -d -o pizdato -g pizdato /var/lib/pizdato
 sudo install -d /opt/pizdato /var/www/pizdato
 sudo install -m 755 "$BACKEND_BIN" /opt/pizdato/backend
-sudo rsync -a --delete "$FRONTEND_DIST"/ /var/www/pizdato/
+sudo find /var/www/pizdato -mindepth 1 -delete
+sudo cp -a "$FRONTEND_DIST"/. /var/www/pizdato/
 sudo install -m 644 "$ROOT/deploy/pizdato.service" /etc/systemd/system/pizdato.service
 
 if [[ ! -f /etc/pizdato.env ]]; then
@@ -40,6 +46,7 @@ EOF
 fi
 
 echo "==> Configuring Caddy"
+sudo cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak.$(date +%s)" 2>/dev/null || true
 sudo install -m 644 "$ROOT/deploy/Caddyfile" /etc/caddy/Caddyfile
 
 sudo systemctl daemon-reload
