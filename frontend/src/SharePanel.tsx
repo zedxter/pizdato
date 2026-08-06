@@ -7,18 +7,15 @@ import {
   IconCopy,
   IconDownload,
   IconMore,
-  IconQuote,
   IconTelegram,
   IconVk,
 } from './ShareIcons'
 import {
   buildQuoteShareText,
-  buildShareText,
   copyShareText,
   nativeShare,
   telegramShareUrl,
   vkShareUrl,
-  vkShareUrlForChoice,
 } from './share'
 
 type Props = {
@@ -27,11 +24,10 @@ type Props = {
 }
 
 export function SharePanel({ stats, wisdom }: Props) {
-  const [copied, setCopied] = useState<'result' | 'quote' | null>(null)
+  const [copied, setCopied] = useState(false)
   const [badgeUrl, setBadgeUrl] = useState<string | null>(null)
   const [badgeBusy, setBadgeBusy] = useState(false)
-  const resultText = buildShareText(stats, wisdom)
-  const quoteText = buildQuoteShareText(wisdom)
+  const shareText = buildQuoteShareText(wisdom)
   const canNativeShare = typeof navigator !== 'undefined' && 'share' in navigator
 
   useEffect(() => {
@@ -59,19 +55,19 @@ export function SharePanel({ stats, wisdom }: Props) {
     }
   }, [stats, wisdom])
 
-  async function onCopy(kind: 'result' | 'quote') {
+  async function onCopy() {
     try {
-      await copyShareText(kind === 'quote' ? quoteText : resultText)
-      setCopied(kind)
-      window.setTimeout(() => setCopied(null), 2000)
+      await copyShareText(shareText)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
     } catch {
-      setCopied(null)
+      setCopied(false)
     }
   }
 
-  async function onNative(kind: 'result' | 'quote') {
-    const ok = await nativeShare(kind === 'quote' ? quoteText : resultText)
-    if (!ok) await onCopy(kind)
+  async function onNative() {
+    const ok = await nativeShare(shareText)
+    if (!ok) await onCopy()
   }
 
   async function onDownloadBadge() {
@@ -85,55 +81,7 @@ export function SharePanel({ stats, wisdom }: Props) {
 
   return (
     <div className="share">
-      <p className="share-heading">Поделиться мудростью</p>
-      <div className="share-actions" role="group" aria-label="Поделиться цитатой">
-        <a
-          className="share-icon-btn"
-          href={telegramShareUrl(quoteText)}
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Цитата в Telegram"
-          aria-label="Поделиться цитатой в Telegram"
-        >
-          <IconTelegram className="share-icon" />
-        </a>
-        <a
-          className="share-icon-btn"
-          href={vkShareUrl(quoteText, 'Мудрость дня — pizdato')}
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Цитата во VK"
-          aria-label="Поделиться цитатой во ВКонтакте"
-        >
-          <IconVk className="share-icon" />
-        </a>
-        <button
-          type="button"
-          className="share-icon-btn"
-          title={copied === 'quote' ? 'Скопировано' : 'Скопировать цитату'}
-          aria-label={copied === 'quote' ? 'Скопировано' : 'Скопировать цитату'}
-          onClick={() => void onCopy('quote')}
-        >
-          {copied === 'quote' ? (
-            <IconCheck className="share-icon" />
-          ) : (
-            <IconQuote className="share-icon" />
-          )}
-        </button>
-        {canNativeShare && (
-          <button
-            type="button"
-            className="share-icon-btn"
-            title="Ещё"
-            aria-label="Поделиться цитатой иначе"
-            onClick={() => void onNative('quote')}
-          >
-            <IconMore className="share-icon" />
-          </button>
-        )}
-      </div>
-
-      <p className="share-heading share-heading-spaced">Кинь другу — пусть тоже выберет</p>
+      <p className="share-heading">Кинь другу — пусть тоже выберет</p>
 
       {badgeUrl && (
         <img
@@ -145,39 +93,35 @@ export function SharePanel({ stats, wisdom }: Props) {
         />
       )}
 
-      <div className="share-actions" role="group" aria-label="Поделиться результатом">
+      <div className="share-actions" role="group" aria-label="Поделиться">
         <a
           className="share-icon-btn"
-          href={telegramShareUrl(resultText)}
+          href={telegramShareUrl(shareText)}
           target="_blank"
           rel="noopener noreferrer"
           title="Telegram"
-          aria-label="Поделиться результатом в Telegram"
+          aria-label="Поделиться цитатой в Telegram"
         >
           <IconTelegram className="share-icon" />
         </a>
         <a
           className="share-icon-btn"
-          href={vkShareUrlForChoice(resultText, stats.choice)}
+          href={vkShareUrl(shareText, 'Мудрость дня — pizdato')}
           target="_blank"
           rel="noopener noreferrer"
           title="VK"
-          aria-label="Поделиться результатом во ВКонтакте"
+          aria-label="Поделиться цитатой во ВКонтакте"
         >
           <IconVk className="share-icon" />
         </a>
         <button
           type="button"
           className="share-icon-btn"
-          title={copied === 'result' ? 'Скопировано' : 'Скопировать результат'}
-          aria-label={copied === 'result' ? 'Скопировано' : 'Скопировать результат'}
-          onClick={() => void onCopy('result')}
+          title={copied ? 'Скопировано' : 'Скопировать цитату'}
+          aria-label={copied ? 'Скопировано' : 'Скопировать цитату'}
+          onClick={() => void onCopy()}
         >
-          {copied === 'result' ? (
-            <IconCheck className="share-icon" />
-          ) : (
-            <IconCopy className="share-icon" />
-          )}
+          {copied ? <IconCheck className="share-icon" /> : <IconCopy className="share-icon" />}
         </button>
         <button
           type="button"
@@ -194,8 +138,8 @@ export function SharePanel({ stats, wisdom }: Props) {
             type="button"
             className="share-icon-btn"
             title="Ещё"
-            aria-label="Поделиться результатом иначе"
-            onClick={() => void onNative('result')}
+            aria-label="Поделиться иначе"
+            onClick={() => void onNative()}
           >
             <IconMore className="share-icon" />
           </button>

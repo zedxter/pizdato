@@ -127,18 +127,6 @@ export default function App() {
 
             <p className="total">Всего голосов: {stats?.total ?? 0}</p>
 
-            <aside className="quotes" aria-label="Мудрость дня">
-              <p className="quotes-heading">Мудрость дня</p>
-              {quotes.map((item) => (
-                <blockquote key={item.text} className="quote-block">
-                  <p className="quote-text">{item.text}</p>
-                  <footer className="quote-footer">
-                    <cite className="quote-author">{item.author}</cite>
-                  </footer>
-                </blockquote>
-              ))}
-            </aside>
-
             {stats && quotes[0] && <SharePanel stats={stats} wisdom={quotes[0]} />}
           </section>
         )}
