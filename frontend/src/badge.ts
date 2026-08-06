@@ -102,6 +102,14 @@ export async function renderBadgeCanvas(
         ? 'Я ЗА ХУЁВО'
         : 'ВЫБЕРИ СТОРОНУ'
 
+  const padX = 28
+  const contentRight = W - padX
+  const pillH = 26
+  const pillY = H - 36 - pillH
+  const titleBaseline = 70
+  const middleTop = titleBaseline + 18
+  const middleBottom = pillY - 18
+
   const bg = ctx.createLinearGradient(0, 0, W, H)
   bg.addColorStop(0, '#14201a')
   bg.addColorStop(1, '#0c1210')
@@ -114,53 +122,64 @@ export async function renderBadgeCanvas(
 
   const glow = ctx.createRadialGradient(
     choice === 'huyevo' ? W - 60 : 100,
-    70,
+    H * 0.45,
     10,
     choice === 'huyevo' ? W - 60 : 100,
-    70,
-    180,
+    H * 0.45,
+    200,
   )
-  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.2)' : 'rgba(61,255,154,0.18)')
+  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.18)' : 'rgba(61,255,154,0.16)')
   glow.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, W, H)
 
   ctx.fillStyle = '#9aab9e'
-  ctx.font = '600 16px Manrope, system-ui, sans-serif'
-  ctx.fillText('PIZDATO.NET · МУДРОСТЬ ДНЯ', 28, 32)
+  ctx.font = '600 15px Manrope, system-ui, sans-serif'
+  ctx.fillText('PIZDATO.NET · МУДРОСТЬ ДНЯ', padX, 30)
 
   ctx.fillStyle = accent
-  ctx.font = '700 15px Manrope, system-ui, sans-serif'
+  ctx.font = '700 14px Manrope, system-ui, sans-serif'
   const tag = choice === 'huyevo' ? 'хуёво' : 'пиздато'
   const tagW = ctx.measureText(tag).width
-  ctx.fillText(tag, W - 28 - tagW, 32)
+  ctx.fillText(tag, contentRight - tagW, 30)
 
   ctx.fillStyle = '#f2f5f0'
-  ctx.font = '400 44px "Bebas Neue", Impact, sans-serif'
-  ctx.fillText(label, 28, 78)
+  ctx.font = '400 42px "Bebas Neue", Impact, sans-serif'
+  ctx.fillText(label, padX, titleBaseline)
 
   if (wisdom) {
-    ctx.fillStyle = '#d7e0d8'
-    ctx.font = '600 20px Manrope, system-ui, sans-serif'
-    const lines = wrapText(ctx, wisdom.text, W - 56, 3)
-    let y = 118
-    for (const line of lines) {
-      ctx.fillText(line, 28, y)
-      y += 26
-    }
-    ctx.fillStyle = '#9aab9e'
-    ctx.font = 'italic 600 16px Manrope, system-ui, sans-serif'
+    const quoteFont = '600 19px Manrope, system-ui, sans-serif'
+    const authorFont = 'italic 600 15px Manrope, system-ui, sans-serif'
+    const lineHeight = 28
+    const authorGap = 14
+
+    ctx.font = quoteFont
+    const lines = wrapText(ctx, wisdom.text, contentRight - padX, 3)
+    ctx.font = authorFont
     const author = `— ${wisdom.author}`
+
+    const quoteBlockH = lines.length * lineHeight + authorGap + 15
+    const available = Math.max(quoteBlockH, middleBottom - middleTop)
+    let y = middleTop + (available - quoteBlockH) / 2 + lineHeight * 0.75
+
+    ctx.fillStyle = '#d7e0d8'
+    ctx.font = quoteFont
+    for (const line of lines) {
+      ctx.fillText(line, padX, y)
+      y += lineHeight
+    }
+
+    ctx.fillStyle = '#9aab9e'
+    ctx.font = authorFont
     const aw = ctx.measureText(author).width
-    ctx.fillText(author, W - 28 - aw, y + 8)
+    ctx.fillText(author, contentRight - aw, y + authorGap)
   }
 
-  const pillY = H - 42
-  drawPill(ctx, 28, pillY, `пиздато ${p}%`, '#06100b', accentDeep, '#3dff9a')
+  drawPill(ctx, padX, pillY, `пиздато ${p}%`, '#06100b', accentDeep, '#3dff9a')
   const firstW = measurePillWidth(ctx, `пиздато ${p}%`)
   drawPill(
     ctx,
-    28 + firstW + 10,
+    padX + firstW + 10,
     pillY,
     `хуёво ${hPct}%`,
     '#1a0503',
