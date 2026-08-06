@@ -13,7 +13,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [justVoted, setJustVoted] = useState(false)
-  const [quotes, setQuotes] = useState<string[]>(() => pickQuotes(3))
+  const [quotes, setQuotes] = useState<string[]>(() => pickQuotes(1))
 
   useEffect(() => {
     let cancelled = false
@@ -37,7 +37,7 @@ export default function App() {
       const next = await castVote(choice)
       setStats(next)
       setJustVoted(true)
-      setQuotes(pickQuotes(3))
+      setQuotes(pickQuotes(1))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
     } finally {
