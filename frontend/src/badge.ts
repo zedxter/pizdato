@@ -97,17 +97,17 @@ export async function renderBadgeCanvas(
   const hPct = pct(stats.huyevo, stats.total)
   const label =
     choice === 'pizdato'
-      ? 'Я ЗА ПИЗДАТО'
+      ? 'Я — ЗА ПИЗДАТО!'
       : choice === 'huyevo'
-        ? 'Я ЗА ХУЁВО'
+        ? 'Я — ЗА ХУЁВО!'
         : 'ВЫБЕРИ СТОРОНУ'
 
   const padX = 28
   const contentRight = W - padX
   const pillH = 26
   const pillY = H - 36 - pillH
-  const titleBaseline = 88
-  const middleTop = titleBaseline + 22
+  const titleBaseline = 102
+  const middleTop = titleBaseline + 20
   const middleBottom = pillY - 16
 
   const bg = ctx.createLinearGradient(0, 0, W, H)
