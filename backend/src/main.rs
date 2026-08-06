@@ -41,6 +41,7 @@ async fn main() {
     });
     let ip_daily_limit = env_i64("VOTE_IP_DAILY_LIMIT", 100);
     let ip_min_interval_secs = env_i64("VOTE_IP_MIN_INTERVAL_SECS", 10);
+    let session_min_age_secs = env_i64("VOTE_SESSION_MIN_AGE_SECS", 2);
 
     let pool = db::connect(&database_url)
         .await
@@ -53,11 +54,13 @@ async fn main() {
         ip_salt,
         ip_daily_limit,
         ip_min_interval_secs,
+        session_min_age_secs,
     });
 
     tracing::info!(
         ip_daily_limit,
         ip_min_interval_secs,
+        session_min_age_secs,
         "vote rate limits configured"
     );
 

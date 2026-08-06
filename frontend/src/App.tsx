@@ -15,23 +15,31 @@ export default function App() {
   const [pending, setPending] = useState(false)
   const [justVoted, setJustVoted] = useState(false)
   const [quotes, setQuotes] = useState<Wisdom[]>(() => pickQuotes(1))
+  const [canVote, setCanVote] = useState(false)
 
   useEffect(() => {
     let cancelled = false
+    let unlockTimer: number | undefined
     fetchStats()
       .then((s) => {
-        if (!cancelled) setStats(s)
+        if (cancelled) return
+        setStats(s)
+        // Soft UI delay aligned with server session min age (~2s).
+        unlockTimer = window.setTimeout(() => {
+          if (!cancelled) setCanVote(true)
+        }, 2000)
       })
       .catch((e: Error) => {
         if (!cancelled) setError(e.message)
       })
     return () => {
       cancelled = true
+      if (unlockTimer !== undefined) window.clearTimeout(unlockTimer)
     }
   }, [])
 
   async function vote(choice: Choice) {
-    if (stats?.voted || pending) return
+    if (stats?.voted || pending || !canVote) return
     setError(null)
     setPending(true)
     try {
@@ -75,7 +83,7 @@ export default function App() {
             <button
               type="button"
               className="btn btn-good"
-              disabled={pending || !stats}
+              disabled={pending || !stats || !canVote}
               onClick={() => void vote('pizdato')}
             >
               Сделать пиздато
@@ -83,7 +91,7 @@ export default function App() {
             <button
               type="button"
               className="btn btn-bad"
-              disabled={pending || !stats}
+              disabled={pending || !stats || !canVote}
               onClick={() => void vote('huyevo')}
             >
               Сделать хуёво

@@ -37,8 +37,9 @@ Repeat votes return `409`. Soft anti-abuse (no captcha/login):
 - Cookie `voter_id` is issued **only** via `GET /api/stats` (page load) and stored in `sessions`
 - `POST /api/vote` without a registered cookie is rejected (`403`)
 - Hashed IP rate limits: default max **100 votes / IP / day** and min **10s** between votes from the same IP
+- Session must be at least **2s** old before vote (`VOTE_SESSION_MIN_AGE_SECS`)
 
-Env knobs: `VOTE_IP_SALT`, `VOTE_IP_DAILY_LIMIT`, `VOTE_IP_MIN_INTERVAL_SECS`.
+Env knobs: `VOTE_IP_SALT`, `VOTE_IP_DAILY_LIMIT`, `VOTE_IP_MIN_INTERVAL_SECS`, `VOTE_SESSION_MIN_AGE_SECS`.
 
 ## Production deploy
 

@@ -177,6 +177,24 @@ pub async fn vote(
         ));
     }
 
+    let session_age = state.session_age_secs(&voter_id).await.map_err(|e| {
+        tracing::error!("session age lookup error: {e}");
+        internal_err(empty_stats())
+    })?;
+
+    if session_age.unwrap_or(0) < state.session_min_age_secs {
+        let stats = build_stats(&state, &voter_id)
+            .await
+            .unwrap_or_else(|_| empty_stats());
+        return Err((
+            StatusCode::TOO_MANY_REQUESTS,
+            Json(ErrorResponse {
+                error: "подождите секунду и попробуйте снова".into(),
+                stats,
+            }),
+        ));
+    }
+
     let ip = client_ip(&headers, addr);
     let ip_hash = state.hash_ip(&ip);
 

@@ -9,6 +9,7 @@ pub struct AppState {
     pub ip_salt: String,
     pub ip_daily_limit: i64,
     pub ip_min_interval_secs: i64,
+    pub session_min_age_secs: i64,
 }
 
 pub async fn connect(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
@@ -149,6 +150,22 @@ impl AppState {
                 .fetch_one(&self.pool)
                 .await?;
         Ok(count > 0)
+    }
+
+    pub async fn session_age_secs(&self, voter_id: &str) -> Result<Option<i64>, sqlx::Error> {
+        let secs: Option<i64> = sqlx::query_scalar(
+            r#"
+            SELECT CAST(
+                (julianday('now') - julianday(created_at)) * 86400
+            AS INTEGER)
+            FROM sessions
+            WHERE voter_id = ?1
+            "#,
+        )
+        .bind(voter_id)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(secs)
     }
 
     pub async fn register_session(&self, voter_id: &str) -> Result<(), sqlx::Error> {
