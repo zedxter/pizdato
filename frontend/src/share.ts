@@ -15,16 +15,22 @@ export function buildShareText(stats: Stats, wisdom?: Wisdom): string {
   const quote = wisdom ? `\n\n«${wisdom.text}»\n— ${wisdom.author}` : ''
 
   if (stats.choice === 'pizdato') {
-    return `Я сделал пиздато на pizdato.net.\n${score}${quote}\n\nА ты? ${SITE_URL}`
+    return `Я сделал пиздато на pizdato.net.\n${score}${quote}\n\nА ты?`
   }
   if (stats.choice === 'huyevo') {
-    return `Я сознательно сделал хуёво на pizdato.net.\n${score}${quote}\n\nА ты? ${SITE_URL}`
+    return `Я сознательно сделал хуёво на pizdato.net.\n${score}${quote}\n\nА ты?`
   }
-  return `Мир делится на пиздато и хуёво.\n${score}${quote}\n\nВыбери сторону: ${SITE_URL}`
+  return `Мир делится на пиздато и хуёво.\n${score}${quote}\n\nВыбери сторону.`
 }
 
+/** Text for Telegram/VK/native share — URL goes via share `url` param, not duplicated here. */
 export function buildQuoteShareText(wisdom: Wisdom): string {
-  return `Мудрость дня с pizdato.net:\n\n«${wisdom.text}»\n— ${wisdom.author}\n\n${SITE_URL}`
+  return `Мудрость дня с pizdato.net:\n\n«${wisdom.text}»\n— ${wisdom.author}`
+}
+
+/** Clipboard version includes the link once. */
+export function buildQuoteCopyText(wisdom: Wisdom): string {
+  return `${buildQuoteShareText(wisdom)}\n\n${SITE_URL}`
 }
 
 export function telegramShareUrl(text: string): string {

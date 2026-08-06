@@ -11,6 +11,7 @@ import {
   IconVk,
 } from './ShareIcons'
 import {
+  buildQuoteCopyText,
   buildQuoteShareText,
   copyShareText,
   nativeShare,
@@ -57,7 +58,7 @@ export function SharePanel({ stats, wisdom }: Props) {
 
   async function onCopy() {
     try {
-      await copyShareText(shareText)
+      await copyShareText(buildQuoteCopyText(wisdom))
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
