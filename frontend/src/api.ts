@@ -27,6 +27,9 @@ export async function castVote(choice: Choice): Promise<Stats> {
   if (res.status === 409) {
     return data.stats ?? data
   }
+  if (res.status === 429) {
+    throw new Error(data.error ?? 'Слишком много попыток. Попробуйте позже.')
+  }
   if (!res.ok) {
     throw new Error(data.error ?? 'Ошибка голосования')
   }

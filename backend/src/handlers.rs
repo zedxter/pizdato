@@ -1,6 +1,10 @@
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{
+    extract::{ConnectInfo, State},
+    http::{HeaderMap, StatusCode},
+    Json,
+};
 use tower_cookies::{Cookie, Cookies};
 use uuid::Uuid;
 
@@ -12,6 +16,24 @@ use crate::{
 const VOTER_COOKIE: &str = "voter_id";
 const COOKIE_MAX_AGE: tower_cookies::cookie::time::Duration =
     tower_cookies::cookie::time::Duration::days(365);
+
+fn client_ip(headers: &HeaderMap, addr: SocketAddr) -> String {
+    if let Some(xff) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
+        if let Some(first) = xff.split(',').next() {
+            let ip = first.trim();
+            if !ip.is_empty() {
+                return ip.to_string();
+            }
+        }
+    }
+    if let Some(real) = headers.get("x-real-ip").and_then(|v| v.to_str().ok()) {
+        let ip = real.trim();
+        if !ip.is_empty() {
+            return ip.to_string();
+        }
+    }
+    addr.ip().to_string()
+}
 
 fn voter_id_from_cookies(cookies: &Cookies) -> Option<String> {
     cookies
@@ -54,6 +76,26 @@ async fn build_stats(state: &AppState, voter_id: &str) -> Result<StatsResponse, 
     })
 }
 
+fn empty_stats() -> StatsResponse {
+    StatsResponse {
+        pizdato: 0,
+        huyevo: 0,
+        total: 0,
+        voted: false,
+        choice: None,
+    }
+}
+
+fn internal_err(stats: StatsResponse) -> (StatusCode, Json<ErrorResponse>) {
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(ErrorResponse {
+            error: "внутренняя ошибка".into(),
+            stats,
+        }),
+    )
+}
+
 pub async fn stats(
     State(state): State<Arc<AppState>>,
     cookies: Cookies,
@@ -68,25 +110,17 @@ pub async fn stats(
 pub async fn vote(
     State(state): State<Arc<AppState>>,
     cookies: Cookies,
+    headers: HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(body): Json<VoteRequest>,
 ) -> Result<(StatusCode, Json<StatsResponse>), (StatusCode, Json<ErrorResponse>)> {
     let voter_id = ensure_voter_id(&cookies, state.cookie_secure);
+    let ip = client_ip(&headers, addr);
+    let ip_hash = state.hash_ip(&ip);
 
     let already = state.find_vote(&voter_id).await.map_err(|e| {
         tracing::error!("vote lookup error: {e}");
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
-                error: "внутренняя ошибка".into(),
-                stats: StatsResponse {
-                    pizdato: 0,
-                    huyevo: 0,
-                    total: 0,
-                    voted: false,
-                    choice: None,
-                },
-            }),
-        )
+        internal_err(empty_stats())
     })?;
 
     if already.is_some() {
@@ -106,25 +140,59 @@ pub async fn vote(
         ));
     }
 
-    match state.insert_vote(body.choice, &voter_id).await {
+    let recent_secs = state
+        .seconds_since_last_ip_vote(&ip_hash)
+        .await
+        .map_err(|e| {
+            tracing::error!("ip interval lookup error: {e}");
+            internal_err(empty_stats())
+        })?;
+
+    if let Some(secs) = recent_secs {
+        if secs < state.ip_min_interval_secs {
+            let stats = build_stats(&state, &voter_id)
+                .await
+                .unwrap_or_else(|_| empty_stats());
+            return Err((
+                StatusCode::TOO_MANY_REQUESTS,
+                Json(ErrorResponse {
+                    error: "слишком часто. подождите немного и попробуйте снова".into(),
+                    stats,
+                }),
+            ));
+        }
+    }
+
+    let day_count = state.votes_from_ip_last_day(&ip_hash).await.map_err(|e| {
+        tracing::error!("ip daily lookup error: {e}");
+        internal_err(empty_stats())
+    })?;
+
+    if day_count >= state.ip_daily_limit {
+        let stats = build_stats(&state, &voter_id)
+            .await
+            .unwrap_or_else(|_| empty_stats());
+        return Err((
+            StatusCode::TOO_MANY_REQUESTS,
+            Json(ErrorResponse {
+                error: "с этого адреса уже много голосов за сутки. загляните завтра".into(),
+                stats,
+            }),
+        ));
+    }
+
+    match state.insert_vote(body.choice, &voter_id, &ip_hash).await {
         Ok(()) => {
-            // Refresh cookie lifetime after a successful vote.
             set_voter_cookie(&cookies, &voter_id, state.cookie_secure);
             let stats = build_stats(&state, &voter_id).await.map_err(|e| {
                 tracing::error!("stats after vote error: {e}");
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(ErrorResponse {
-                        error: "внутренняя ошибка".into(),
-                        stats: StatsResponse {
-                            pizdato: 0,
-                            huyevo: 0,
-                            total: 0,
-                            voted: true,
-                            choice: Some(body.choice),
-                        },
-                    }),
-                )
+                internal_err(StatsResponse {
+                    pizdato: 0,
+                    huyevo: 0,
+                    total: 0,
+                    voted: true,
+                    choice: Some(body.choice),
+                })
             })?;
             Ok((StatusCode::OK, Json(stats)))
         }
@@ -148,19 +216,7 @@ pub async fn vote(
                 }
             }
             tracing::error!("insert vote error: {e}");
-            Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorResponse {
-                    error: "внутренняя ошибка".into(),
-                    stats: StatsResponse {
-                        pizdato: 0,
-                        huyevo: 0,
-                        total: 0,
-                        voted: false,
-                        choice: None,
-                    },
-                }),
-            ))
+            Err(internal_err(empty_stats()))
         }
     }
 }

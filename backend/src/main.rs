@@ -13,6 +13,14 @@ use tracing_subscriber::EnvFilter;
 
 use crate::db::AppState;
 
+fn env_i64(key: &str, default: i64) -> i64 {
+    std::env::var(key)
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(default)
+        .max(1)
+}
+
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
@@ -27,6 +35,12 @@ async fn main() {
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
     let bind = std::env::var("BIND").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+    let ip_salt = std::env::var("VOTE_IP_SALT").unwrap_or_else(|_| {
+        tracing::warn!("VOTE_IP_SALT not set; using insecure default for development");
+        "dev-insecure-salt-change-me".to_string()
+    });
+    let ip_daily_limit = env_i64("VOTE_IP_DAILY_LIMIT", 5);
+    let ip_min_interval_secs = env_i64("VOTE_IP_MIN_INTERVAL_SECS", 10);
 
     let pool = db::connect(&database_url)
         .await
@@ -36,7 +50,16 @@ async fn main() {
     let state = Arc::new(AppState {
         pool,
         cookie_secure,
+        ip_salt,
+        ip_daily_limit,
+        ip_min_interval_secs,
     });
+
+    tracing::info!(
+        ip_daily_limit,
+        ip_min_interval_secs,
+        "vote rate limits configured"
+    );
 
     let cors = CorsLayer::new()
         .allow_origin(Any)
@@ -56,7 +79,10 @@ async fn main() {
         .await
         .expect("failed to bind");
     tracing::info!("listening on {addr}");
-    axum::serve(listener, app)
-        .await
-        .expect("server error");
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .expect("server error");
 }

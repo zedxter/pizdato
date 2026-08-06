@@ -1,3 +1,4 @@
+use sha2::{Digest, Sha256};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 
 use crate::models::Choice;
@@ -5,6 +6,9 @@ use crate::models::Choice;
 pub struct AppState {
     pub pool: SqlitePool,
     pub cookie_secure: bool,
+    pub ip_salt: String,
+    pub ip_daily_limit: i64,
+    pub ip_min_interval_secs: i64,
 }
 
 pub async fn connect(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
@@ -64,51 +68,37 @@ pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::Error> {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 choice TEXT NOT NULL CHECK (choice IN ('pizdato', 'huyevo')),
                 voter_id TEXT NOT NULL UNIQUE,
+                ip_hash TEXT,
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
             )
             "#,
         )
         .execute(pool)
         .await?;
-        return Ok(());
+    } else if !has_ip_hash_column(pool).await? {
+        tracing::info!("adding non-unique ip_hash column for rate limits");
+        sqlx::query("ALTER TABLE votes ADD COLUMN ip_hash TEXT")
+            .execute(pool)
+            .await?;
     }
 
-    // Older installs keyed uniqueness by IP as well — drop that.
-    if has_ip_hash_column(pool).await? {
-        tracing::info!("migrating votes table: removing ip_hash uniqueness");
-        sqlx::query("DROP TABLE IF EXISTS votes_new")
-            .execute(pool)
-            .await?;
-        sqlx::query(
-            r#"
-            CREATE TABLE votes_new (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                choice TEXT NOT NULL CHECK (choice IN ('pizdato', 'huyevo')),
-                voter_id TEXT NOT NULL UNIQUE,
-                created_at TEXT NOT NULL DEFAULT (datetime('now'))
-            )
-            "#,
-        )
-        .execute(pool)
-        .await?;
-        sqlx::query(
-            r#"
-            INSERT INTO votes_new (id, choice, voter_id, created_at)
-            SELECT id, choice, voter_id, created_at FROM votes
-            "#,
-        )
-        .execute(pool)
-        .await?;
-        sqlx::query("DROP TABLE votes").execute(pool).await?;
-        sqlx::query("ALTER TABLE votes_new RENAME TO votes")
-            .execute(pool)
-            .await?;
-    }
+    sqlx::query(
+        "CREATE INDEX IF NOT EXISTS idx_votes_ip_hash_created_at ON votes (ip_hash, created_at)",
+    )
+    .execute(pool)
+    .await?;
 
     Ok(())
 }
 
 impl AppState {
+    pub fn hash_ip(&self, ip: &str) -> String {
+        let mut hasher = Sha256::new();
+        hasher.update(self.ip_salt.as_bytes());
+        hasher.update(ip.as_bytes());
+        hex::encode(hasher.finalize())
+    }
+
     pub async fn counts(&self) -> Result<(i64, i64), sqlx::Error> {
         let row: (i64, i64) = sqlx::query_as(
             r#"
@@ -132,10 +122,49 @@ impl AppState {
         Ok(row.and_then(|(c,)| Choice::parse(&c)))
     }
 
-    pub async fn insert_vote(&self, choice: Choice, voter_id: &str) -> Result<(), sqlx::Error> {
-        sqlx::query("INSERT INTO votes (choice, voter_id) VALUES (?1, ?2)")
+    pub async fn votes_from_ip_last_day(&self, ip_hash: &str) -> Result<i64, sqlx::Error> {
+        let count: i64 = sqlx::query_scalar(
+            r#"
+            SELECT COUNT(*)
+            FROM votes
+            WHERE ip_hash = ?1
+              AND created_at >= datetime('now', '-1 day')
+            "#,
+        )
+        .bind(ip_hash)
+        .fetch_one(&self.pool)
+        .await?;
+        Ok(count)
+    }
+
+    pub async fn seconds_since_last_ip_vote(&self, ip_hash: &str) -> Result<Option<i64>, sqlx::Error> {
+        let secs: Option<i64> = sqlx::query_scalar(
+            r#"
+            SELECT CAST(
+                (julianday('now') - julianday(created_at)) * 86400
+            AS INTEGER)
+            FROM votes
+            WHERE ip_hash = ?1
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+            "#,
+        )
+        .bind(ip_hash)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(secs)
+    }
+
+    pub async fn insert_vote(
+        &self,
+        choice: Choice,
+        voter_id: &str,
+        ip_hash: &str,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query("INSERT INTO votes (choice, voter_id, ip_hash) VALUES (?1, ?2, ?3)")
             .bind(choice.as_str())
             .bind(voter_id)
+            .bind(ip_hash)
             .execute(&self.pool)
             .await?;
         Ok(())
