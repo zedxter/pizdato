@@ -194,9 +194,19 @@ button {
 }
 
 .voted-note {
-  margin: 0 0 1.4rem;
+  margin: 0 0 1.1rem;
   font-weight: 700;
   font-size: 1.1rem;
+  line-height: 1.35;
+  max-width: 28rem;
+}
+
+.stats-heading {
+  margin: 0 0 1.1rem;
+  color: var(--muted);
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .bars {
