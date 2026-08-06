@@ -265,6 +265,10 @@ button {
   font-weight: 700;
 }
 
+.share-heading-spaced {
+  margin-top: 1.6rem;
+}
+
 .badge-preview {
   display: block;
   width: 100%;

@@ -1,4 +1,5 @@
 import type { Choice, Stats } from './api'
+import type { Wisdom } from './quotes'
 
 const SITE_URL = 'https://pizdato.net/'
 
@@ -7,18 +8,23 @@ function pct(part: number, total: number): number {
   return Math.round((part / total) * 100)
 }
 
-export function buildShareText(stats: Stats): string {
+export function buildShareText(stats: Stats, wisdom?: Wisdom): string {
   const p = pct(stats.pizdato, stats.total)
   const h = pct(stats.huyevo, stats.total)
   const score = `Сейчас у человечества: пиздато ${p}% · хуёво ${h}% (всего ${stats.total}).`
+  const quote = wisdom ? `\n\n«${wisdom.text}»\n— ${wisdom.author}` : ''
 
   if (stats.choice === 'pizdato') {
-    return `Я сделал пиздато на pizdato.net.\n${score}\nА ты? ${SITE_URL}`
+    return `Я сделал пиздато на pizdato.net.\n${score}${quote}\n\nА ты? ${SITE_URL}`
   }
   if (stats.choice === 'huyevo') {
-    return `Я сознательно сделал хуёво на pizdato.net.\n${score}\nА ты? ${SITE_URL}`
+    return `Я сознательно сделал хуёво на pizdato.net.\n${score}${quote}\n\nА ты? ${SITE_URL}`
   }
-  return `Мир делится на пиздато и хуёво.\n${score}\nВыбери сторону: ${SITE_URL}`
+  return `Мир делится на пиздато и хуёво.\n${score}${quote}\n\nВыбери сторону: ${SITE_URL}`
+}
+
+export function buildQuoteShareText(wisdom: Wisdom): string {
+  return `Мудрость дня с pizdato.net:\n\n«${wisdom.text}»\n— ${wisdom.author}\n\n${SITE_URL}`
 }
 
 export function telegramShareUrl(text: string): string {
@@ -26,19 +32,23 @@ export function telegramShareUrl(text: string): string {
   return `https://t.me/share/url?${params.toString()}`
 }
 
-export function vkShareUrl(text: string, choice?: Choice): string {
-  const title =
-    choice === 'pizdato'
-      ? 'Я сделал пиздато'
-      : choice === 'huyevo'
-        ? 'Я сделал хуёво'
-        : 'pizdato — выбери сторону'
+export function vkShareUrl(text: string, title = 'pizdato'): string {
   const params = new URLSearchParams({
     url: SITE_URL,
     title,
     comment: text,
   })
   return `https://vk.com/share.php?${params.toString()}`
+}
+
+export function vkShareUrlForChoice(text: string, choice?: Choice): string {
+  const title =
+    choice === 'pizdato'
+      ? 'Я сделал пиздато'
+      : choice === 'huyevo'
+        ? 'Я сделал хуёво'
+        : 'pizdato — выбери сторону'
+  return vkShareUrl(text, title)
 }
 
 export async function copyShareText(text: string): Promise<void> {

@@ -1,7 +1,8 @@
 import type { Stats } from './api'
+import type { Wisdom } from './quotes'
 
-const W = 640
-const H = 160
+const W = 720
+const H = 280
 
 function pct(part: number, total: number): number {
   if (total <= 0) return 0
@@ -38,8 +39,49 @@ async function ensureFonts(): Promise<void> {
   }
 }
 
-/** Signature-friendly badge PNG (640×160). */
-export async function renderBadgeCanvas(stats: Stats): Promise<HTMLCanvasElement> {
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  maxLines: number,
+): string[] {
+  const words = text.split(/\s+/).filter(Boolean)
+  const lines: string[] = []
+  let current = ''
+
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word
+    if (ctx.measureText(next).width <= maxWidth) {
+      current = next
+      continue
+    }
+    if (current) lines.push(current)
+    current = word
+    if (lines.length >= maxLines) break
+  }
+
+  if (lines.length < maxLines && current) {
+    lines.push(current)
+  }
+
+  const fitted = lines.slice(0, maxLines)
+  const consumed = fitted.join(' ')
+  if (consumed.length < text.trim().length && fitted.length > 0) {
+    let last = fitted[fitted.length - 1]
+    while (last.length > 1 && ctx.measureText(`${last}…`).width > maxWidth) {
+      last = last.slice(0, -1).trimEnd()
+    }
+    fitted[fitted.length - 1] = `${last}…`
+  }
+
+  return fitted
+}
+
+/** Signature badge with choice + wisdom quote (720×280). */
+export async function renderBadgeCanvas(
+  stats: Stats,
+  wisdom?: Wisdom,
+): Promise<HTMLCanvasElement> {
   await ensureFonts()
 
   const canvas = document.createElement('canvas')
@@ -60,7 +102,6 @@ export async function renderBadgeCanvas(stats: Stats): Promise<HTMLCanvasElement
         ? 'Я ЗА ХУЁВО'
         : 'ВЫБЕРИ СТОРОНУ'
 
-  // background
   const bg = ctx.createLinearGradient(0, 0, W, H)
   bg.addColorStop(0, '#14201a')
   bg.addColorStop(1, '#0c1210')
@@ -68,36 +109,53 @@ export async function renderBadgeCanvas(stats: Stats): Promise<HTMLCanvasElement
   roundRect(ctx, 0, 0, W, H, 18)
   ctx.fill()
 
-  // left accent bar
   ctx.fillStyle = accent
   ctx.fillRect(0, 0, 10, H)
 
-  // soft glow
   const glow = ctx.createRadialGradient(
-    choice === 'huyevo' ? W - 40 : 80,
-    H / 2,
+    choice === 'huyevo' ? W - 60 : 100,
+    70,
     10,
-    choice === 'huyevo' ? W - 40 : 80,
-    H / 2,
-    140,
+    choice === 'huyevo' ? W - 60 : 100,
+    70,
+    180,
   )
-  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.22)' : 'rgba(61,255,154,0.2)')
+  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.2)' : 'rgba(61,255,154,0.18)')
   glow.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, W, H)
 
-  // brand
   ctx.fillStyle = '#9aab9e'
-  ctx.font = '600 18px Manrope, system-ui, sans-serif'
-  ctx.fillText('PIZDATO.NET', 28, 36)
+  ctx.font = '600 16px Manrope, system-ui, sans-serif'
+  ctx.fillText('PIZDATO.NET · МУДРОСТЬ ДНЯ', 28, 32)
 
-  // main label
+  ctx.fillStyle = accent
+  ctx.font = '700 15px Manrope, system-ui, sans-serif'
+  const tag = choice === 'huyevo' ? 'хуёво' : 'пиздато'
+  const tagW = ctx.measureText(tag).width
+  ctx.fillText(tag, W - 28 - tagW, 32)
+
   ctx.fillStyle = '#f2f5f0'
-  ctx.font = '400 52px "Bebas Neue", Impact, sans-serif'
-  ctx.fillText(label, 28, 92)
+  ctx.font = '400 44px "Bebas Neue", Impact, sans-serif'
+  ctx.fillText(label, 28, 78)
 
-  // stats pills
-  const pillY = 118
+  if (wisdom) {
+    ctx.fillStyle = '#d7e0d8'
+    ctx.font = '600 20px Manrope, system-ui, sans-serif'
+    const lines = wrapText(ctx, wisdom.text, W - 56, 3)
+    let y = 118
+    for (const line of lines) {
+      ctx.fillText(line, 28, y)
+      y += 26
+    }
+    ctx.fillStyle = '#9aab9e'
+    ctx.font = 'italic 600 16px Manrope, system-ui, sans-serif'
+    const author = `— ${wisdom.author}`
+    const aw = ctx.measureText(author).width
+    ctx.fillText(author, W - 28 - aw, y + 8)
+  }
+
+  const pillY = H - 42
   drawPill(ctx, 28, pillY, `пиздато ${p}%`, '#06100b', accentDeep, '#3dff9a')
   const firstW = measurePillWidth(ctx, `пиздато ${p}%`)
   drawPill(
@@ -110,19 +168,12 @@ export async function renderBadgeCanvas(stats: Stats): Promise<HTMLCanvasElement
     '#ff4d3d',
   )
 
-  // corner tag
-  ctx.fillStyle = accent
-  ctx.font = '700 16px Manrope, system-ui, sans-serif'
-  const tag = choice === 'huyevo' ? 'хуёво' : 'пиздато'
-  const tagW = ctx.measureText(tag).width
-  ctx.fillText(tag, W - 28 - tagW, 36)
-
   return canvas
 }
 
 function measurePillWidth(ctx: CanvasRenderingContext2D, label: string): number {
-  ctx.font = '800 16px Manrope, system-ui, sans-serif'
-  return ctx.measureText(label).width + 24
+  ctx.font = '800 15px Manrope, system-ui, sans-serif'
+  return ctx.measureText(label).width + 22
 }
 
 function drawPill(
@@ -134,10 +185,10 @@ function drawPill(
   from: string,
   to: string,
 ) {
-  ctx.font = '800 16px Manrope, system-ui, sans-serif'
-  const padX = 12
+  ctx.font = '800 15px Manrope, system-ui, sans-serif'
+  const padX = 11
   const w = ctx.measureText(label).width + padX * 2
-  const h = 28
+  const h = 26
   const grad = ctx.createLinearGradient(x, y, x + w, y)
   grad.addColorStop(0, from)
   grad.addColorStop(1, to)
@@ -145,11 +196,11 @@ function drawPill(
   roundRect(ctx, x, y, w, h, 6)
   ctx.fill()
   ctx.fillStyle = textColor
-  ctx.fillText(label, x + padX, y + 19)
+  ctx.fillText(label, x + padX, y + 18)
 }
 
-export async function downloadBadge(stats: Stats): Promise<void> {
-  const canvas = await renderBadgeCanvas(stats)
+export async function downloadBadge(stats: Stats, wisdom?: Wisdom): Promise<void> {
+  const canvas = await renderBadgeCanvas(stats, wisdom)
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, 'image/png'),
   )

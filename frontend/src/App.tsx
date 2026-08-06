@@ -139,7 +139,7 @@ export default function App() {
               ))}
             </aside>
 
-            {stats && <SharePanel stats={stats} />}
+            {stats && quotes[0] && <SharePanel stats={stats} wisdom={quotes[0]} />}
           </section>
         )}
 

@@ -35,7 +35,10 @@ export function IconCopy({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
       <rect x="8.5" y="8.5" width="11" height="11" rx="2" {...stroke} />
-      <path {...stroke} d="M15.5 8.5V6.8A2.3 2.3 0 0 0 13.2 4.5H6.8A2.3 2.3 0 0 0 4.5 6.8v6.4a2.3 2.3 0 0 0 2.3 2.3h1.7" />
+      <path
+        {...stroke}
+        d="M15.5 8.5V6.8A2.3 2.3 0 0 0 13.2 4.5H6.8A2.3 2.3 0 0 0 4.5 6.8v6.4a2.3 2.3 0 0 0 2.3 2.3h1.7"
+      />
     </svg>
   )
 }
@@ -63,6 +66,17 @@ export function IconCheck({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
       <path {...stroke} d="m5.5 12.5 4 4 9-9" />
+    </svg>
+  )
+}
+
+export function IconQuote({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M8.5 17.5c-1.7 0-3-1.3-3-3.2 0-2.3 1.7-4.5 4.2-6.1l.7 1.1c-1.5 1-2.4 2.2-2.5 3.4.3-.2.7-.3 1.2-.3 1.4 0 2.4 1 2.4 2.3 0 1.4-1.1 2.8-3 2.8zm8.2 0c-1.7 0-3-1.3-3-3.2 0-2.3 1.7-4.5 4.2-6.1l.7 1.1c-1.5 1-2.4 2.2-2.5 3.4.3-.2.7-.3 1.2-.3 1.4 0 2.4 1 2.4 2.3 0 1.4-1.1 2.8-3 2.8z"
+      />
     </svg>
   )
 }
