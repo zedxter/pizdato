@@ -59,7 +59,16 @@ export default function App() {
       <main className="hero">
         <p className="eyebrow">pizdato.net</p>
         <h1 className="brand">pizdato</h1>
-        <p className="tagline">Мир делится на два лагеря. Выбери сторону.</p>
+        {voted && quotes[0] ? (
+          <blockquote className="quote-block hero-quote">
+            <p className="quote-text">{quotes[0].text}</p>
+            <footer className="quote-footer">
+              <cite className="quote-author">{quotes[0].author}</cite>
+            </footer>
+          </blockquote>
+        ) : (
+          <p className="tagline">Мир делится на два лагеря. Выбери сторону.</p>
+        )}
 
         {!voted ? (
           <div className={`actions ${pending ? 'is-pending' : ''}`}>
