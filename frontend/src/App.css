@@ -265,61 +265,13 @@ button {
   font-weight: 700;
 }
 
-.share-card {
-  padding: 1.15rem 1.2rem 1.05rem;
-  background:
-    linear-gradient(145deg, rgba(61, 255, 154, 0.08), transparent 45%),
-    linear-gradient(320deg, rgba(255, 77, 61, 0.1), transparent 50%),
-    rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--line);
+.badge-preview {
+  display: block;
+  width: 100%;
+  max-width: 34rem;
+  height: auto;
   margin-bottom: 1rem;
-}
-
-.share-card-brand {
-  margin: 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.share-card-choice {
-  margin: 0.55rem 0 0;
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 7vw, 2.6rem);
-  line-height: 0.95;
-  letter-spacing: 0.02em;
-  color: var(--ink);
-}
-
-.share-card-score {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.share-pill {
-  font-size: 0.85rem;
-  font-weight: 800;
-  padding: 0.35rem 0.65rem;
-}
-
-.share-pill-good {
-  color: #06100b;
-  background: linear-gradient(135deg, var(--good), #9dffc8);
-}
-
-.share-pill-bad {
-  color: #1a0503;
-  background: linear-gradient(135deg, var(--bad), #ff9a7a);
-}
-
-.share-card-total {
-  margin: 0.75rem 0 0;
-  color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 600;
+  border: 1px solid var(--line);
 }
 
 .share-actions {
@@ -359,34 +311,12 @@ button {
 }
 
 .share-copy,
-.share-more {
+.share-more,
+.share-badge {
   font: inherit;
-}
-
-.badge-block {
-  margin-top: 1.5rem;
-}
-
-.badge-hint {
-  margin: -0.35rem 0 0.9rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 600;
-  line-height: 1.4;
-  max-width: 28rem;
-}
-
-.badge-preview {
-  display: block;
-  width: 100%;
-  max-width: 34rem;
-  height: auto;
-  margin-bottom: 0.85rem;
-  border: 1px solid var(--line);
 }
 
 .share-badge {
-  font: inherit;
   background: linear-gradient(135deg, rgba(61, 255, 154, 0.18), rgba(255, 77, 61, 0.12));
   border-color: rgba(61, 255, 154, 0.35);
 }

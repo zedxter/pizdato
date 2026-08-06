@@ -18,10 +18,6 @@ export function SharePanel({ stats }: Props) {
   const [badgeUrl, setBadgeUrl] = useState<string | null>(null)
   const [badgeBusy, setBadgeBusy] = useState(false)
   const text = buildShareText(stats)
-  const pizdatoPct =
-    stats.total > 0 ? Math.round((stats.pizdato / stats.total) * 100) : 0
-  const huyevoPct =
-    stats.total > 0 ? Math.round((stats.huyevo / stats.total) * 100) : 0
 
   useEffect(() => {
     let revoked: string | null = null
@@ -76,23 +72,15 @@ export function SharePanel({ stats }: Props) {
     <div className="share">
       <p className="share-heading">Кинь другу — пусть тоже выберет</p>
 
-      <div className="share-card">
-        <p className="share-card-brand">pizdato.net</p>
-        <p className="share-card-choice">
-          {stats.choice === 'pizdato'
-            ? 'Я за пиздато'
-            : stats.choice === 'huyevo'
-              ? 'Я за хуёво'
-              : 'Выбери сторону'}
-        </p>
-        <div className="share-card-score">
-          <span className="share-pill share-pill-good">
-            пиздато {pizdatoPct}%
-          </span>
-          <span className="share-pill share-pill-bad">хуёво {huyevoPct}%</span>
-        </div>
-        <p className="share-card-total">{stats.total} голосов</p>
-      </div>
+      {badgeUrl && (
+        <img
+          className="badge-preview"
+          src={badgeUrl}
+          alt="Бейдж результата pizdato"
+          width={640}
+          height={160}
+        />
+      )}
 
       <div className="share-actions">
         <a
@@ -114,27 +102,6 @@ export function SharePanel({ stats }: Props) {
         <button type="button" className="share-btn share-copy" onClick={() => void onCopy()}>
           {copied ? 'Скопировано' : 'Скопировать'}
         </button>
-        {'share' in navigator && (
-          <button type="button" className="share-btn share-more" onClick={() => void onNative()}>
-            Ещё…
-          </button>
-        )}
-      </div>
-
-      <div className="badge-block">
-        <p className="share-heading">Бейдж для подписи</p>
-        <p className="badge-hint">
-          Скачай PNG и вставь в подпись на форуме, в Telegram-канале или портфолио.
-        </p>
-        {badgeUrl && (
-          <img
-            className="badge-preview"
-            src={badgeUrl}
-            alt="Превью бейджа pizdato"
-            width={640}
-            height={160}
-          />
-        )}
         <button
           type="button"
           className="share-btn share-badge"
@@ -143,6 +110,11 @@ export function SharePanel({ stats }: Props) {
         >
           {badgeBusy ? 'Готовим…' : 'Скачать бейдж PNG'}
         </button>
+        {'share' in navigator && (
+          <button type="button" className="share-btn share-more" onClick={() => void onNative()}>
+            Ещё…
+          </button>
+        )}
       </div>
     </div>
   )
