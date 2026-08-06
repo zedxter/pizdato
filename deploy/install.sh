@@ -33,16 +33,14 @@ sudo cp -a "$FRONTEND_DIST"/. /var/www/pizdato/
 sudo install -m 644 "$ROOT/deploy/pizdato.service" /etc/systemd/system/pizdato.service
 
 if [[ ! -f /etc/pizdato.env ]]; then
-  SALT="$(openssl rand -hex 32)"
   sudo tee /etc/pizdato.env >/dev/null <<EOF
 BIND=127.0.0.1:8080
 DATABASE_URL=sqlite:/var/lib/pizdato/votes.db?mode=rwc
-VOTE_IP_SALT=${SALT}
 COOKIE_SECURE=true
 RUST_LOG=info
 EOF
   sudo chmod 600 /etc/pizdato.env
-  echo "Created /etc/pizdato.env with a fresh VOTE_IP_SALT"
+  echo "Created /etc/pizdato.env"
 fi
 
 echo "==> Configuring Caddy"

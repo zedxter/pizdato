@@ -23,10 +23,6 @@ async fn main() {
 
     let database_url = std::env::var("DATABASE_URL")
         .unwrap_or_else(|_| "sqlite:votes.db?mode=rwc".to_string());
-    let ip_salt = std::env::var("VOTE_IP_SALT").unwrap_or_else(|_| {
-        tracing::warn!("VOTE_IP_SALT not set; using insecure default for development");
-        "dev-insecure-salt-change-me".to_string()
-    });
     let cookie_secure = std::env::var("COOKIE_SECURE")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
@@ -39,7 +35,6 @@ async fn main() {
 
     let state = Arc::new(AppState {
         pool,
-        ip_salt,
         cookie_secure,
     });
 
@@ -61,10 +56,7 @@ async fn main() {
         .await
         .expect("failed to bind");
     tracing::info!("listening on {addr}");
-    axum::serve(
-        listener,
-        app.into_make_service_with_connect_info::<SocketAddr>(),
-    )
-    .await
-    .expect("server error");
+    axum::serve(listener, app)
+        .await
+        .expect("server error");
 }

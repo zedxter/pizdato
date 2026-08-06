@@ -1,6 +1,6 @@
 # Pizdato
 
-Voting site for [pizdato.net](https://pizdato.net): two buttons — **Сделать пиздато** / **Сделать хуёво** — with live counts and one vote per visitor (cookie + hashed IP).
+Voting site for [pizdato.net](https://pizdato.net): two buttons — **Сделать пиздато** / **Сделать хуёво** — with live counts and one vote per visitor (unique HTTP-only cookie).
 
 ## Stack
 
@@ -32,7 +32,7 @@ Open http://localhost:5173 — Vite proxies `/api` to the backend on `:8080`.
 | `GET` | `/api/stats` | Counts + whether this client already voted |
 | `POST` | `/api/vote` | Body `{ "choice": "pizdato" \| "huyevo" }` |
 
-Repeat votes return `409` with current stats. Identity: `voter_id` HTTP-only cookie **or** `SHA256(VOTE_IP_SALT + ip)` — either match blocks a new vote.
+Repeat votes return `409` with current stats. Identity: each visitor gets a unique `voter_id` HTTP-only cookie on first visit; votes are keyed only by that cookie (no IP blocking).
 
 ## Production deploy
 
