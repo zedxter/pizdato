@@ -1,0 +1,21 @@
+[Unit]
+Description=Pizdato voting API
+After=network.target
+
+[Service]
+Type=simple
+User=pizdato
+Group=pizdato
+WorkingDirectory=/opt/pizdato
+EnvironmentFile=/etc/pizdato.env
+ExecStart=/opt/pizdato/backend
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/pizdato
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
