@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Stats } from './api'
+import { downloadBadge, renderBadgeCanvas } from './badge'
 import {
   buildShareText,
   copyShareText,
@@ -14,11 +15,38 @@ type Props = {
 
 export function SharePanel({ stats }: Props) {
   const [copied, setCopied] = useState(false)
+  const [badgeUrl, setBadgeUrl] = useState<string | null>(null)
+  const [badgeBusy, setBadgeBusy] = useState(false)
   const text = buildShareText(stats)
   const pizdatoPct =
     stats.total > 0 ? Math.round((stats.pizdato / stats.total) * 100) : 0
   const huyevoPct =
     stats.total > 0 ? Math.round((stats.huyevo / stats.total) * 100) : 0
+
+  useEffect(() => {
+    let revoked: string | null = null
+    let cancelled = false
+
+    void (async () => {
+      try {
+        const canvas = await renderBadgeCanvas(stats)
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, 'image/png'),
+        )
+        if (!blob || cancelled) return
+        const url = URL.createObjectURL(blob)
+        revoked = url
+        setBadgeUrl(url)
+      } catch {
+        if (!cancelled) setBadgeUrl(null)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      if (revoked) URL.revokeObjectURL(revoked)
+    }
+  }, [stats])
 
   async function onCopy() {
     try {
@@ -35,11 +63,20 @@ export function SharePanel({ stats }: Props) {
     if (!ok) await onCopy()
   }
 
+  async function onDownloadBadge() {
+    setBadgeBusy(true)
+    try {
+      await downloadBadge(stats)
+    } finally {
+      setBadgeBusy(false)
+    }
+  }
+
   return (
     <div className="share">
       <p className="share-heading">Кинь другу — пусть тоже выберет</p>
 
-      <div className="share-card" aria-hidden="true">
+      <div className="share-card">
         <p className="share-card-brand">pizdato.net</p>
         <p className="share-card-choice">
           {stats.choice === 'pizdato'
@@ -82,6 +119,30 @@ export function SharePanel({ stats }: Props) {
             Ещё…
           </button>
         )}
+      </div>
+
+      <div className="badge-block">
+        <p className="share-heading">Бейдж для подписи</p>
+        <p className="badge-hint">
+          Скачай PNG и вставь в подпись на форуме, в Telegram-канале или портфолио.
+        </p>
+        {badgeUrl && (
+          <img
+            className="badge-preview"
+            src={badgeUrl}
+            alt="Превью бейджа pizdato"
+            width={640}
+            height={160}
+          />
+        )}
+        <button
+          type="button"
+          className="share-btn share-badge"
+          disabled={badgeBusy}
+          onClick={() => void onDownloadBadge()}
+        >
+          {badgeBusy ? 'Готовим…' : 'Скачать бейдж PNG'}
+        </button>
       </div>
     </div>
   )

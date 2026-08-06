@@ -363,6 +363,39 @@ button {
   font: inherit;
 }
 
+.badge-block {
+  margin-top: 1.5rem;
+}
+
+.badge-hint {
+  margin: -0.35rem 0 0.9rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  max-width: 28rem;
+}
+
+.badge-preview {
+  display: block;
+  width: 100%;
+  max-width: 34rem;
+  height: auto;
+  margin-bottom: 0.85rem;
+  border: 1px solid var(--line);
+}
+
+.share-badge {
+  font: inherit;
+  background: linear-gradient(135deg, rgba(61, 255, 154, 0.18), rgba(255, 77, 61, 0.12));
+  border-color: rgba(61, 255, 154, 0.35);
+}
+
+.share-badge:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .quotes {
   margin-top: 2rem;
   padding-top: 1.4rem;
