@@ -106,9 +106,9 @@ export async function renderBadgeCanvas(
   const contentRight = W - padX
   const pillH = 26
   const pillY = H - 36 - pillH
-  const titleBaseline = 70
-  const middleTop = titleBaseline + 18
-  const middleBottom = pillY - 18
+  const titleBaseline = 88
+  const middleTop = titleBaseline + 22
+  const middleBottom = pillY - 16
 
   const bg = ctx.createLinearGradient(0, 0, W, H)
   bg.addColorStop(0, '#14201a')
@@ -135,13 +135,13 @@ export async function renderBadgeCanvas(
 
   ctx.fillStyle = '#9aab9e'
   ctx.font = '600 15px Manrope, system-ui, sans-serif'
-  ctx.fillText('PIZDATO.NET · МУДРОСТЬ ДНЯ', padX, 30)
+  ctx.fillText('PIZDATO.NET · МУДРОСТЬ ДНЯ', padX, 34)
 
   ctx.fillStyle = accent
   ctx.font = '700 14px Manrope, system-ui, sans-serif'
   const tag = choice === 'huyevo' ? 'хуёво' : 'пиздато'
   const tagW = ctx.measureText(tag).width
-  ctx.fillText(tag, contentRight - tagW, 30)
+  ctx.fillText(tag, contentRight - tagW, 34)
 
   ctx.fillStyle = '#f2f5f0'
   ctx.font = '400 42px "Bebas Neue", Impact, sans-serif'
