@@ -127,8 +127,6 @@ export default function App() {
 
             <p className="total">Всего голосов: {stats?.total ?? 0}</p>
 
-            {stats && <SharePanel stats={stats} />}
-
             <aside className="quotes" aria-label="Мудрость дня">
               <p className="quotes-heading">Мудрость дня</p>
               {quotes.map((item) => (
@@ -140,6 +138,8 @@ export default function App() {
                 </blockquote>
               ))}
             </aside>
+
+            {stats && <SharePanel stats={stats} />}
           </section>
         )}
 

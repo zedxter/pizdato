@@ -280,54 +280,48 @@ button {
   gap: 0.55rem;
 }
 
-.share-btn {
+.share-icon-btn {
   appearance: none;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.04);
   color: var(--ink);
-  font-weight: 700;
-  font-size: 0.92rem;
-  padding: 0.7rem 0.95rem;
   text-decoration: none;
   cursor: pointer;
   transition:
     transform 0.15s ease,
     background 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 
-.share-btn:hover {
+.share-icon-btn:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(242, 245, 240, 0.28);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(242, 245, 240, 0.3);
+  color: var(--good);
 }
 
-.share-tg:hover {
-  border-color: rgba(61, 255, 154, 0.55);
-}
-
-.share-vk:hover {
-  border-color: rgba(255, 77, 61, 0.45);
-}
-
-.share-copy,
-.share-more,
-.share-badge {
-  font: inherit;
-}
-
-.share-badge {
-  background: linear-gradient(135deg, rgba(61, 255, 154, 0.18), rgba(255, 77, 61, 0.12));
-  border-color: rgba(61, 255, 154, 0.35);
-}
-
-.share-badge:disabled {
-  opacity: 0.6;
+.share-icon-btn:disabled {
+  opacity: 0.55;
   cursor: wait;
+  transform: none;
+}
+
+.share-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+  display: block;
 }
 
 .quotes {
-  margin-top: 2rem;
+  margin-top: 1.75rem;
   padding-top: 1.4rem;
   border-top: 1px solid var(--line);
   max-width: 34rem;

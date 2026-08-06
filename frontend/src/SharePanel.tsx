@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react'
 import type { Stats } from './api'
 import { downloadBadge, renderBadgeCanvas } from './badge'
 import {
+  IconCheck,
+  IconCopy,
+  IconDownload,
+  IconMore,
+  IconTelegram,
+  IconVk,
+} from './ShareIcons'
+import {
   buildShareText,
   copyShareText,
   nativeShare,
@@ -18,6 +26,7 @@ export function SharePanel({ stats }: Props) {
   const [badgeUrl, setBadgeUrl] = useState<string | null>(null)
   const [badgeBusy, setBadgeBusy] = useState(false)
   const text = buildShareText(stats)
+  const canNativeShare = typeof navigator !== 'undefined' && 'share' in navigator
 
   useEffect(() => {
     let revoked: string | null = null
@@ -82,37 +91,55 @@ export function SharePanel({ stats }: Props) {
         />
       )}
 
-      <div className="share-actions">
+      <div className="share-actions" role="group" aria-label="Поделиться">
         <a
-          className="share-btn share-tg"
+          className="share-icon-btn"
           href={telegramShareUrl(text)}
           target="_blank"
           rel="noopener noreferrer"
+          title="Telegram"
+          aria-label="Поделиться в Telegram"
         >
-          Telegram
+          <IconTelegram className="share-icon" />
         </a>
         <a
-          className="share-btn share-vk"
+          className="share-icon-btn"
           href={vkShareUrl(text, stats.choice)}
           target="_blank"
           rel="noopener noreferrer"
+          title="VK"
+          aria-label="Поделиться во ВКонтакте"
         >
-          VK
+          <IconVk className="share-icon" />
         </a>
-        <button type="button" className="share-btn share-copy" onClick={() => void onCopy()}>
-          {copied ? 'Скопировано' : 'Скопировать'}
+        <button
+          type="button"
+          className="share-icon-btn"
+          title={copied ? 'Скопировано' : 'Скопировать текст'}
+          aria-label={copied ? 'Скопировано' : 'Скопировать текст'}
+          onClick={() => void onCopy()}
+        >
+          {copied ? <IconCheck className="share-icon" /> : <IconCopy className="share-icon" />}
         </button>
         <button
           type="button"
-          className="share-btn share-badge"
+          className="share-icon-btn"
+          title="Скачать бейдж PNG"
+          aria-label="Скачать бейдж PNG"
           disabled={badgeBusy}
           onClick={() => void onDownloadBadge()}
         >
-          {badgeBusy ? 'Готовим…' : 'Скачать бейдж PNG'}
+          <IconDownload className="share-icon" />
         </button>
-        {'share' in navigator && (
-          <button type="button" className="share-btn share-more" onClick={() => void onNative()}>
-            Ещё…
+        {canNativeShare && (
+          <button
+            type="button"
+            className="share-icon-btn"
+            title="Ещё"
+            aria-label="Поделиться иначе"
+            onClick={() => void onNative()}
+          >
+            <IconMore className="share-icon" />
           </button>
         )}
       </div>
