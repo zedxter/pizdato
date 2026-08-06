@@ -266,43 +266,28 @@ button {
   font-weight: 700;
 }
 
+/* Блочная цитата: графически выделена → кавычки не ставятся (habr.com/ru/articles/22163) */
 .quote-block {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 0.75rem;
-  align-items: start;
   margin: 0;
+  padding: 1rem 0 1rem 1.1rem;
+  border-left: 3px solid var(--good);
   animation: rise 0.55s ease both;
-}
-
-.quote-mark {
-  display: block;
-  margin-top: 0.05em;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(3.75rem, 11vw, 5.25rem);
-  line-height: 0.65;
-  color: var(--good);
-  opacity: 0.7;
-  user-select: none;
-}
-
-.quote-body {
-  min-width: 0;
-  padding-top: 0.35rem;
 }
 
 .quote-text {
   margin: 0;
-  font-size: clamp(1.05rem, 2.4vw, 1.2rem);
+  font-size: clamp(1.05rem, 2.4vw, 1.22rem);
   font-weight: 700;
   line-height: 1.45;
   color: var(--ink);
 }
 
-.quote-author {
-  display: block;
-  margin: 0.75rem 0 0;
+.quote-footer {
+  margin: 0.85rem 0 0;
   text-align: right;
+}
+
+.quote-author {
   font-size: 0.88rem;
   font-weight: 600;
   font-style: italic;
@@ -310,7 +295,7 @@ button {
 }
 
 .quote-author::before {
-  content: '— ';
+  content: '—\00a0';
 }
 
 .error {

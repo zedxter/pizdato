@@ -130,13 +130,10 @@ export default function App() {
               <p className="quotes-heading">Мудрость дня</p>
               {quotes.map((item) => (
                 <blockquote key={item.text} className="quote-block">
-                  <span className="quote-mark" aria-hidden="true">
-                    „
-                  </span>
-                  <div className="quote-body">
-                    <p className="quote-text">{item.text}</p>
-                    <footer className="quote-author">{item.author}</footer>
-                  </div>
+                  <p className="quote-text">{item.text}</p>
+                  <footer className="quote-footer">
+                    <cite className="quote-author">{item.author}</cite>
+                  </footer>
                 </blockquote>
               ))}
             </aside>
