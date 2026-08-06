@@ -250,6 +250,119 @@ button {
   font-size: 0.95rem;
 }
 
+.share {
+  margin-top: 1.75rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+
+.share-heading {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.share-card {
+  padding: 1.15rem 1.2rem 1.05rem;
+  background:
+    linear-gradient(145deg, rgba(61, 255, 154, 0.08), transparent 45%),
+    linear-gradient(320deg, rgba(255, 77, 61, 0.1), transparent 50%),
+    rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  margin-bottom: 1rem;
+}
+
+.share-card-brand {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.share-card-choice {
+  margin: 0.55rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 7vw, 2.6rem);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.share-card-score {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.share-pill {
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.35rem 0.65rem;
+}
+
+.share-pill-good {
+  color: #06100b;
+  background: linear-gradient(135deg, var(--good), #9dffc8);
+}
+
+.share-pill-bad {
+  color: #1a0503;
+  background: linear-gradient(135deg, var(--bad), #ff9a7a);
+}
+
+.share-card-total {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.share-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 0.7rem 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.share-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(242, 245, 240, 0.28);
+}
+
+.share-tg:hover {
+  border-color: rgba(61, 255, 154, 0.55);
+}
+
+.share-vk:hover {
+  border-color: rgba(255, 77, 61, 0.45);
+}
+
+.share-copy,
+.share-more {
+  font: inherit;
+}
+
 .quotes {
   margin-top: 2rem;
   padding-top: 1.4rem;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { castVote, fetchStats, type Choice, type Stats } from './api'
 import { pickQuotes, type Wisdom } from './quotes'
+import { SharePanel } from './SharePanel'
 import './App.css'
 
 function pct(part: number, total: number): number {
@@ -125,6 +126,8 @@ export default function App() {
             </div>
 
             <p className="total">Всего голосов: {stats?.total ?? 0}</p>
+
+            {stats && <SharePanel stats={stats} />}
 
             <aside className="quotes" aria-label="Мудрость дня">
               <p className="quotes-heading">Мудрость дня</p>
