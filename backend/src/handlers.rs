@@ -54,16 +54,6 @@ fn set_voter_cookie(cookies: &Cookies, voter_id: &str, secure: bool) {
     cookies.add(cookie);
 }
 
-/// Ensure every visitor has a unique voter_id cookie. New cookie = new voter.
-fn ensure_voter_id(cookies: &Cookies, secure: bool) -> String {
-    if let Some(existing) = voter_id_from_cookies(cookies) {
-        return existing;
-    }
-    let voter_id = Uuid::new_v4().to_string();
-    set_voter_cookie(cookies, &voter_id, secure);
-    voter_id
-}
-
 async fn build_stats(state: &AppState, voter_id: &str) -> Result<StatsResponse, sqlx::Error> {
     let (pizdato, huyevo) = state.counts().await?;
     let choice = state.find_vote(voter_id).await?;
@@ -96,11 +86,37 @@ fn internal_err(stats: StatsResponse) -> (StatusCode, Json<ErrorResponse>) {
     )
 }
 
+/// Issue cookie + DB session only from the main-page stats call.
+async fn issue_or_resume_session(
+    state: &AppState,
+    cookies: &Cookies,
+) -> Result<String, sqlx::Error> {
+    if let Some(existing) = voter_id_from_cookies(cookies) {
+        let known = state.session_exists(&existing).await?
+            || state.find_vote(&existing).await?.is_some();
+        if known {
+            state.register_session(&existing).await?;
+            // Refresh cookie lifetime for returning visitors.
+            set_voter_cookie(cookies, &existing, state.cookie_secure);
+            return Ok(existing);
+        }
+        // Unknown/forged cookie — replace with a fresh registered session.
+    }
+
+    let voter_id = Uuid::new_v4().to_string();
+    state.register_session(&voter_id).await?;
+    set_voter_cookie(cookies, &voter_id, state.cookie_secure);
+    Ok(voter_id)
+}
+
 pub async fn stats(
     State(state): State<Arc<AppState>>,
     cookies: Cookies,
 ) -> Result<Json<StatsResponse>, StatusCode> {
-    let voter_id = ensure_voter_id(&cookies, state.cookie_secure);
+    let voter_id = issue_or_resume_session(&state, &cookies).await.map_err(|e| {
+        tracing::error!("session issue error: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
     build_stats(&state, &voter_id).await.map(Json).map_err(|e| {
         tracing::error!("stats error: {e}");
         StatusCode::INTERNAL_SERVER_ERROR
@@ -114,7 +130,53 @@ pub async fn vote(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(body): Json<VoteRequest>,
 ) -> Result<(StatusCode, Json<StatsResponse>), (StatusCode, Json<ErrorResponse>)> {
-    let voter_id = ensure_voter_id(&cookies, state.cookie_secure);
+    let Some(voter_id) = voter_id_from_cookies(&cookies) else {
+        let stats = state
+            .counts()
+            .await
+            .map(|(p, h)| StatsResponse {
+                pizdato: p,
+                huyevo: h,
+                total: p + h,
+                voted: false,
+                choice: None,
+            })
+            .unwrap_or_else(|_| empty_stats());
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "сначала откройте страницу, затем голосуйте".into(),
+                stats,
+            }),
+        ));
+    };
+
+    let registered = state.session_exists(&voter_id).await.map_err(|e| {
+        tracing::error!("session lookup error: {e}");
+        internal_err(empty_stats())
+    })?;
+
+    if !registered {
+        let stats = state
+            .counts()
+            .await
+            .map(|(p, h)| StatsResponse {
+                pizdato: p,
+                huyevo: h,
+                total: p + h,
+                voted: false,
+                choice: None,
+            })
+            .unwrap_or_else(|_| empty_stats());
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(ErrorResponse {
+                error: "сессия не найдена. обновите страницу и попробуйте снова".into(),
+                stats,
+            }),
+        ));
+    }
+
     let ip = client_ip(&headers, addr);
     let ip_hash = state.hash_ip(&ip);
 
@@ -183,7 +245,6 @@ pub async fn vote(
 
     match state.insert_vote(body.choice, &voter_id, &ip_hash).await {
         Ok(()) => {
-            set_voter_cookie(&cookies, &voter_id, state.cookie_secure);
             let stats = build_stats(&state, &voter_id).await.map_err(|e| {
                 tracing::error!("stats after vote error: {e}");
                 internal_err(StatsResponse {

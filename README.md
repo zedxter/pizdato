@@ -32,7 +32,11 @@ Open http://localhost:5173 — Vite proxies `/api` to the backend on `:8080`.
 | `GET` | `/api/stats` | Counts + whether this client already voted |
 | `POST` | `/api/vote` | Body `{ "choice": "pizdato" \| "huyevo" }` |
 
-Repeat votes return `409`. Soft anti-abuse (no captcha/login): hashed IP rate limits — default max **5 votes / IP / day** and min **10s** between votes from the same IP. Identity for “already voted” remains the `voter_id` cookie.
+Repeat votes return `409`. Soft anti-abuse (no captcha/login):
+
+- Cookie `voter_id` is issued **only** via `GET /api/stats` (page load) and stored in `sessions`
+- `POST /api/vote` without a registered cookie is rejected (`403`)
+- Hashed IP rate limits: default max **5 votes / IP / day** and min **10s** between votes from the same IP
 
 Env knobs: `VOTE_IP_SALT`, `VOTE_IP_DAILY_LIMIT`, `VOTE_IP_MIN_INTERVAL_SECS`.
 

@@ -38,7 +38,6 @@ async fn has_ip_hash_column(pool: &SqlitePool) -> Result<bool, sqlx::Error> {
 }
 
 pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::Error> {
-    // Finish a previously interrupted migration.
     if table_exists(pool, "votes_new").await? {
         tracing::info!("finishing interrupted votes migration");
         if table_exists(pool, "votes").await? {
@@ -88,6 +87,27 @@ pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS sessions (
+            voter_id TEXT PRIMARY KEY,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    // Backfill sessions for anyone who already voted (legacy cookies).
+    sqlx::query(
+        r#"
+        INSERT OR IGNORE INTO sessions (voter_id, created_at)
+        SELECT voter_id, created_at FROM votes
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
     Ok(())
 }
 
@@ -122,6 +142,23 @@ impl AppState {
         Ok(row.and_then(|(c,)| Choice::parse(&c)))
     }
 
+    pub async fn session_exists(&self, voter_id: &str) -> Result<bool, sqlx::Error> {
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM sessions WHERE voter_id = ?1")
+                .bind(voter_id)
+                .fetch_one(&self.pool)
+                .await?;
+        Ok(count > 0)
+    }
+
+    pub async fn register_session(&self, voter_id: &str) -> Result<(), sqlx::Error> {
+        sqlx::query("INSERT OR IGNORE INTO sessions (voter_id) VALUES (?1)")
+            .bind(voter_id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
     pub async fn votes_from_ip_last_day(&self, ip_hash: &str) -> Result<i64, sqlx::Error> {
         let count: i64 = sqlx::query_scalar(
             r#"
@@ -137,7 +174,10 @@ impl AppState {
         Ok(count)
     }
 
-    pub async fn seconds_since_last_ip_vote(&self, ip_hash: &str) -> Result<Option<i64>, sqlx::Error> {
+    pub async fn seconds_since_last_ip_vote(
+        &self,
+        ip_hash: &str,
+    ) -> Result<Option<i64>, sqlx::Error> {
         let secs: Option<i64> = sqlx::query_scalar(
             r#"
             SELECT CAST(
