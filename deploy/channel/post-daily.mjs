@@ -3,20 +3,12 @@
  * Daily pizdato.net channel post: live vote stats + "мудрость дня".
  * Uses the existing mcp-telegram StoreSession (user account).
  */
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { homedir } from "node:os";
-import { TelegramClient } from "telegram";
-import { StoreSession } from "telegram/sessions/index.js";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { channelPeer, loadPosterEnv } from "./lib/env.js";
+import { sendChannel } from "./lib/telegram.js";
 
-const CHANNEL = process.env.PIZDATO_CHANNEL || "@pizdato_net";
 const STATS_URL = process.env.PIZDATO_STATS_URL || "https://pizdato.net/api/stats";
-const ENV_FILE =
-  process.env.TELEGRAM_MCP_ENV || join(homedir(), ".config/telegram-mcp.env");
-const CHANNEL_ENV =
-  process.env.PIZDATO_CHANNEL_ENV || join(homedir(), ".config/pizdato-channel.env");
-// mcp-telegram StoreSession writes under cwd + absolute session path.
-// Prefer TELEGRAM_SESSION_CWD; default to process cwd at runtime.
 
 const WISDOMS = [
   "Не всё то пиздато, что блестит.",
@@ -50,29 +42,6 @@ const WISDOMS = [
   "Всё гениальное просто. Особенно две кнопки.",
   "Будь собой. Остальные роли уже заняты хуёво.",
 ];
-
-function loadEnvFile(path) {
-  try {
-    const text = readFileSync(path, "utf8");
-    for (const line of text.split("\n")) {
-      const t = line.trim();
-      if (!t || t.startsWith("#")) continue;
-      const i = t.indexOf("=");
-      if (i < 0) continue;
-      const k = t.slice(0, i).trim();
-      let v = t.slice(i + 1).trim();
-      if (
-        (v.startsWith('"') && v.endsWith('"')) ||
-        (v.startsWith("'") && v.endsWith("'"))
-      ) {
-        v = v.slice(1, -1);
-      }
-      if (!(k in process.env)) process.env[k] = v;
-    }
-  } catch {
-    // optional
-  }
-}
 
 function dayIndex(d = new Date()) {
   const start = Date.UTC(d.getUTCFullYear(), 0, 0);
@@ -129,45 +98,17 @@ function buildMessage(stats) {
 }
 
 async function main() {
-  loadEnvFile(ENV_FILE);
-  loadEnvFile(CHANNEL_ENV);
-
-  const accountId = process.env.TELEGRAM_ACCOUNT_ID;
-  if (!accountId) {
-    throw new Error("TELEGRAM_ACCOUNT_ID missing (set in pizdato-channel.env)");
-  }
-  const sessionCwd = process.env.TELEGRAM_SESSION_CWD || process.cwd();
-  const sessionName =
-    process.env.TELEGRAM_SESSION_NAME ||
-    join(homedir(), ".telegram-agent/sessions", accountId);
-
-  const apiId = parseInt(process.env.TELEGRAM_API_ID || "", 10);
-  const apiHash = process.env.TELEGRAM_API_HASH || "";
-  if (!apiId || !apiHash) {
-    throw new Error("TELEGRAM_API_ID / TELEGRAM_API_HASH missing");
-  }
-
+  loadPosterEnv();
   const stats = await fetchStats();
   const text = buildMessage(stats);
-
-  process.chdir(sessionCwd);
-  const client = new TelegramClient(new StoreSession(sessionName), apiId, apiHash, {
-    connectionRetries: 5,
-  });
-  await client.connect();
-  if (!(await client.isUserAuthorized())) {
-    throw new Error(
-      `Telegram session not authorized for ${accountId} (cwd=${sessionCwd}, session=${sessionName})`,
-    );
-  }
-
-  await client.sendMessage(CHANNEL, { message: text, linkPreview: false });
-  await client.disconnect();
-  console.log(`posted to ${CHANNEL}`);
+  await sendChannel(text, { linkPreview: false });
+  console.log(`posted to ${channelPeer()}`);
   console.log(text);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
