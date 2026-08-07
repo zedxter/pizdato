@@ -25,12 +25,17 @@ if ! id pizdato >/dev/null 2>&1; then
 fi
 
 echo "==> Installing files"
-sudo install -d -o pizdato -g pizdato /var/lib/pizdato
-sudo install -d /opt/pizdato /var/www/pizdato
+sudo install -d -o pizdato -g pizdato /var/lib/pizdato /var/lib/pizdato/backups
+sudo install -d /opt/pizdato /var/www/pizdato /var/log/caddy
 sudo install -m 755 "$BACKEND_BIN" /opt/pizdato/backend
+sudo install -m 755 "$ROOT/deploy/db-admin.sh" /opt/pizdato/db-admin.sh
+sudo install -m 755 "$ROOT/deploy/backup-db.sh" /opt/pizdato/backup-db.sh
 sudo find /var/www/pizdato -mindepth 1 -delete
 sudo cp -a "$FRONTEND_DIST"/. /var/www/pizdato/
 sudo install -m 644 "$ROOT/deploy/pizdato.service" /etc/systemd/system/pizdato.service
+sudo install -m 644 "$ROOT/deploy/pizdato-backup.cron" /etc/cron.d/pizdato-backup
+sudo touch /var/log/pizdato-backup.log
+sudo chown pizdato:pizdato /var/log/pizdato-backup.log
 
 if [[ ! -f /etc/pizdato.env ]]; then
   SALT="$(openssl rand -hex 32)"
@@ -49,6 +54,9 @@ EOF
 fi
 
 echo "==> Configuring Caddy"
+sudo install -d -o caddy -g caddy /var/log/caddy
+sudo rm -f /var/log/caddy/pizdato-access.log
+sudo -u caddy touch /var/log/caddy/pizdato-access.log
 sudo cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak.$(date +%s)" 2>/dev/null || true
 sudo install -m 644 "$ROOT/deploy/Caddyfile" /etc/caddy/Caddyfile
 
@@ -57,3 +65,5 @@ sudo systemctl enable --now pizdato
 sudo systemctl reload caddy || sudo systemctl restart caddy
 
 echo "==> Done. https://pizdato.net (Caddy handles TLS automatically)"
+echo "    DB backups: /var/lib/pizdato/backups (cron 03:15)"
+echo "    Access log: /var/log/caddy/pizdato-access.log"

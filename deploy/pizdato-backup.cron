@@ -1,0 +1,5 @@
+# Daily SQLite backup for pizdato (keeps 7 newest copies)
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+15 3 * * * pizdato /opt/pizdato/backup-db.sh >>/var/log/pizdato-backup.log 2>&1

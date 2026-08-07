@@ -39,14 +39,17 @@ async fn main() {
         tracing::warn!("VOTE_IP_SALT not set; using insecure default for development");
         "dev-insecure-salt-change-me".to_string()
     });
-    let ip_daily_limit = env_i64("VOTE_IP_DAILY_LIMIT", 100);
+    let ip_daily_limit = env_i64("VOTE_IP_DAILY_LIMIT", 10);
     let ip_min_interval_secs = env_i64("VOTE_IP_MIN_INTERVAL_SECS", 10);
     let session_min_age_secs = env_i64("VOTE_SESSION_MIN_AGE_SECS", 2);
+    let ip_403_blacklist_after = env_i64("VOTE_IP_403_BLACKLIST_AFTER", 5);
 
     let pool = db::connect(&database_url)
         .await
         .expect("failed to connect to database");
-    db::migrate(&pool).await.expect("failed to migrate database");
+    db::migrate_with_retry(&pool, 8)
+        .await
+        .expect("failed to migrate database");
 
     let state = Arc::new(AppState {
         pool,
@@ -55,12 +58,14 @@ async fn main() {
         ip_daily_limit,
         ip_min_interval_secs,
         session_min_age_secs,
+        ip_403_blacklist_after,
     });
 
     tracing::info!(
         ip_daily_limit,
         ip_min_interval_secs,
         session_min_age_secs,
+        ip_403_blacklist_after,
         "vote rate limits configured"
     );
 

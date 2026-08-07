@@ -12,6 +12,11 @@ backend/target
 .env
 backend/.env
 /etc/
+# Accidental relative StoreSession nest from mcp-telegram cwd
+/home/
+
+# Channel poster deps
+deploy/channel/node_modules/
 
 # OS / IDE
 .DS_Store

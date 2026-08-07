@@ -1,5 +1,10 @@
+use std::{str::FromStr, time::Duration};
+
 use sha2::{Digest, Sha256};
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
+use sqlx::{
+    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
+    SqlitePool,
+};
 
 use crate::models::Choice;
 
@@ -7,16 +12,62 @@ pub struct AppState {
     pub pool: SqlitePool,
     pub cookie_secure: bool,
     pub ip_salt: String,
+    /// Max POST /api/vote attempts per IP hash per rolling day (any status).
     pub ip_daily_limit: i64,
     pub ip_min_interval_secs: i64,
     pub session_min_age_secs: i64,
+    /// After this many HTTP 403 vote responses in a day, IP is blacklisted.
+    pub ip_403_blacklist_after: i64,
+}
+
+fn is_db_locked(err: &sqlx::Error) -> bool {
+    match err {
+        sqlx::Error::Database(db) => {
+            let msg = db.message();
+            msg.contains("database is locked") || msg.contains("database table is locked")
+        }
+        sqlx::Error::PoolTimedOut => true,
+        _ => false,
+    }
 }
 
 pub async fn connect(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
+    let options = SqliteConnectOptions::from_str(database_url)?
+        .create_if_missing(true)
+        .journal_mode(SqliteJournalMode::Wal)
+        .synchronous(SqliteSynchronous::Normal)
+        .busy_timeout(Duration::from_secs(5));
+
+    // SQLite prefers few writers; WAL still allows concurrent readers on these conns.
     SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect(database_url)
+        .max_connections(2)
+        .acquire_timeout(Duration::from_secs(10))
+        .connect_with(options)
         .await
+}
+
+pub async fn migrate_with_retry(pool: &SqlitePool, attempts: u32) -> Result<(), sqlx::Error> {
+    let attempts = attempts.max(1);
+    let mut delay = Duration::from_millis(200);
+
+    for attempt in 1..=attempts {
+        match migrate(pool).await {
+            Ok(()) => return Ok(()),
+            Err(e) if is_db_locked(&e) && attempt < attempts => {
+                tracing::warn!(
+                    attempt,
+                    next_delay_ms = delay.as_millis() as u64,
+                    error = %e,
+                    "database locked during migrate; retrying"
+                );
+                tokio::time::sleep(delay).await;
+                delay = (delay * 2).min(Duration::from_secs(5));
+            }
+            Err(e) => return Err(e),
+        }
+    }
+
+    unreachable!("migrate_with_retry loop must return")
 }
 
 async fn table_exists(pool: &SqlitePool, name: &str) -> Result<bool, sqlx::Error> {
@@ -109,6 +160,65 @@ pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
+    // Drop stale orphan sessions (e.g. vote-farm cookies) but keep a short
+    // browsing window so an open tab can still vote after /api/stats.
+    let pruned = sqlx::query(
+        r#"
+        DELETE FROM sessions
+        WHERE created_at < datetime('now', '-30 minutes')
+          AND NOT EXISTS (
+              SELECT 1 FROM votes v WHERE v.voter_id = sessions.voter_id
+          )
+        "#,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected();
+    if pruned > 0 {
+        tracing::info!(pruned, "pruned stale orphan sessions");
+    }
+
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS ip_vote_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip_hash TEXT NOT NULL,
+            status INTEGER NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        "CREATE INDEX IF NOT EXISTS idx_ip_vote_requests_ip_created ON ip_vote_requests (ip_hash, created_at)",
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS ip_blacklist (
+            ip_hash TEXT PRIMARY KEY,
+            reason TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    let pruned_req = sqlx::query(
+        "DELETE FROM ip_vote_requests WHERE created_at < datetime('now', '-7 days')",
+    )
+    .execute(pool)
+    .await?
+    .rows_affected();
+    if pruned_req > 0 {
+        tracing::info!(pruned_req, "pruned old ip vote request logs");
+    }
+
     Ok(())
 }
 
@@ -126,12 +236,102 @@ impl AppState {
             SELECT
                 COALESCE(SUM(CASE WHEN choice = 'pizdato' THEN 1 ELSE 0 END), 0),
                 COALESCE(SUM(CASE WHEN choice = 'huyevo' THEN 1 ELSE 0 END), 0)
-            FROM votes
+            FROM votes v
+            WHERE v.ip_hash IS NULL
+               OR NOT EXISTS (
+                    SELECT 1 FROM ip_blacklist b WHERE b.ip_hash = v.ip_hash
+               )
             "#,
         )
         .fetch_one(&self.pool)
         .await?;
         Ok(row)
+    }
+
+    pub async fn is_ip_blacklisted(&self, ip_hash: &str) -> Result<bool, sqlx::Error> {
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM ip_blacklist WHERE ip_hash = ?1")
+                .bind(ip_hash)
+                .fetch_one(&self.pool)
+                .await?;
+        Ok(count > 0)
+    }
+
+    pub async fn record_vote_request(
+        &self,
+        ip_hash: &str,
+        status: i64,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query("INSERT INTO ip_vote_requests (ip_hash, status) VALUES (?1, ?2)")
+            .bind(ip_hash)
+            .bind(status)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
+    pub async fn vote_requests_from_ip_last_day(
+        &self,
+        ip_hash: &str,
+    ) -> Result<i64, sqlx::Error> {
+        let count: i64 = sqlx::query_scalar(
+            r#"
+            SELECT COUNT(*)
+            FROM ip_vote_requests
+            WHERE ip_hash = ?1
+              AND created_at >= datetime('now', '-1 day')
+            "#,
+        )
+        .bind(ip_hash)
+        .fetch_one(&self.pool)
+        .await?;
+        Ok(count)
+    }
+
+    pub async fn forbidden_from_ip_last_day(&self, ip_hash: &str) -> Result<i64, sqlx::Error> {
+        let count: i64 = sqlx::query_scalar(
+            r#"
+            SELECT COUNT(*)
+            FROM ip_vote_requests
+            WHERE ip_hash = ?1
+              AND status = 403
+              AND created_at >= datetime('now', '-1 day')
+            "#,
+        )
+        .bind(ip_hash)
+        .fetch_one(&self.pool)
+        .await?;
+        Ok(count)
+    }
+
+    pub async fn blacklist_ip_if_needed(
+        &self,
+        ip_hash: &str,
+        reason: &str,
+    ) -> Result<bool, sqlx::Error> {
+        if self.is_ip_blacklisted(ip_hash).await? {
+            return Ok(false);
+        }
+        let forbidden = self.forbidden_from_ip_last_day(ip_hash).await?;
+        if forbidden < self.ip_403_blacklist_after {
+            return Ok(false);
+        }
+        let res = sqlx::query(
+            "INSERT OR IGNORE INTO ip_blacklist (ip_hash, reason) VALUES (?1, ?2)",
+        )
+        .bind(ip_hash)
+        .bind(reason)
+        .execute(&self.pool)
+        .await?;
+        if res.rows_affected() > 0 {
+            tracing::warn!(
+                forbidden,
+                threshold = self.ip_403_blacklist_after,
+                "ip blacklisted after repeated 403 vote responses"
+            );
+            return Ok(true);
+        }
+        Ok(false)
     }
 
     pub async fn find_vote(&self, voter_id: &str) -> Result<Option<Choice>, sqlx::Error> {
@@ -174,21 +374,6 @@ impl AppState {
             .execute(&self.pool)
             .await?;
         Ok(())
-    }
-
-    pub async fn votes_from_ip_last_day(&self, ip_hash: &str) -> Result<i64, sqlx::Error> {
-        let count: i64 = sqlx::query_scalar(
-            r#"
-            SELECT COUNT(*)
-            FROM votes
-            WHERE ip_hash = ?1
-              AND created_at >= datetime('now', '-1 day')
-            "#,
-        )
-        .bind(ip_hash)
-        .fetch_one(&self.pool)
-        .await?;
-        Ok(count)
     }
 
     pub async fn seconds_since_last_ip_vote(

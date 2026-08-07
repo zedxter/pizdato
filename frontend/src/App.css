@@ -38,6 +38,8 @@ button {
 
 .page {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 100dvh;
   overflow: hidden;
   background:
@@ -91,12 +93,16 @@ button {
 .hero {
   position: relative;
   z-index: 1;
-  min-height: 100dvh;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: clamp(1.5rem, 5vw, 4rem);
+  width: 100%;
   max-width: 56rem;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  text-align: center;
 }
 
 .eyebrow {
@@ -106,6 +112,26 @@ button {
   text-transform: uppercase;
   color: var(--muted);
   animation: rise 0.7s ease both;
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 3.2vw, 1.85rem);
+  margin: 0.5rem 0 0.25rem;
+  padding: 0.35rem 0 0.15rem;
+  animation: rise 0.75s ease both;
+}
+
+.brand-mark {
+  width: clamp(5rem, 15vw, 8rem);
+  height: clamp(5rem, 15vw, 8rem);
+  border-radius: 22%;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .brand {
@@ -124,7 +150,7 @@ button {
 }
 
 .tagline {
-  margin: 1.25rem 0 0;
+  margin: 1.25rem auto 0;
   max-width: 28rem;
   font-size: clamp(1.05rem, 2.4vw, 1.35rem);
   font-weight: 600;
@@ -133,16 +159,27 @@ button {
   animation: rise 0.8s ease 0.12s both;
 }
 
+.chance-note {
+  margin: 0.85rem auto 0;
+  max-width: 28rem;
+  font-size: clamp(0.98rem, 2.1vw, 1.12rem);
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--muted);
+  animation: rise 0.85s ease 0.18s both;
+}
+
 .hero-quote {
   margin-top: 1.35rem;
+  width: 100%;
   max-width: 34rem;
   animation: rise 0.8s ease 0.12s both;
 }
 
 .quote-block {
   margin: 0;
-  padding: 1rem 0 1rem 1.1rem;
-  border-left: 3px solid var(--good);
+  padding: 1.1rem 0.5rem 0;
+  border-top: 3px solid var(--good);
 }
 
 .quote-text {
@@ -155,7 +192,7 @@ button {
 
 .quote-footer {
   margin: 0.85rem 0 0;
-  text-align: right;
+  text-align: center;
 }
 
 .quote-author {
@@ -170,11 +207,14 @@ button {
 }
 
 .actions {
-  margin-top: clamp(2rem, 6vw, 3.5rem);
+  margin-top: clamp(1.5rem, 4.5vw, 2.4rem);
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.9rem;
-  animation: rise 0.85s ease 0.2s both;
+  width: 100%;
+  max-width: 34rem;
+  animation: rise 0.85s ease 0.24s both;
 }
 
 .actions.is-pending {
@@ -222,6 +262,7 @@ button {
 
 .results {
   margin-top: clamp(2rem, 6vw, 3.5rem);
+  width: 100%;
   max-width: 34rem;
 }
 
@@ -230,7 +271,7 @@ button {
 }
 
 .voted-note {
-  margin: 0 0 1.1rem;
+  margin: 0 auto 1.1rem;
   font-weight: 700;
   font-size: 1.1rem;
   line-height: 1.35;
@@ -306,13 +347,14 @@ button {
   width: 100%;
   max-width: 34rem;
   height: auto;
-  margin-bottom: 1rem;
+  margin: 0 auto 1rem;
   border: 1px solid var(--line);
 }
 
 .share-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.55rem;
 }
 
@@ -356,10 +398,78 @@ button {
   display: block;
 }
 
-.error {
+.error-block {
   margin-top: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+}
+
+.error {
+  margin: 0;
   color: #ffb4ab;
   font-weight: 600;
+}
+
+.retry-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0.55rem 0.95rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.retry-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(242, 245, 240, 0.3);
+}
+
+.retry-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.site-footer {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding: 1.5rem 1.25rem 2rem;
+  text-align: center;
+  animation: rise 0.9s ease 0.28s both;
+}
+
+.channel-link {
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.channel-link span {
+  color: var(--ink);
+}
+
+.channel-link:hover {
+  color: var(--ink);
+  border-bottom-color: rgba(242, 245, 240, 0.35);
+}
+
+.channel-link:hover span {
+  color: var(--good);
 }
 
 @keyframes rise {

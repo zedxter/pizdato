@@ -1,0 +1,13 @@
+{
+  "name": "pizdato-channel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Daily stats + wisdom posts to @pizdato_net",
+  "scripts": {
+    "post": "node post-daily.mjs"
+  },
+  "dependencies": {
+    "telegram": "^2.26.22"
+  }
+}

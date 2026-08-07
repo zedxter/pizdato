@@ -1,9 +1,11 @@
 # pizdato.net — static frontend + API reverse proxy
-# Existing VS Code tunnel path kept for compatibility.
 pizdato.net {
-	handle /_vs_code_z/* {
-		uri strip_prefix /_vs_code_z
-		reverse_proxy 127.0.0.1:42424
+	log {
+		output file /var/log/caddy/pizdato-access.log {
+			roll_size 50mb
+			roll_keep 7
+			roll_keep_for 168h
+		}
 	}
 
 	handle /api/* {

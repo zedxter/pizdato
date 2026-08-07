@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { castVote, fetchStats, type Choice, type Stats } from './api'
+import { castVote, fetchStatsWithRetry, type Choice, type Stats } from './api'
 import { pickQuotes, type Wisdom } from './quotes'
 import { SharePanel } from './SharePanel'
 import './App.css'
@@ -13,14 +13,21 @@ export default function App() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [loadingStats, setLoadingStats] = useState(true)
   const [justVoted, setJustVoted] = useState(false)
   const [quotes, setQuotes] = useState<Wisdom[]>(() => pickQuotes(1))
   const [canVote, setCanVote] = useState(false)
+  const [statsReload, setStatsReload] = useState(0)
 
   useEffect(() => {
     let cancelled = false
     let unlockTimer: number | undefined
-    fetchStats()
+
+    setLoadingStats(true)
+    setError(null)
+    setCanVote(false)
+
+    void fetchStatsWithRetry(3)
       .then((s) => {
         if (cancelled) return
         setStats(s)
@@ -29,14 +36,22 @@ export default function App() {
           if (!cancelled) setCanVote(true)
         }, 2000)
       })
-      .catch((e: Error) => {
-        if (!cancelled) setError(e.message)
+      .catch((e: unknown) => {
+        if (cancelled) return
+        setStats(null)
+        setError(
+          e instanceof Error ? e.message : 'Не удалось загрузить статистику',
+        )
       })
+      .finally(() => {
+        if (!cancelled) setLoadingStats(false)
+      })
+
     return () => {
       cancelled = true
       if (unlockTimer !== undefined) window.clearTimeout(unlockTimer)
     }
-  }, [])
+  }, [statsReload])
 
   async function vote(choice: Choice) {
     if (stats?.voted || pending || !canVote) return
@@ -66,7 +81,17 @@ export default function App() {
 
       <main className="hero">
         <p className="eyebrow">pizdato.net</p>
-        <h1 className="brand">pizdato</h1>
+        <div className="brand-lockup">
+          <img
+            className="brand-mark"
+            src="/logo.png"
+            width={160}
+            height={160}
+            alt=""
+            decoding="async"
+          />
+          <h1 className="brand">pizdato</h1>
+        </div>
         {voted && quotes[0] ? (
           <blockquote className="quote-block hero-quote">
             <p className="quote-text">{quotes[0].text}</p>
@@ -75,7 +100,12 @@ export default function App() {
             </footer>
           </blockquote>
         ) : (
-          <p className="tagline">Мир делится на два лагеря. Выбери сторону.</p>
+          <>
+            <p className="tagline">Мир делится на два лагеря.</p>
+            <p className="chance-note">
+              У тебя только один шанс повлиять на этот мир — выбирай с умом.
+            </p>
+          </>
         )}
 
         {!voted ? (
@@ -83,7 +113,7 @@ export default function App() {
             <button
               type="button"
               className="btn btn-good"
-              disabled={pending || !stats || !canVote}
+              disabled={pending || !stats || !canVote || loadingStats}
               onClick={() => void vote('pizdato')}
             >
               Сделать пиздато
@@ -91,7 +121,7 @@ export default function App() {
             <button
               type="button"
               className="btn btn-bad"
-              disabled={pending || !stats || !canVote}
+              disabled={pending || !stats || !canVote || loadingStats}
               onClick={() => void vote('huyevo')}
             >
               Сделать хуёво
@@ -148,8 +178,31 @@ export default function App() {
           </section>
         )}
 
-        {error && <p className="error">{error}</p>}
+        {error && (
+          <div className="error-block">
+            <p className="error">{error}</p>
+            <button
+              type="button"
+              className="retry-btn"
+              disabled={loadingStats}
+              onClick={() => setStatsReload((n) => n + 1)}
+            >
+              {loadingStats ? 'Загрузка…' : 'Обновить'}
+            </button>
+          </div>
+        )}
       </main>
+
+      <footer className="site-footer">
+        <a
+          className="channel-link"
+          href="https://t.me/pizdato_net"
+          target="_blank"
+          rel="noopener noreferrer me"
+        >
+          Telegram-канал <span aria-hidden="true">@pizdato_net</span>
+        </a>
+      </footer>
     </div>
   )
 }

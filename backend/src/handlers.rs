@@ -86,6 +86,52 @@ fn internal_err(stats: StatsResponse) -> (StatusCode, Json<ErrorResponse>) {
     )
 }
 
+async fn counts_stats(state: &AppState) -> StatsResponse {
+    state
+        .counts()
+        .await
+        .map(|(p, h)| StatsResponse {
+            pizdato: p,
+            huyevo: h,
+            total: p + h,
+            voted: false,
+            choice: None,
+        })
+        .unwrap_or_else(|_| empty_stats())
+}
+
+/// Log vote attempt; on 403, maybe blacklist the IP.
+async fn note_vote_outcome(state: &AppState, ip_hash: &str, status: StatusCode) {
+    let code = status.as_u16() as i64;
+    if let Err(e) = state.record_vote_request(ip_hash, code).await {
+        tracing::error!("record vote request error: {e}");
+        return;
+    }
+    if status == StatusCode::FORBIDDEN {
+        let reason = format!(
+            ">= {} HTTP 403 vote responses in 24h",
+            state.ip_403_blacklist_after
+        );
+        if let Err(e) = state.blacklist_ip_if_needed(ip_hash, &reason).await {
+            tracing::error!("blacklist check error: {e}");
+        }
+    }
+}
+
+fn reject(
+    status: StatusCode,
+    error: impl Into<String>,
+    stats: StatsResponse,
+) -> (StatusCode, Json<ErrorResponse>) {
+    (
+        status,
+        Json(ErrorResponse {
+            error: error.into(),
+            stats,
+        }),
+    )
+}
+
 /// Issue cookie + DB session only from the main-page stats call.
 async fn issue_or_resume_session(
     state: &AppState,
@@ -130,24 +176,44 @@ pub async fn vote(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(body): Json<VoteRequest>,
 ) -> Result<(StatusCode, Json<StatsResponse>), (StatusCode, Json<ErrorResponse>)> {
-    let Some(voter_id) = voter_id_from_cookies(&cookies) else {
-        let stats = state
-            .counts()
-            .await
-            .map(|(p, h)| StatsResponse {
-                pizdato: p,
-                huyevo: h,
-                total: p + h,
-                voted: false,
-                choice: None,
-            })
-            .unwrap_or_else(|_| empty_stats());
-        return Err((
+    let ip = client_ip(&headers, addr);
+    let ip_hash = state.hash_ip(&ip);
+
+    let blacklisted = state.is_ip_blacklisted(&ip_hash).await.map_err(|e| {
+        tracing::error!("blacklist lookup error: {e}");
+        internal_err(empty_stats())
+    })?;
+    if blacklisted {
+        note_vote_outcome(&state, &ip_hash, StatusCode::FORBIDDEN).await;
+        return Err(reject(
             StatusCode::FORBIDDEN,
-            Json(ErrorResponse {
-                error: "сначала откройте страницу, затем голосуйте".into(),
-                stats,
-            }),
+            "голос с этого адреса не учитывается",
+            counts_stats(&state).await,
+        ));
+    }
+
+    let day_requests = state
+        .vote_requests_from_ip_last_day(&ip_hash)
+        .await
+        .map_err(|e| {
+            tracing::error!("ip request daily lookup error: {e}");
+            internal_err(empty_stats())
+        })?;
+    if day_requests >= state.ip_daily_limit {
+        note_vote_outcome(&state, &ip_hash, StatusCode::FORBIDDEN).await;
+        return Err(reject(
+            StatusCode::FORBIDDEN,
+            "с этого адреса слишком много попыток за сутки",
+            counts_stats(&state).await,
+        ));
+    }
+
+    let Some(voter_id) = voter_id_from_cookies(&cookies) else {
+        note_vote_outcome(&state, &ip_hash, StatusCode::FORBIDDEN).await;
+        return Err(reject(
+            StatusCode::FORBIDDEN,
+            "сначала откройте страницу, затем голосуйте",
+            counts_stats(&state).await,
         ));
     };
 
@@ -157,23 +223,11 @@ pub async fn vote(
     })?;
 
     if !registered {
-        let stats = state
-            .counts()
-            .await
-            .map(|(p, h)| StatsResponse {
-                pizdato: p,
-                huyevo: h,
-                total: p + h,
-                voted: false,
-                choice: None,
-            })
-            .unwrap_or_else(|_| empty_stats());
-        return Err((
+        note_vote_outcome(&state, &ip_hash, StatusCode::FORBIDDEN).await;
+        return Err(reject(
             StatusCode::FORBIDDEN,
-            Json(ErrorResponse {
-                error: "сессия не найдена. обновите страницу и попробуйте снова".into(),
-                stats,
-            }),
+            "сессия не найдена. обновите страницу и попробуйте снова",
+            counts_stats(&state).await,
         ));
     }
 
@@ -186,17 +240,13 @@ pub async fn vote(
         let stats = build_stats(&state, &voter_id)
             .await
             .unwrap_or_else(|_| empty_stats());
-        return Err((
+        note_vote_outcome(&state, &ip_hash, StatusCode::TOO_MANY_REQUESTS).await;
+        return Err(reject(
             StatusCode::TOO_MANY_REQUESTS,
-            Json(ErrorResponse {
-                error: "подождите секунду и попробуйте снова".into(),
-                stats,
-            }),
+            "подождите секунду и попробуйте снова",
+            stats,
         ));
     }
-
-    let ip = client_ip(&headers, addr);
-    let ip_hash = state.hash_ip(&ip);
 
     let already = state.find_vote(&voter_id).await.map_err(|e| {
         tracing::error!("vote lookup error: {e}");
@@ -211,12 +261,12 @@ pub async fn vote(
             voted: true,
             choice: already,
         });
-        return Err((
+        // Conflict is normal re-click — still counts toward daily request budget.
+        note_vote_outcome(&state, &ip_hash, StatusCode::CONFLICT).await;
+        return Err(reject(
             StatusCode::CONFLICT,
-            Json(ErrorResponse {
-                error: "вы уже проголосовали".into(),
-                stats,
-            }),
+            "вы уже проголосовали",
+            stats,
         ));
     }
 
@@ -233,36 +283,18 @@ pub async fn vote(
             let stats = build_stats(&state, &voter_id)
                 .await
                 .unwrap_or_else(|_| empty_stats());
-            return Err((
+            note_vote_outcome(&state, &ip_hash, StatusCode::TOO_MANY_REQUESTS).await;
+            return Err(reject(
                 StatusCode::TOO_MANY_REQUESTS,
-                Json(ErrorResponse {
-                    error: "слишком часто. подождите немного и попробуйте снова".into(),
-                    stats,
-                }),
+                "слишком часто. подождите немного и попробуйте снова",
+                stats,
             ));
         }
     }
 
-    let day_count = state.votes_from_ip_last_day(&ip_hash).await.map_err(|e| {
-        tracing::error!("ip daily lookup error: {e}");
-        internal_err(empty_stats())
-    })?;
-
-    if day_count >= state.ip_daily_limit {
-        let stats = build_stats(&state, &voter_id)
-            .await
-            .unwrap_or_else(|_| empty_stats());
-        return Err((
-            StatusCode::TOO_MANY_REQUESTS,
-            Json(ErrorResponse {
-                error: "с этого адреса уже много голосов за сутки. загляните завтра".into(),
-                stats,
-            }),
-        ));
-    }
-
     match state.insert_vote(body.choice, &voter_id, &ip_hash).await {
         Ok(()) => {
+            note_vote_outcome(&state, &ip_hash, StatusCode::OK).await;
             let stats = build_stats(&state, &voter_id).await.map_err(|e| {
                 tracing::error!("stats after vote error: {e}");
                 internal_err(StatsResponse {
@@ -285,12 +317,11 @@ pub async fn vote(
                         voted: true,
                         choice: None,
                     });
-                    return Err((
+                    note_vote_outcome(&state, &ip_hash, StatusCode::CONFLICT).await;
+                    return Err(reject(
                         StatusCode::CONFLICT,
-                        Json(ErrorResponse {
-                            error: "вы уже проголосовали".into(),
-                            stats,
-                        }),
+                        "вы уже проголосовали",
+                        stats,
                     ));
                 }
             }
