@@ -26,7 +26,8 @@ pizdato.net {
 
 	handle {
 		root * /var/www/pizdato
-		try_files {path} /index.html
+		# Prefer real files, then MPA shells (e.g. /issledovanie → issledovanie.html), else SPA
+		try_files {path} {path}.html {path}/index.html /index.html
 		file_server
 		header {
 			X-Content-Type-Options nosniff

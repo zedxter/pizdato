@@ -116,10 +116,31 @@ Public surfaces: [pizdato.net](https://pizdato.net), [t.me/pizdato_net](https://
 
 ## SEO
 
-Technical SEO is set up (`robots.txt`, `sitemap.xml`, Open Graph, JSON-LD, canonical). To appear in search:
+Technical SEO: `robots.txt`, `sitemap.xml`, Open Graph, JSON-LD, canonicals.
+
+Crawlable shells:
+
+- `/` → `index.html` (vote page meta)
+- `/issledovanie` → `issledovanie.html` (Article + BreadcrumbList meta, noscript excerpt); Caddy maps clean URL via `try_files … {path}.html`
+
+To appear in search:
 
 1. [Google Search Console](https://search.google.com/search-console) — add `https://pizdato.net/`, submit sitemap `https://pizdato.net/sitemap.xml`
-2. [Yandex Webmaster](https://webmaster.yandex.ru/) — same site + sitemap; optional meta verification tag can go in `frontend/index.html`
+2. [Yandex Webmaster](https://webmaster.yandex.ru/) — same site + sitemap
+
+### Content roadmap (next indexable pages)
+
+Same visual language, footer links, dedicated `*.html` shells + sitemap entries:
+
+| Path | Role | Notes |
+|------|------|--------|
+| `/kak-eto-rabotaet` | How voting works | One vote, session cookie, soft anti-abuse — public copy only |
+| `/mudrost` | Wisdom archive | Rotating/site quotes; shareable permalinks later |
+| `/statistika` | Live stats explainer | Aggregates + what the bars mean; link to MCP `/mcp` as curiosity |
+| `/faq` | Short FAQ | 4–6 questions people actually ask |
+| `/issledovanie/*` | Mini-essays | Optional series: like/dislike, equality, carnival language |
+
+Link each new URL from the footer and from Telegram posts (not only the homepage). Prefer fewer strong pages over a thin content farm.
 
 Ranking still depends on links, demand, and time — this only makes the site crawlable and understandable.
 
