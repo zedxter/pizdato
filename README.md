@@ -21,6 +21,7 @@ One meaningful vote per visitor is enforced with a soft anti-abuse layer (HTTP-o
 
 - Before vote: brand + tagline + two vote buttons (buttons unlock ~2s after stats load)
 - After vote: wisdom quote in the hero, live % bars, share panel with badge preview (Telegram / VK / copy / download / native share)
+- Essay: [pizdato.net/issledovanie](https://pizdato.net/issledovanie) — research piece on binary oppositions (linked from the footer)
 - Frontend retries `GET /api/stats` a few times and shows **Обновить** if the API is briefly unavailable
 
 ## Development

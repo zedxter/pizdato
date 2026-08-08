@@ -194,14 +194,22 @@ export default function App() {
       </main>
 
       <footer className="site-footer">
-        <a
-          className="channel-link"
-          href="https://t.me/pizdato_net"
-          target="_blank"
-          rel="noopener noreferrer me"
-        >
-          Telegram-канал <span aria-hidden="true">@pizdato_net</span>
-        </a>
+        <div className="footer-nav">
+          <a className="channel-link" href="/issledovanie">
+            Исследование
+          </a>
+          <span className="footer-sep" aria-hidden="true">
+            ·
+          </span>
+          <a
+            className="channel-link"
+            href="https://t.me/pizdato_net"
+            target="_blank"
+            rel="noopener noreferrer me"
+          >
+            Telegram-канал <span aria-hidden="true">@pizdato_net</span>
+          </a>
+        </div>
       </footer>
     </div>
   )

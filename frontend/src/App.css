@@ -447,6 +447,19 @@ button {
   animation: rise 0.9s ease 0.28s both;
 }
 
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.85rem 1.5rem;
+}
+
+.footer-sep {
+  color: rgba(242, 245, 240, 0.28);
+  user-select: none;
+}
+
 .channel-link {
   color: var(--muted);
   font-size: 0.95rem;
@@ -495,5 +508,13 @@ button {
 @media (max-width: 560px) {
   .btn {
     width: 100%;
+  }
+
+  .footer-nav {
+    gap: 0.55rem 0.85rem;
+  }
+
+  .channel-link {
+    font-size: 0.88rem;
   }
 }
