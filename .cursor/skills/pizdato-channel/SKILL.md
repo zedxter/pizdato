@@ -16,6 +16,8 @@ description: >-
 
 ## Evening post structure
 
+Topic: the most **absurd / funny / quirky** story of the day — not hard politics, war, or tragedy-as-comedy.
+
 1. Title line: `Вечерний разбор: пиздато или хуёво`
 2. 2–4 short paragraphs — retell the news in own words (facts not invented)
 3. `Пиздато:` 1–2 sentences

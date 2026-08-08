@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 /**
- * Daily pizdato.net channel post: live vote stats + "мудрость дня".
+ * Daily pizdato.net channel post: live vote stats + top news of the day + wisdom.
  * Uses the existing mcp-telegram StoreSession (user account).
+ *
+ *   node post-daily.mjs           # post to channel
+ *   node post-daily.mjs --preview # DM owner only
  */
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { topDiscussedNews } from "./lib/db.js";
 import { channelPeer, loadPosterEnv } from "./lib/env.js";
-import { sendChannel } from "./lib/telegram.js";
+import { notifyOwner, sendChannel } from "./lib/telegram.js";
 
 const STATS_URL = process.env.PIZDATO_STATS_URL || "https://pizdato.net/api/stats";
 
@@ -74,7 +78,7 @@ async function fetchStats() {
   return res.json();
 }
 
-function buildMessage(stats) {
+export function buildMessage(stats, topNews = null) {
   const p = Number(stats.pizdato) || 0;
   const h = Number(stats.huyevo) || 0;
   const t = Number(stats.total) || p + h;
@@ -82,25 +86,60 @@ function buildMessage(stats) {
   const hp = t > 0 ? Math.round((h / t) * 100) : 0;
   const wisdom = wisdomForToday();
 
-  return [
+  const lines = [
     `📊 Статы pizdato.net — ${formatRuDate()}`,
     "",
     `пиздато  ${bar(p, t)}  ${p} (${pp}%)`,
     `хуёво    ${bar(h, t)}  ${h} (${hp}%)`,
     `всего: ${t}`,
+  ];
+
+  if (topNews) {
+    const isPizdato = topNews.verdict === "pizdato";
+    const label = isPizdato ? "пиздато" : "хуёво";
+    const thumb = isPizdato ? "👍" : "👎";
+    const reason = String(topNews.reason || "").trim();
+    lines.push(
+      "",
+      "📰 Топ-новость за прошедшие сутки",
+      topNews.title,
+      `Вердикт: ${thumb} ${label}`,
+    );
+    if (reason) lines.push(`Почему: ${reason}`);
+    if (topNews.url) lines.push(topNews.url);
+  }
+
+  lines.push(
     "",
     `🧠 Мудрость дня`,
     `«${wisdom}»`,
     "",
     "Мир ждёт твоего голоса. Остальное — уже легенда:",
     "https://pizdato.net",
-  ].join("\n");
+  );
+
+  return lines.join("\n");
 }
 
 async function main() {
   loadPosterEnv();
+  const previewOnly = process.argv.includes("--preview");
   const stats = await fetchStats();
-  const text = buildMessage(stats);
+  let topNews = null;
+  try {
+    topNews = topDiscussedNews({ hours: 24 });
+  } catch (e) {
+    console.warn("top news unavailable:", e.message);
+  }
+  const text = buildMessage(stats, topNews);
+
+  if (previewOnly) {
+    await notifyOwner(text, "👀 morning preview");
+    console.log("preview sent to owner");
+    console.log(text);
+    return;
+  }
+
   await sendChannel(text, { linkPreview: false });
   console.log(`posted to ${channelPeer()}`);
   console.log(text);

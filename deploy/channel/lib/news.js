@@ -136,6 +136,115 @@ async function fetchFeed(url) {
   return parseRss(await res.text(), url);
 }
 
+function htmlToText(html) {
+  return String(html || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<\/(p|div|br|li|h[1-6]|tr|article|section)>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => {
+      try {
+        return String.fromCodePoint(Number(n));
+      } catch {
+        return " ";
+      }
+    })
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+function extractCanonicalUrl(html, baseUrl) {
+  const patterns = [
+    /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+    /<meta[^>]+property=["']og:url["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:url["']/i,
+  ];
+  for (const re of patterns) {
+    const m = html.match(re);
+    if (m?.[1]) {
+      try {
+        return new URL(m[1], baseUrl).href;
+      } catch {
+        // ignore
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Download article page and return plain text for LLM verdict.
+ * Follows redirects; best-effort for Google News wrappers.
+ */
+export async function fetchArticleBody(url, { maxChars = 7000 } = {}) {
+  const ua =
+    "Mozilla/5.0 (compatible; pizdato-channel-bot/1.1; +https://pizdato.net)";
+  const notes = [];
+  let current = url;
+
+  const get = async (target) => {
+    const res = await fetch(target, {
+      headers: {
+        "User-Agent": ua,
+        Accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "ru,en;q=0.8",
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) throw new Error(`article HTTP ${res.status}`);
+    const finalUrl = res.url || target;
+    const html = await res.text();
+    return { finalUrl, html };
+  };
+
+  try {
+    let { finalUrl, html } = await get(current);
+
+    // Google News often wraps the publisher page — hop to canonical if different.
+    if (/news\.google\.com/i.test(finalUrl) || /news\.google\.com/i.test(current)) {
+      const canon = extractCanonicalUrl(html, finalUrl);
+      if (canon && !/news\.google\.com/i.test(canon)) {
+        notes.push(`resolved google news → ${canon}`);
+        ({ finalUrl, html } = await get(canon));
+      } else {
+        notes.push("google news wrapper; using page text as-is");
+      }
+    }
+
+    let text = htmlToText(html);
+    // Prefer <article> slice if present and long enough.
+    const articleMatch = html.match(/<article[\s\S]*?<\/article>/i);
+    if (articleMatch) {
+      const articleText = htmlToText(articleMatch[0]);
+      if (articleText.length > 400) text = articleText;
+    }
+
+    text = text.replace(/\s+\n/g, "\n").trim();
+    if (text.length < 120) {
+      notes.push(`thin article body (${text.length} chars)`);
+    }
+    if (text.length > maxChars) {
+      text = `${text.slice(0, maxChars).trim()}…`;
+    }
+
+    return { text, finalUrl, notes };
+  } catch (e) {
+    notes.push(`article fetch failed: ${e.message}`);
+    return { text: "", finalUrl: url, notes };
+  }
+}
+
 function loadState() {
   try {
     return JSON.parse(readFileSync(STATE_FILE, "utf8"));
@@ -264,9 +373,39 @@ function scoreItem(item, clusterSize = 1) {
   return score;
 }
 
-export async function pickNews() {
-  const state = loadState();
-  const posted = new Set(state.postedUrls);
+/** Heavy / dull topics — not for evening «абсурд дня». */
+const EVENING_HARD_SKIP_RE =
+  /санкц|выборы|президент|правительств|госдум|сенат|конгресс|парламент|трамп|путин|байден|нато|мид\b|дипломат|законпроект|депутат|министр|минпром|минвест|минюст|кремл|белый дом|мобилиз|израил|хамас|орган(ы|ов)?\b|донор|трансплант|пересадк|инфаркт|онколог|рак\b|погиб|убит|теракт|расстрел|катастроф|землетряс|ураган|наводнен|газпром|хранилищ|инфляц|ликвидн|госконтракт|госзакуп|мигрант|нежелательн|дериватив|заблокированн|умерл|умерла|\bумер\b|эвтанази|суицид|похорон/i;
+
+/** Signals that a story is absurd / funny / delightfully weird. */
+const ABSURD_RE =
+  /абсурд|курьёз|курьез|смешн|забавн|розыгрыш|опечатка|перепутал|вместо\s|сбежал|зоопарк|в квартире|пенсионерк|крокодил|удав|кот[аыу]|собак|попуга|хомяк|капибар|енот|жираф|слон|обезьян|пингвин|утка|белка|медвед(?!ев)|голый|трусах|блогер|лерчек|титок|\bмем\b|rm\s*-rf|удалила данные|nintendo|mamma mia|кофе натощак|утренней привычк|каникул|вирусн(ых|ой)?\s+игр|суд обязал|роскошн\w*\s+автомобил|автомобил\w*\s+блогер|claude|chatgpt|взломал.*ии|ии.*взлом|антроп/i;
+
+function absurdScore(item) {
+  const t = `${item.title} ${item.summary || ""}`;
+  if (EVENING_HARD_SKIP_RE.test(t) || SKIP_RE.test(t)) return -999;
+  if (/news\.google\.com/i.test(item.url)) return -40;
+
+  // Gate: without an absurd/funny signal, keep score ≤0 so evening won't pick it.
+  if (!ABSURD_RE.test(t)) {
+    return Math.min(item.clusterSize || 1, 3) - 5;
+  }
+
+  let s = 60;
+  s += Math.min(item.clusterSize || 1, 6) * 4;
+  s += Math.max(0, item.score || 0) * 0.1;
+
+  if (/крокодил|удав|зоопарк|сбежал|в квартире|пенсионерк/i.test(t)) s += 45;
+  if (/перепутал|опечатка|вместо\s|rm\s*-rf|удалила данные/i.test(t)) s += 40;
+  if (/блогер|лерчек|\bмем\b|титок|курьёз|забавн|смешн|абсурд/i.test(t)) s += 28;
+  if (/nintendo|mamma mia|кофе|каникул|привычк|roblox|claude|chatgpt/i.test(t)) s += 18;
+  if (/habr\.com/i.test(item.url) && /удал|ошиб|слома|вместо|rm/i.test(t)) s += 12;
+  return s;
+}
+
+/** Rank RSS items; excludeUrls skips already-seen / already-stored links. */
+export async function rankNews({ excludeUrls = [] } = {}) {
+  const excluded = new Set(excludeUrls);
   const all = [];
   for (const feed of FEEDS) {
     try {
@@ -277,7 +416,7 @@ export async function pickNews() {
   }
 
   const fresh = all
-    .filter((i) => i.url && !posted.has(i.url))
+    .filter((i) => i.url && !excluded.has(i.url))
     .map((i) => {
       const withTg = {
         ...i,
@@ -299,12 +438,54 @@ export async function pickNews() {
     }
     item.clusterSize = cluster;
     item.score = scoreItem(item, cluster);
+    item.absurdScore = absurdScore(item);
   }
 
-  const candidates = fresh.filter((i) => i.score > 0).sort((a, b) => b.score - a.score);
+  return fresh.filter((i) => i.score > 0).sort((a, b) => b.score - a.score);
+}
 
-  if (!candidates.length) throw new Error("no suitable news items");
-  const top = candidates[0];
-  console.log(`picked score=${top.score} cluster=${top.clusterSize} :: ${top.title}`);
+export async function pickNews() {
+  return pickAbsurdNews();
+}
+
+/** Evening: pick the most absurd / funny story of the day (not hard politics). */
+export async function pickAbsurdNews() {
+  const state = loadState();
+  const ranked = await rankNews({ excludeUrls: state.postedUrls });
+  const byAbsurd = [...ranked]
+    .filter((i) => (i.absurdScore ?? absurdScore(i)) > 0)
+    .sort((a, b) => (b.absurdScore ?? 0) - (a.absurdScore ?? 0));
+
+  let top = byAbsurd[0];
+  if (!top) {
+    // Soft fallback: least-political leftover by absurdScore (may be low).
+    const soft = [...ranked]
+      .map((i) => ({ ...i, absurdScore: i.absurdScore ?? absurdScore(i) }))
+      .filter((i) => i.absurdScore > -100)
+      .sort((a, b) => b.absurdScore - a.absurdScore);
+    top = soft[0];
+  }
+  if (!top) throw new Error("no suitable absurd news items");
+
+  console.log(
+    `picked absurd=${top.absurdScore} score=${top.score} cluster=${top.clusterSize} :: ${top.title}`,
+  );
+
+  // Enrich summary with article body for a sharper evening take.
+  try {
+    const fetched = await fetchArticleBody(top.url);
+    if (fetched.notes?.length) {
+      console.warn("article fetch:", fetched.notes.join("; "));
+    }
+    if (fetched.text && fetched.text.length > 120) {
+      top.summary = fetched.text.slice(0, 1800);
+      if (fetched.finalUrl && !/news\.google\.com/i.test(fetched.finalUrl)) {
+        top.resolvedUrl = fetched.finalUrl;
+      }
+    }
+  } catch (e) {
+    console.warn("article enrich failed:", e.message);
+  }
+
   return { item: top, state };
 }

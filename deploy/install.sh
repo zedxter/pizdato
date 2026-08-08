@@ -25,7 +25,7 @@ if ! id pizdato >/dev/null 2>&1; then
 fi
 
 echo "==> Installing files"
-sudo install -d -o pizdato -g pizdato /var/lib/pizdato /var/lib/pizdato/backups
+sudo install -d -o pizdato -g pizdato -m 770 /var/lib/pizdato /var/lib/pizdato/backups
 sudo install -d /opt/pizdato /var/www/pizdato /var/log/caddy
 sudo install -m 755 "$BACKEND_BIN" /opt/pizdato/backend
 sudo install -m 755 "$ROOT/deploy/db-admin.sh" /opt/pizdato/db-admin.sh
@@ -36,6 +36,19 @@ sudo install -m 644 "$ROOT/deploy/pizdato.service" /etc/systemd/system/pizdato.s
 sudo install -m 644 "$ROOT/deploy/pizdato-backup.cron" /etc/cron.d/pizdato-backup
 sudo touch /var/log/pizdato-backup.log
 sudo chown pizdato:pizdato /var/log/pizdato-backup.log
+
+# Channel hourly cron (deploy user) writes news_items + system votes into the same DB.
+DEPLOY_USER="${PIZDATO_DEPLOY_USER:-${SUDO_USER:-}}"
+if [[ -n "$DEPLOY_USER" && "$DEPLOY_USER" != "root" ]] && getent group pizdato >/dev/null 2>&1; then
+  if ! id -nG "$DEPLOY_USER" | tr ' ' '\n' | grep -qx pizdato; then
+    sudo usermod -aG pizdato "$DEPLOY_USER"
+    echo "Added $DEPLOY_USER to group pizdato"
+  fi
+fi
+if [[ -f /var/lib/pizdato/votes.db ]]; then
+  sudo chown pizdato:pizdato /var/lib/pizdato/votes.db
+  sudo chmod 660 /var/lib/pizdato/votes.db
+fi
 
 if [[ ! -f /etc/pizdato.env ]]; then
   SALT="$(openssl rand -hex 32)"

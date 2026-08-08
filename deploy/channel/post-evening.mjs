@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Evening channel post: pick a hot news item and discuss it as пиздато vs хуёво.
- * Posts to @pizdato_net via the existing mcp-telegram StoreSession.
+ * Evening channel post: pick the most ABSURD / funny news of the day and
+ * discuss it as пиздато vs хуёво. Posts to @pizdato_net via StoreSession.
  *
- * Text generation (preferred): cursor-agent --print --mode ask
+ * Text generation (preferred): cursor-agent --print
  * Fallback: OPENROUTER/GROQ/OPENAI key in ~/.config/pizdato-channel.env
  * Last resort: local template
  */
@@ -11,14 +11,14 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadPosterEnv } from "./lib/env.js";
 import { generatePost } from "./lib/generate.js";
-import { pickNews, savePostedState } from "./lib/news.js";
+import { pickAbsurdNews, savePostedState } from "./lib/news.js";
 import { notifyOwner, sendChannel } from "./lib/telegram.js";
 
 async function main() {
   loadPosterEnv();
 
   try {
-    const { item, state } = await pickNews();
+    const { item, state } = await pickAbsurdNews();
     const { text, notes } = await generatePost(item);
 
     await sendChannel(text);

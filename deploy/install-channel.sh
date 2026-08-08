@@ -42,6 +42,9 @@ MAILTO=""
 # Morning: live stats + wisdom
 0 10 * * * $DEPLOY_USER cd $DEST && $NODE_BIN post-daily.mjs >> /var/log/pizdato-channel.log 2>&1
 
+# Hourly: score one news item → news_items + auto-vote (no channel post)
+5 * * * * $DEPLOY_USER cd $DEST && $NODE_BIN post-hourly.mjs >> /var/log/pizdato-channel.log 2>&1
+
 # Evening: hot news as пиздато / хуёво
 0 17 * * * $DEPLOY_USER cd $DEST && $NODE_BIN post-evening.mjs >> /var/log/pizdato-channel.log 2>&1
 EOF
@@ -50,9 +53,29 @@ sudo chmod 644 /etc/cron.d/pizdato-channel
 sudo touch /var/log/pizdato-channel.log
 sudo chown "$DEPLOY_USER:$DEPLOY_USER" /var/log/pizdato-channel.log
 
+# Channel cron needs write access to votes.db (news_items + system votes).
+if getent group pizdato >/dev/null 2>&1; then
+  if ! id -nG "$DEPLOY_USER" | tr ' ' '\n' | grep -qx pizdato; then
+    sudo usermod -aG pizdato "$DEPLOY_USER"
+    echo "    Added $DEPLOY_USER to group pizdato (re-login may be needed for interactive shells)"
+  fi
+  sudo chmod 770 /var/lib/pizdato
+  if [[ -f /var/lib/pizdato/votes.db ]]; then
+    sudo chown pizdato:pizdato /var/lib/pizdato/votes.db
+    sudo chmod 660 /var/lib/pizdato/votes.db
+  fi
+  for side in /var/lib/pizdato/votes.db-wal /var/lib/pizdato/votes.db-shm; do
+    if [[ -f "$side" ]]; then
+      sudo chown pizdato:pizdato "$side"
+      sudo chmod 660 "$side"
+    fi
+  done
+fi
+
 echo "==> Channel poster installed"
 echo "    Peer: @pizdato_net"
-echo "    Cron: 10:00 stats+wisdom, 17:00 news take (Europe/Berlin)"
-echo "    Manual: cd $DEST && node post-daily.mjs | node post-evening.mjs"
+echo "    Cron: hourly :05 news vote, 10:00 stats+wisdom, 17:00 evening take (Europe/Berlin)"
+echo "    Manual: cd $DEST && node post-hourly.mjs | node post-daily.mjs | node post-evening.mjs"
 echo "    Secrets: $DEPLOY_HOME/.config/telegram-mcp.env + $DEPLOY_HOME/.config/pizdato-channel.env"
+echo "    DB: /var/lib/pizdato/votes.db (group pizdato writable)"
 echo "    See: $SRC/pizdato-channel.env.example"

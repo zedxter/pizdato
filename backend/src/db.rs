@@ -219,6 +219,36 @@ pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::Error> {
         tracing::info!(pruned_req, "pruned old ip vote request logs");
     }
 
+    // Hourly channel cron stores scored news here; evening may consume later.
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS news_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            url TEXT NOT NULL UNIQUE,
+            summary TEXT NOT NULL DEFAULT '',
+            source TEXT,
+            telegram TEXT,
+            verdict TEXT NOT NULL CHECK (verdict IN ('pizdato', 'huyevo')),
+            reason TEXT NOT NULL DEFAULT '',
+            score REAL NOT NULL DEFAULT 0,
+            cluster_size INTEGER NOT NULL DEFAULT 1,
+            engagement INTEGER NOT NULL DEFAULT 0,
+            voter_id TEXT NOT NULL UNIQUE,
+            posted_at TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        "CREATE INDEX IF NOT EXISTS idx_news_items_created_at ON news_items (created_at)",
+    )
+    .execute(pool)
+    .await?;
+
     Ok(())
 }
 
