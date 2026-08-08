@@ -13,7 +13,8 @@ One meaningful vote per visitor is enforced with a soft anti-abuse layer (HTTP-o
 ## Stack
 
 - **Frontend:** React + Vite (TypeScript)
-- **Backend:** Rust (Axum) + SQLite (WAL, busy timeout, small connection pool)
+- **Backend:** Rust (Axum) + SQLite
+- **MCP:** public Streamable HTTP endpoint (read-only stats)
 - **Deploy:** Caddy + systemd
 
 ## Product surface
@@ -37,7 +38,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 — Vite proxies `/api` to the backend on `:8080`.
+Open http://localhost:5173 — Vite proxies `/api` to the backend. For local MCP, point the client at `http://127.0.0.1:8080/mcp`.
 
 ## API
 
@@ -52,64 +53,65 @@ Notable responses:
 - `403` — no/unknown session, daily request budget exhausted, or IP blacklisted
 - `429` — session too fresh, or min interval between votes from the same IP
 
-Soft anti-abuse:
+Soft anti-abuse (high level): one meaningful vote per visitor via cookie session + hashed IP rate limits and blacklist; exact knobs live in `deploy/pizdato.env.example`.
 
-- Cookie `voter_id` is issued **only** via `GET /api/stats` and stored in `sessions`
-- `POST /api/vote` without a registered session is rejected
-- Hashed IP limits (default): **10 vote requests / IP / day** (any outcome), min **10s** between successful votes from the same IP
-- After **5** HTTP `403` vote responses from an IP in 24h → IP is **blacklisted**; its votes are excluded from public stats
-- Session must be at least **2s** old (`VOTE_SESSION_MIN_AGE_SECS`)
-- Stale orphan sessions (no vote, older than ~30 minutes) are pruned on migrate
+## MCP
 
-Env knobs: `VOTE_IP_SALT`, `VOTE_IP_DAILY_LIMIT`, `VOTE_IP_MIN_INTERVAL_SECS`, `VOTE_IP_403_BLACKLIST_AFTER`, `VOTE_SESSION_MIN_AGE_SECS`.
+Public [Model Context Protocol](https://modelcontextprotocol.io/) server on the same backend as the site.
 
-## Production deploy
+| | |
+|--|--|
+| **URL** | `https://pizdato.net/mcp` |
+| **Transport** | Streamable HTTP |
+| **Auth** | none (read-only public data) |
 
-On the VPS (Caddy already running):
+### Tool: `get_stats`
+
+Returns live aggregate vote counts only:
+
+```json
+{
+  "pizdato": 35,
+  "huyevo": 20,
+  "total": 55,
+  "pizdato_pct": 63.6,
+  "huyevo_pct": 36.4
+}
+```
+
+Does **not** expose voter identities, IPs/hashes, sessions, env, DB paths, or other internals.
+
+### Cursor config
+
+Project file [`.cursor/mcp.json`](.cursor/mcp.json) (or Cursor Settings → MCP):
+
+```json
+{
+  "mcpServers": {
+    "pizdato": {
+      "url": "https://pizdato.net/mcp"
+    }
+  }
+}
+```
+
+## Production
+
+On the host (Caddy already running):
 
 ```bash
 ./deploy/install.sh
 ```
 
-That builds frontend/backend, installs the systemd unit, wires Caddy, installs the daily DB backup cron, and reloads Caddy. TLS is automatic via Caddy.
+Builds frontend/backend, installs the service, wires Caddy (site + `/api` + `/mcp`), TLS via Caddy.
 
-Telegram channel posts (stats, hourly news votes, evening take):
+Telegram channel automation (stats, hourly news votes, evening take):
 
 ```bash
 ./deploy/install-channel.sh
 ```
 
-| Path | Role |
-|------|------|
-| https://pizdato.net | Live site |
-| https://t.me/pizdato_net | Public Telegram channel |
-| `/opt/pizdato/channel/` | Channel posters (`post-daily.mjs`, `post-hourly.mjs`, `post-evening.mjs`, `report-daily.mjs`) |
-| `/etc/cron.d/pizdato-channel` | Cron: `09:05` owner traffic DM, hourly news vote, `10:00` stats+wisdom, `17:00` evening take (Europe/Berlin) |
-| `/var/log/pizdato-channel.log` | Poster log |
-| `~/.config/pizdato-channel.env` | Optional overrides + `TELEGRAM_ACCOUNT_ID` (see example); text gen prefers `cursor-agent -p` |
-
-| Path | Role |
-|------|------|
-| `/etc/pizdato.env` | Runtime env ([example](deploy/pizdato.env.example)) |
-| `/opt/pizdato/backend` | API binary |
-| `/opt/pizdato/db-admin.sh` | Run SQL **after stopping** the API (avoids SQLite locks) |
-| `/opt/pizdato/backup-db.sh` | Online SQLite `.backup` |
-| `/var/lib/pizdato/votes.db` | Database |
-| `/var/lib/pizdato/backups/` | Daily backups (cron `03:15`, keeps 7 newest) |
-| `/var/www/pizdato` | Static frontend |
-| `/var/log/caddy/pizdato-access.log` | Caddy access log (rolled) |
-
-Safe one-off DB work:
-
-```bash
-sudo /opt/pizdato/db-admin.sh 'SELECT COUNT(*) FROM votes;'
-```
-
-## Ops notes
-
-- Prefer `db-admin.sh` (or `systemctl stop pizdato`) for long `DELETE` / `VACUUM` — concurrent admin + API caused `database is locked` outages before WAL hardening
-- SQLite runs with **WAL**, **busy_timeout=5s**, pool size **2**, migrate retries on lock
-- Filter API traffic in the access log: `sudo grep '"/api/' /var/log/caddy/pizdato-access.log`
+Public surfaces: [pizdato.net](https://pizdato.net), [t.me/pizdato_net](https://t.me/pizdato_net). Operator layout and env samples live under [`deploy/`](deploy/) — not duplicated here.
 
 ## SEO
 

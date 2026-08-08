@@ -8,7 +8,7 @@ fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FRONTEND_DIST="$ROOT/frontend/dist"
-BACKEND_BIN="$ROOT/backend/target/release/backend"
+BACKEND_BIN="$ROOT/target/release/backend"
 
 echo "==> Building frontend"
 cd "$ROOT/frontend"
@@ -16,8 +16,8 @@ npm ci
 npm run build
 
 echo "==> Building backend"
-cd "$ROOT/backend"
-cargo build --release
+cd "$ROOT"
+cargo build -p backend --release
 
 echo "==> Ensuring system user"
 if ! id pizdato >/dev/null 2>&1; then

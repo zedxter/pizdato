@@ -5,6 +5,7 @@ frontend/node_modules
 # Build
 frontend/dist
 backend/target
+/target/
 
 # Local data / secrets
 *.db
