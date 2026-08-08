@@ -1,8 +1,19 @@
-.page-essay {
+/* Vote hero locks overflow; essay/FAQ must scroll the document instead. */
+.page.page-essay {
+  overflow: visible;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: auto;
+  height: auto;
+  max-height: none;
+}
+
+html:has(.page-essay),
+body:has(.page-essay),
+body:has(.page-essay) #root {
+  height: auto;
+  min-height: 100%;
   overflow-x: clip;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overflow-y: visible;
 }
 
 .essay-top,
