@@ -8,6 +8,7 @@
     "post": "node post-daily.mjs"
   },
   "dependencies": {
+    "better-sqlite3": "^11.10.0",
     "telegram": "^2.26.22"
   }
 }

@@ -9,96 +9,12 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runSql } from "./lib/db.js";
+import { dayTrafficStats } from "./lib/db.js";
 import { loadPosterEnv } from "./lib/env.js";
 import { notifyOwner } from "./lib/telegram.js";
 
 const ACCESS_LOG =
   process.env.PIZDATO_ACCESS_LOG || "/var/log/caddy/pizdato-access.log";
-
-function dayBounds(which) {
-  // SQLite stores UTC; local day in Europe/Berlin ≈ server localtime.
-  if (which === "today") {
-    return {
-      label: "сегодня",
-      sqlDay: "date('now', 'localtime')",
-      access: "today",
-    };
-  }
-  return {
-    label: "вчера",
-    sqlDay: "date('now', 'localtime', '-1 day')",
-    access: "yesterday",
-  };
-}
-
-function scalar(sql) {
-  const rows = runSql(sql, { json: true });
-  if (!rows.length) return 0;
-  const v = Object.values(rows[0])[0];
-  return Number(v) || 0;
-}
-
-function collectDbStats(sqlDay) {
-  const sessions = scalar(
-    `SELECT COUNT(*) AS n FROM sessions WHERE date(created_at, 'localtime') = ${sqlDay};`,
-  );
-  const sessionsVoted = scalar(
-    `SELECT COUNT(*) AS n FROM sessions s
-     WHERE date(s.created_at, 'localtime') = ${sqlDay}
-       AND EXISTS (SELECT 1 FROM votes v WHERE v.voter_id = s.voter_id);`,
-  );
-  const humanVotes = scalar(
-    `SELECT COUNT(*) AS n FROM votes
-     WHERE date(created_at, 'localtime') = ${sqlDay}
-       AND voter_id NOT LIKE 'news:%';`,
-  );
-  const newsVotes = scalar(
-    `SELECT COUNT(*) AS n FROM votes
-     WHERE date(created_at, 'localtime') = ${sqlDay}
-       AND voter_id LIKE 'news:%';`,
-  );
-  const humanP = scalar(
-    `SELECT COUNT(*) AS n FROM votes
-     WHERE date(created_at, 'localtime') = ${sqlDay}
-       AND voter_id NOT LIKE 'news:%' AND choice = 'pizdato';`,
-  );
-  const humanH = scalar(
-    `SELECT COUNT(*) AS n FROM votes
-     WHERE date(created_at, 'localtime') = ${sqlDay}
-       AND voter_id NOT LIKE 'news:%' AND choice = 'huyevo';`,
-  );
-  const newsP = scalar(
-    `SELECT COUNT(*) AS n FROM votes
-     WHERE date(created_at, 'localtime') = ${sqlDay}
-       AND voter_id LIKE 'news:%' AND choice = 'pizdato';`,
-  );
-  const newsH = scalar(
-    `SELECT COUNT(*) AS n FROM votes
-     WHERE date(created_at, 'localtime') = ${sqlDay}
-       AND voter_id LIKE 'news:%' AND choice = 'huyevo';`,
-  );
-  const newsItems = scalar(
-    `SELECT COUNT(*) AS n FROM news_items
-     WHERE date(created_at, 'localtime') = ${sqlDay};`,
-  );
-
-  const dayLabel = runSql(`SELECT ${sqlDay} AS d;`, { json: true })[0]?.d || "?";
-
-  return {
-    dayLabel,
-    sessions,
-    sessionsVoted,
-    sessionsNoVote: Math.max(0, sessions - sessionsVoted),
-    humanVotes,
-    humanP,
-    humanH,
-    newsVotes,
-    newsP,
-    newsH,
-    newsItems,
-  };
-}
 
 function isBotUa(ua) {
   const u = String(ua || "").toLowerCase();
@@ -142,7 +58,6 @@ function collectAccessStats(which) {
   const ipsHuman = new Set();
   const voteIps = new Set();
   let homeGets = 0;
-  let lines = 0;
 
   for (const line of raw.split("\n")) {
     if (!line.trim()) continue;
@@ -156,7 +71,6 @@ function collectAccessStats(which) {
     if (ts == null) continue;
     const day = fmt.format(new Date(Number(ts) * 1000));
     if (day !== targetDay) continue;
-    lines += 1;
     const req = o.request || {};
     const ip = req.client_ip || req.remote_ip;
     if (!ip) continue;
@@ -174,7 +88,6 @@ function collectAccessStats(which) {
   return {
     ok: true,
     day: targetDay,
-    lines,
     uniqueIps: ips.size,
     uniqueIpsNonBot: ipsHuman.size,
     homeGets,
@@ -215,10 +128,11 @@ async function main() {
   loadPosterEnv();
   const today = process.argv.includes("--today");
   const dry = process.argv.includes("--dry-run");
-  const { label, sqlDay, access: accessWhich } = dayBounds(today ? "today" : "yesterday");
+  const which = today ? "today" : "yesterday";
+  const label = today ? "сегодня" : "вчера";
 
-  const db = collectDbStats(sqlDay);
-  const access = collectAccessStats(accessWhich);
+  const db = dayTrafficStats(which);
+  const access = collectAccessStats(which);
   const text = buildReport({ db, access, label });
 
   console.log(text);

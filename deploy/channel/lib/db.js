@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import Database from "better-sqlite3";
 import { createHash } from "node:crypto";
 
 export function dbPath() {
@@ -9,33 +9,20 @@ export function dbPath() {
   );
 }
 
-function sqlString(value) {
-  return `'${String(value ?? "").replace(/'/g, "''")}'`;
+let _db;
+
+/** Shared read/write connection (WAL-friendly busy timeout). */
+export function getDb() {
+  if (_db) return _db;
+  _db = new Database(dbPath(), { timeout: 8000 });
+  _db.pragma("busy_timeout = 8000");
+  return _db;
 }
 
-/** Run SQL against votes.db via sqlite3 CLI (WAL-friendly busy timeout). */
-export function runSql(sql, { json = false } = {}) {
-  const db = dbPath();
-  const args = ["-cmd", ".timeout 8000"];
-  if (json) args.push("-json");
-  args.push(db, sql);
-  const res = spawnSync("sqlite3", args, {
-    encoding: "utf8",
-    maxBuffer: 8 * 1024 * 1024,
-  });
-  if (res.error) throw res.error;
-  if (res.status !== 0) {
-    throw new Error(
-      `sqlite3 exit ${res.status}: ${(res.stderr || res.stdout || "").trim().slice(0, 500)}`,
-    );
-  }
-  const out = (res.stdout || "").trim();
-  if (!json) return out;
-  if (!out) return [];
-  try {
-    return JSON.parse(out);
-  } catch {
-    throw new Error(`sqlite3 json parse failed: ${out.slice(0, 200)}`);
+export function closeDb() {
+  if (_db) {
+    _db.close();
+    _db = null;
   }
 }
 
@@ -44,11 +31,19 @@ export function newsVoterId(url) {
   return `news:${hash}`;
 }
 
+function positiveInt(value, fallback, { min = 1, max = 3650 } = {}) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(n)));
+}
+
 export function listNewsUrls({ days = 30 } = {}) {
-  const rows = runSql(
-    `SELECT url FROM news_items WHERE created_at >= datetime('now', '-${Number(days)} days');`,
-    { json: true },
-  );
+  const d = positiveInt(days, 30);
+  const rows = getDb()
+    .prepare(
+      `SELECT url FROM news_items WHERE created_at >= datetime('now', ?)`,
+    )
+    .all(`-${d} days`);
   return rows.map((r) => r.url).filter(Boolean);
 }
 
@@ -72,45 +67,50 @@ export function insertNewsAndVote({
     throw new Error(`invalid verdict: ${verdict}`);
   }
   const voterId = newsVoterId(url);
-  const existing = runSql(`SELECT id FROM news_items WHERE url = ${sqlString(url)} LIMIT 1;`, {
-    json: true,
-  });
-  if (existing.length) {
-    return { inserted: false, id: existing[0].id, voterId };
+  const db = getDb();
+
+  const find = db.prepare(`SELECT id FROM news_items WHERE url = ? LIMIT 1`);
+  const existing = find.get(url);
+  if (existing) {
+    return { inserted: false, id: existing.id, voterId };
   }
 
-  runSql(`
-BEGIN IMMEDIATE;
-INSERT INTO news_items (
-  title, url, summary, source, telegram, verdict, reason,
-  score, cluster_size, engagement, voter_id
-) VALUES (
-  ${sqlString(title)},
-  ${sqlString(url)},
-  ${sqlString(summary)},
-  ${source == null ? "NULL" : sqlString(source)},
-  ${telegram == null ? "NULL" : sqlString(telegram)},
-  ${sqlString(verdict)},
-  ${sqlString(reason)},
-  ${Number(score) || 0},
-  ${Math.max(1, Number(clusterSize) || 1)},
-  ${Math.max(0, Number(engagement) || 0)},
-  ${sqlString(voterId)}
-);
-INSERT INTO votes (choice, voter_id, ip_hash)
-VALUES (${sqlString(verdict)}, ${sqlString(voterId)}, NULL);
-COMMIT;
-`);
+  const insertNews = db.prepare(`
+    INSERT INTO news_items (
+      title, url, summary, source, telegram, verdict, reason,
+      score, cluster_size, engagement, voter_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const insertVote = db.prepare(
+    `INSERT INTO votes (choice, voter_id, ip_hash) VALUES (?, ?, NULL)`,
+  );
 
-  const rows = runSql(`SELECT id FROM news_items WHERE url = ${sqlString(url)} LIMIT 1;`, {
-    json: true,
+  const tx = db.transaction(() => {
+    insertNews.run(
+      String(title ?? ""),
+      String(url ?? ""),
+      String(summary ?? ""),
+      source == null ? null : String(source),
+      telegram == null ? null : String(telegram),
+      verdict,
+      String(reason ?? ""),
+      Number(score) || 0,
+      Math.max(1, Number(clusterSize) || 1),
+      Math.max(0, Number(engagement) || 0),
+      voterId,
+    );
+    insertVote.run(verdict, voterId);
+    return find.get(url);
   });
-  return { inserted: true, id: rows[0]?.id, voterId };
+
+  const row = tx();
+  return { inserted: true, id: row?.id, voterId };
 }
 
 /** Ensure migration ran (backend usually creates the table; keep a local safety net). */
 export function ensureNewsTable() {
-  runSql(`
+  const db = getDb();
+  db.exec(`
 CREATE TABLE IF NOT EXISTS news_items (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
@@ -136,16 +136,76 @@ CREATE INDEX IF NOT EXISTS idx_news_items_created_at ON news_items (created_at);
  * Rank: cluster_size → score → engagement → newest.
  */
 export function topDiscussedNews({ hours = 24 } = {}) {
-  const h = Math.max(1, Number(hours) || 24);
-  const rows = runSql(
-    `
+  const h = positiveInt(hours, 24, { max: 24 * 60 });
+  return (
+    getDb()
+      .prepare(
+        `
 SELECT id, title, url, verdict, reason, score, cluster_size, engagement, created_at
 FROM news_items
-WHERE created_at >= datetime('now', '-${h} hours')
+WHERE created_at >= datetime('now', ?)
 ORDER BY cluster_size DESC, score DESC, engagement DESC, created_at DESC
-LIMIT 1;
+LIMIT 1
 `,
-    { json: true },
+      )
+      .get(`-${h} hours`) || null
   );
-  return rows[0] || null;
+}
+
+/** Counts for a local calendar day: today | yesterday. */
+export function dayTrafficStats(which = "yesterday") {
+  const dayExpr =
+    which === "today" ? `date('now', 'localtime')` : `date('now', 'localtime', '-1 day')`;
+  const db = getDb();
+
+  const dayLabel = db.prepare(`SELECT ${dayExpr} AS d`).get().d;
+
+  const countWhere = (sql) =>
+    db.prepare(`SELECT COUNT(*) AS n FROM ${sql}`).get().n;
+
+  // day filter reused — only our fixed dayExpr, never user input.
+  const onDay = `date(created_at, 'localtime') = ${dayExpr}`;
+
+  const sessions = countWhere(`sessions WHERE ${onDay}`);
+  const sessionsVoted = db
+    .prepare(
+      `
+SELECT COUNT(*) AS n FROM sessions s
+WHERE date(s.created_at, 'localtime') = ${dayExpr}
+  AND EXISTS (SELECT 1 FROM votes v WHERE v.voter_id = s.voter_id)
+`,
+    )
+    .get().n;
+
+  const humanVotes = countWhere(
+    `votes WHERE ${onDay} AND voter_id NOT LIKE 'news:%'`,
+  );
+  const humanP = countWhere(
+    `votes WHERE ${onDay} AND voter_id NOT LIKE 'news:%' AND choice = 'pizdato'`,
+  );
+  const humanH = countWhere(
+    `votes WHERE ${onDay} AND voter_id NOT LIKE 'news:%' AND choice = 'huyevo'`,
+  );
+  const newsVotes = countWhere(`votes WHERE ${onDay} AND voter_id LIKE 'news:%'`);
+  const newsP = countWhere(
+    `votes WHERE ${onDay} AND voter_id LIKE 'news:%' AND choice = 'pizdato'`,
+  );
+  const newsH = countWhere(
+    `votes WHERE ${onDay} AND voter_id LIKE 'news:%' AND choice = 'huyevo'`,
+  );
+  const newsItems = countWhere(`news_items WHERE ${onDay}`);
+
+  return {
+    dayLabel,
+    sessions,
+    sessionsVoted,
+    sessionsNoVote: Math.max(0, sessions - sessionsVoted),
+    humanVotes,
+    humanP,
+    humanH,
+    newsVotes,
+    newsP,
+    newsH,
+    newsItems,
+  };
 }
