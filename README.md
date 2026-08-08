@@ -1,4 +1,10 @@
+<p align="center">
+  <img src="frontend/public/logo.png" alt="pizdato.net" width="180" />
+</p>
+
 # Pizdato
+
+**Site:** [pizdato.net](https://pizdato.net) · **Telegram:** [@pizdato_net](https://t.me/pizdato_net)
 
 Voting site for [pizdato.net](https://pizdato.net): two buttons — **Сделать пиздато** / **Сделать хуёво** — with live counts, a wisdom quote after voting, and share/badge flow («Кинь другу»).
 
@@ -67,7 +73,7 @@ On the VPS (Caddy already running):
 
 That builds frontend/backend, installs the systemd unit, wires Caddy, installs the daily DB backup cron, and reloads Caddy. TLS is automatic via Caddy.
 
-Telegram channel daily posts (stats + wisdom):
+Telegram channel posts (stats, hourly news votes, evening take):
 
 ```bash
 ./deploy/install-channel.sh
@@ -75,11 +81,12 @@ Telegram channel daily posts (stats + wisdom):
 
 | Path | Role |
 |------|------|
-| https://t.me/pizdato_net | Public channel |
-| `/opt/pizdato/channel/` | Daily poster (`post-daily.mjs`, `post-evening.mjs`) |
-| `/etc/cron.d/pizdato-channel` | Cron `10:00` stats+wisdom, `17:00` news take (Europe/Berlin) |
+| https://pizdato.net | Live site |
+| https://t.me/pizdato_net | Public Telegram channel |
+| `/opt/pizdato/channel/` | Channel posters (`post-daily.mjs`, `post-hourly.mjs`, `post-evening.mjs`, `report-daily.mjs`) |
+| `/etc/cron.d/pizdato-channel` | Cron: `09:05` owner traffic DM, hourly news vote, `10:00` stats+wisdom, `17:00` evening take (Europe/Berlin) |
 | `/var/log/pizdato-channel.log` | Poster log |
-| `~/.config/pizdato-channel.env` | Optional overrides + `TELEGRAM_ACCOUNT_ID` (see example); evening posts prefer `cursor-agent -p` |
+| `~/.config/pizdato-channel.env` | Optional overrides + `TELEGRAM_ACCOUNT_ID` (see example); text gen prefers `cursor-agent -p` |
 
 | Path | Role |
 |------|------|

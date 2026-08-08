@@ -42,6 +42,9 @@ MAILTO=""
 # Morning: live stats + wisdom
 0 10 * * * $DEPLOY_USER cd $DEST && $NODE_BIN post-daily.mjs >> /var/log/pizdato-channel.log 2>&1
 
+# Owner DM: yesterday traffic / sessions / human vs news votes
+5 9 * * * $DEPLOY_USER cd $DEST && $NODE_BIN report-daily.mjs >> /var/log/pizdato-channel.log 2>&1
+
 # Hourly: score one news item → news_items + auto-vote (no channel post)
 5 * * * * $DEPLOY_USER cd $DEST && $NODE_BIN post-hourly.mjs >> /var/log/pizdato-channel.log 2>&1
 
@@ -74,8 +77,8 @@ fi
 
 echo "==> Channel poster installed"
 echo "    Peer: @pizdato_net"
-echo "    Cron: hourly :05 news vote, 10:00 stats+wisdom, 17:00 evening take (Europe/Berlin)"
-echo "    Manual: cd $DEST && node post-hourly.mjs | node post-daily.mjs | node post-evening.mjs"
+echo "    Cron: 09:05 owner traffic DM, hourly :05 news vote, 10:00 stats+wisdom, 17:00 evening take (Europe/Berlin)"
+echo "    Manual: cd $DEST && node report-daily.mjs | node post-hourly.mjs | node post-daily.mjs | node post-evening.mjs"
 echo "    Secrets: $DEPLOY_HOME/.config/telegram-mcp.env + $DEPLOY_HOME/.config/pizdato-channel.env"
 echo "    DB: /var/lib/pizdato/votes.db (group pizdato writable)"
 echo "    See: $SRC/pizdato-channel.env.example"

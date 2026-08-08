@@ -7,6 +7,9 @@ MAILTO=""
 # Morning: live stats + wisdom (Europe/Berlin on the VPS)
 # 0 10 * * * DEPLOY_USER cd /opt/pizdato/channel && NODE post-daily.mjs >> /var/log/pizdato-channel.log 2>&1
 
+# Owner DM: yesterday traffic digest
+# 5 9 * * * DEPLOY_USER cd /opt/pizdato/channel && NODE report-daily.mjs >> /var/log/pizdato-channel.log 2>&1
+
 # Hourly: one news → news_items + auto-vote (no channel post)
 # 5 * * * * DEPLOY_USER cd /opt/pizdato/channel && NODE post-hourly.mjs >> /var/log/pizdato-channel.log 2>&1
 
