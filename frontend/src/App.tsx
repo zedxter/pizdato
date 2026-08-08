@@ -201,6 +201,12 @@ export default function App() {
           <span className="footer-sep" aria-hidden="true">
             ·
           </span>
+          <a className="channel-link" href="/faq">
+            FAQ
+          </a>
+          <span className="footer-sep" aria-hidden="true">
+            ·
+          </span>
           <a
             className="channel-link"
             href="https://t.me/pizdato_net"

@@ -2,19 +2,25 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const CLEAN_PAGES = {
+  '/issledovanie': '/issledovanie.html',
+  '/faq': '/faq.html',
+}
+
 /** Map clean URLs to MPA HTML entries in vite dev / preview. */
-function cleanEssayUrl() {
+function cleanPageUrls() {
   const rewrite = (url) => {
     if (!url) return url
-    const pathOnly = url.split('?')[0]
-    if (pathOnly === '/issledovanie' || pathOnly === '/issledovanie/') {
-      return url.replace(pathOnly, '/issledovanie.html')
+    const pathOnly = url.split('?')[0].replace(/\/+$/, '') || '/'
+    const target = CLEAN_PAGES[pathOnly]
+    if (target) {
+      return url.replace(url.split('?')[0], target)
     }
     return url
   }
 
   return {
-    name: 'pizdato-clean-essay-url',
+    name: 'pizdato-clean-page-urls',
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
         req.url = rewrite(req.url) ?? req.url
@@ -31,12 +37,13 @@ function cleanEssayUrl() {
 }
 
 export default defineConfig({
-  plugins: [react(), cleanEssayUrl()],
+  plugins: [react(), cleanPageUrls()],
   build: {
     rollupOptions: {
       input: {
         main: 'index.html',
         issledovanie: 'issledovanie.html',
+        faq: 'faq.html',
       },
     },
   },

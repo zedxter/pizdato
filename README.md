@@ -22,6 +22,7 @@ One meaningful vote per visitor is enforced with a soft anti-abuse layer (HTTP-o
 - Before vote: brand + tagline + two vote buttons (buttons unlock ~2s after stats load)
 - After vote: wisdom quote in the hero, live % bars, share panel with badge preview (Telegram / VK / copy / download / native share)
 - Essay: [pizdato.net/issledovanie](https://pizdato.net/issledovanie) — research piece on binary oppositions (linked from the footer)
+- FAQ: [pizdato.net/faq](https://pizdato.net/faq) — how voting works, one vote, privacy at a high level
 - Frontend retries `GET /api/stats` a few times and shows **Обновить** if the API is briefly unavailable
 
 ## Development
@@ -121,7 +122,8 @@ Technical SEO: `robots.txt`, `sitemap.xml`, Open Graph, JSON-LD, canonicals.
 Crawlable shells:
 
 - `/` → `index.html` (vote page meta)
-- `/issledovanie` → `issledovanie.html` (Article + BreadcrumbList meta, noscript excerpt); Caddy maps clean URL via `try_files … {path}.html`
+- `/issledovanie` → `issledovanie.html` (Article + BreadcrumbList meta, noscript excerpt)
+- `/faq` → `faq.html` (FAQPage JSON-LD); Caddy maps clean URLs via `try_files … {path}.html`
 
 To appear in search:
 

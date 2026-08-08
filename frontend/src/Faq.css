@@ -1,0 +1,113 @@
+.page-faq .essay {
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.faq-item {
+  border: 1px solid rgba(242, 245, 240, 0.12);
+  border-radius: 0.45rem;
+  background: rgba(8, 14, 11, 0.42);
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.faq-item[open] {
+  border-color: rgba(61, 255, 154, 0.28);
+  background: rgba(8, 14, 11, 0.58);
+}
+
+.faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  list-style: none;
+  cursor: pointer;
+  padding: 1rem 1.05rem;
+  color: var(--ink);
+  font-size: clamp(1rem, 2.8vw, 1.08rem);
+  font-weight: 800;
+  line-height: 1.35;
+  user-select: none;
+}
+
+.faq-q::-webkit-details-marker {
+  display: none;
+}
+
+.faq-q-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.faq-chevron {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.18s ease, border-color 0.15s ease;
+  margin-top: -0.2rem;
+}
+
+.faq-item[open] .faq-chevron {
+  transform: rotate(225deg);
+  margin-top: 0.15rem;
+  border-color: var(--good);
+}
+
+.faq-q:hover .faq-chevron {
+  border-color: var(--ink);
+}
+
+.faq-a {
+  padding: 0 1.05rem 1.1rem;
+  color: rgba(242, 245, 240, 0.9);
+  font-size: clamp(0.98rem, 2.6vw, 1.03rem);
+  line-height: 1.62;
+  overflow-wrap: anywhere;
+}
+
+.faq-a a {
+  color: var(--good);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(61, 255, 154, 0.35);
+}
+
+.faq-a a:hover {
+  border-bottom-color: var(--good);
+}
+
+.faq-a code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  color: var(--good);
+  background: rgba(61, 255, 154, 0.08);
+  padding: 0.08em 0.35em;
+  border-radius: 0.25rem;
+}
+
+.faq-a strong {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+@media (max-width: 560px) {
+  .faq-q {
+    padding: 0.95rem 0.9rem;
+  }
+
+  .faq-a {
+    padding: 0 0.9rem 1rem;
+  }
+}
