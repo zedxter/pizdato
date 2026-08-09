@@ -44,3 +44,22 @@ pub struct ErrorResponse {
     pub error: String,
     pub stats: StatsResponse,
 }
+
+#[derive(Debug, Serialize)]
+pub struct NewsItemPublic {
+    pub id: i64,
+    pub title: String,
+    pub url: String,
+    pub verdict: Choice,
+    pub reason: String,
+    pub created_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image_url: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct NewsFeedResponse {
+    pub items: Vec<NewsItemPublic>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_before_id: Option<i64>,
+}

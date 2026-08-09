@@ -1,4 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
+import { SiteFooter } from './SiteFooter'
+import { SiteNav } from './SiteNav'
 import './App.css'
 import './Essay.css'
 import './Faq.css'
@@ -34,7 +36,7 @@ const FAQS: FaqItem[] = [
         Это два полюса оценки, а не юридический вердикт. «Пиздато» — когда мир (или
         момент) зашёл. «Хуёво» — когда разлад, фальшь, антиклимакс. Подробнее о
         бинарностях в культуре — в{' '}
-        <a href="/issledovanie">исследовании</a>.
+        <a href="/issledovanie">эссе</a>.
       </>
     ),
   },
@@ -120,10 +122,10 @@ const FAQS: FaqItem[] = [
   },
   {
     id: 'essay',
-    q: 'Что за страница «Исследование»?',
+    q: 'Что за страница «Эссе»?',
     a: (
       <>
-        Длинное эссе о бинарных противостояниях (добро/зло, равенство/неравенство и
+        Длинный текст о бинарных противостояниях (добро/зло, равенство/неравенство и
         т.д.) и о том, почему две кнопки — не шутка, а прозрачная форма оценки. Читать:{' '}
         <a href="/issledovanie">pizdato.net/issledovanie</a>.
       </>
@@ -140,6 +142,17 @@ const FAQS: FaqItem[] = [
         </a>
         -эндпоинт для ассистентов: инструмент <code>get_stats</code> отдаёт те же
         агрегаты голосов. Секретов и внутренних путей там нет.
+      </>
+    ),
+  },
+  {
+    id: 'how-page',
+    q: 'Где прочитать, как всё устроено?',
+    a: (
+      <>
+        Страница <a href="/how">«Как это работает»</a> — про голос человека,
+        новости в общем счёте и почему один клик всё ещё имеет смысл. Технические
+        детали (cookie, один голос, антиабус) — здесь, в FAQ.
       </>
     ),
   },
@@ -180,22 +193,7 @@ export default function Faq() {
       <div className="glow glow-a" aria-hidden="true" />
       <div className="glow glow-b" aria-hidden="true" />
 
-      <header className="essay-top">
-        <a className="essay-brand" href="/">
-          <img
-            className="essay-brand-mark"
-            src="/logo.png"
-            width={48}
-            height={48}
-            alt=""
-            decoding="async"
-          />
-          <span className="essay-brand-name">pizdato</span>
-        </a>
-        <a className="essay-back" href="/">
-          К голосованию
-        </a>
-      </header>
+      <SiteNav current="faq" />
 
       <article className="essay faq">
         <header className="essay-masthead">
@@ -229,30 +227,7 @@ export default function Faq() {
         </div>
       </article>
 
-      <footer className="site-footer essay-footer">
-        <p className="essay-cta">
-          Мир ждёт твоего голоса. Остальное — уже легенда:
-        </p>
-        <a className="essay-cta-link" href="/">
-          https://pizdato.net
-        </a>
-        <div className="footer-nav">
-          <a className="channel-link" href="/issledovanie">
-            Исследование
-          </a>
-          <span className="footer-sep" aria-hidden="true">
-            ·
-          </span>
-          <a
-            className="channel-link"
-            href="https://t.me/pizdato_net"
-            target="_blank"
-            rel="noopener noreferrer me"
-          >
-            Telegram <span aria-hidden="true">@pizdato_net</span>
-          </a>
-        </div>
-      </footer>
+      <SiteFooter current="faq" cta />
     </div>
   )
 }

@@ -83,6 +83,7 @@ async fn main() {
     let api = Router::new()
         .route("/api/stats", get(handlers::stats))
         .route("/api/vote", post(handlers::vote))
+        .route("/api/news", get(handlers::news_feed))
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 

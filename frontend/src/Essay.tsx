@@ -5,6 +5,8 @@ import {
   essayTitleHtml,
   essayTocHtml,
 } from './essayHtml'
+import { SiteFooter } from './SiteFooter'
+import { SiteNav } from './SiteNav'
 import './App.css'
 import './Essay.css'
 
@@ -37,22 +39,7 @@ export default function Essay() {
       <div className="glow glow-a" aria-hidden="true" />
       <div className="glow glow-b" aria-hidden="true" />
 
-      <header className="essay-top">
-        <a className="essay-brand" href="/">
-          <img
-            className="essay-brand-mark"
-            src="/logo.png"
-            width={48}
-            height={48}
-            alt=""
-            decoding="async"
-          />
-          <span className="essay-brand-name">pizdato</span>
-        </a>
-        <a className="essay-back" href="/">
-          К голосованию
-        </a>
-      </header>
+      <SiteNav current="essay" />
 
       <article className="essay">
         <header className="essay-masthead">
@@ -105,30 +92,7 @@ export default function Essay() {
         />
       </article>
 
-      <footer className="site-footer essay-footer">
-        <p className="essay-cta">
-          Мир ждёт твоего голоса. Остальное — уже легенда:
-        </p>
-        <a className="essay-cta-link" href="/">
-          https://pizdato.net
-        </a>
-        <div className="footer-nav">
-          <a className="channel-link" href="/faq">
-            FAQ
-          </a>
-          <span className="footer-sep" aria-hidden="true">
-            ·
-          </span>
-          <a
-            className="channel-link"
-            href="https://t.me/pizdato_net"
-            target="_blank"
-            rel="noopener noreferrer me"
-          >
-            Telegram-канал <span aria-hidden="true">@pizdato_net</span>
-          </a>
-        </div>
-      </footer>
+      <SiteFooter current="essay" cta />
     </div>
   )
 }

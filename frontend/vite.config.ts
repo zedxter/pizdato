@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react'
 const CLEAN_PAGES = {
   '/issledovanie': '/issledovanie.html',
   '/faq': '/faq.html',
+  '/lenta': '/lenta.html',
+  '/how': '/how.html',
 }
 
 /** Map clean URLs to MPA HTML entries in vite dev / preview. */
@@ -44,6 +46,8 @@ export default defineConfig({
         main: 'index.html',
         issledovanie: 'issledovanie.html',
         faq: 'faq.html',
+        lenta: 'lenta.html',
+        how: 'how.html',
       },
     },
   },

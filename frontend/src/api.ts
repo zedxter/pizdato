@@ -60,3 +60,41 @@ export async function castVote(choice: Choice): Promise<Stats> {
   }
   return data
 }
+
+export interface NewsItem {
+  id: number
+  title: string
+  url: string
+  verdict: Choice
+  reason: string
+  created_at: string
+  image_url?: string | null
+}
+
+export interface NewsFeedPage {
+  items: NewsItem[]
+  next_before_id: number | null
+}
+
+export async function fetchNewsPage(opts?: {
+  limit?: number
+  beforeId?: number | null
+}): Promise<NewsFeedPage> {
+  const params = new URLSearchParams()
+  params.set('limit', String(opts?.limit ?? 20))
+  if (opts?.beforeId != null) {
+    params.set('before_id', String(opts.beforeId))
+  }
+  const res = await fetch(`/api/news?${params.toString()}`)
+  if (!res.ok) {
+    throw new Error('Не удалось загрузить ленту')
+  }
+  const data = (await res.json()) as {
+    items: NewsItem[]
+    next_before_id?: number | null
+  }
+  return {
+    items: data.items ?? [],
+    next_before_id: data.next_before_id ?? null,
+  }
+}

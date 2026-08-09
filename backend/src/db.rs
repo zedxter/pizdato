@@ -89,6 +89,15 @@ async fn has_ip_hash_column(pool: &SqlitePool) -> Result<bool, sqlx::Error> {
     Ok(count > 0)
 }
 
+async fn has_news_image_url_column(pool: &SqlitePool) -> Result<bool, sqlx::Error> {
+    let count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM pragma_table_info('news_items') WHERE name = 'image_url'",
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok(count > 0)
+}
+
 pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     if table_exists(pool, "votes_new").await? {
         tracing::info!("finishing interrupted votes migration");
@@ -236,12 +245,20 @@ pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::Error> {
             engagement INTEGER NOT NULL DEFAULT 0,
             voter_id TEXT NOT NULL UNIQUE,
             posted_at TEXT,
+            image_url TEXT,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
         "#,
     )
     .execute(pool)
     .await?;
+
+    if !has_news_image_url_column(pool).await? {
+        tracing::info!("adding news_items.image_url for feed thumbnails");
+        sqlx::query("ALTER TABLE news_items ADD COLUMN image_url TEXT")
+            .execute(pool)
+            .await?;
+    }
 
     sqlx::query(
         "CREATE INDEX IF NOT EXISTS idx_news_items_created_at ON news_items (created_at)",
@@ -440,5 +457,42 @@ impl AppState {
             .execute(&self.pool)
             .await?;
         Ok(())
+    }
+
+    /// Public news feed (hourly verdicts), newest first. Cursor: id < before_id.
+    pub async fn list_news(
+        &self,
+        limit: i64,
+        before_id: Option<i64>,
+    ) -> Result<Vec<(i64, String, String, String, String, String, Option<String>)>, sqlx::Error>
+    {
+        let limit = limit.clamp(1, 50);
+        if let Some(before) = before_id {
+            sqlx::query_as(
+                r#"
+                SELECT id, title, url, verdict, reason, created_at, image_url
+                FROM news_items
+                WHERE id < ?1
+                ORDER BY id DESC
+                LIMIT ?2
+                "#,
+            )
+            .bind(before)
+            .bind(limit)
+            .fetch_all(&self.pool)
+            .await
+        } else {
+            sqlx::query_as(
+                r#"
+                SELECT id, title, url, verdict, reason, created_at, image_url
+                FROM news_items
+                ORDER BY id DESC
+                LIMIT ?1
+                "#,
+            )
+            .bind(limit)
+            .fetch_all(&self.pool)
+            .await
+        }
     }
 }

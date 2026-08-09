@@ -1,7 +1,7 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
-    extract::{ConnectInfo, State},
+    extract::{ConnectInfo, Query, State},
     http::{HeaderMap, StatusCode},
     Json,
 };
@@ -10,9 +10,10 @@ use uuid::Uuid;
 
 use crate::{
     db::AppState,
-    models::{ErrorResponse, StatsResponse, VoteRequest},
+    models::{
+        Choice, ErrorResponse, NewsFeedResponse, NewsItemPublic, StatsResponse, VoteRequest,
+    },
 };
-
 const VOTER_COOKIE: &str = "voter_id";
 const COOKIE_MAX_AGE: tower_cookies::cookie::time::Duration =
     tower_cookies::cookie::time::Duration::days(365);
@@ -329,4 +330,60 @@ pub async fn vote(
             Err(internal_err(empty_stats()))
         }
     }
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct NewsFeedQuery {
+    pub limit: Option<i64>,
+    pub before_id: Option<i64>,
+}
+
+/// Public feed of hourly news verdicts (newest first).
+pub async fn news_feed(
+    State(state): State<Arc<AppState>>,
+    Query(q): Query<NewsFeedQuery>,
+) -> Result<Json<NewsFeedResponse>, (StatusCode, Json<serde_json::Value>)> {
+    let limit = q.limit.unwrap_or(20).clamp(1, 50);
+    let rows = state.list_news(limit, q.before_id).await.map_err(|e| {
+        tracing::error!("list news error: {e}");
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({ "error": "не удалось загрузить ленту" })),
+        )
+    })?;
+
+    let items: Vec<NewsItemPublic> = rows
+        .into_iter()
+        .filter_map(|(id, title, url, verdict, reason, created_at, image_url)| {
+            let verdict = Choice::parse(&verdict)?;
+            let image_url = image_url.and_then(|s| {
+                let t = s.trim().to_string();
+                if t.is_empty() {
+                    None
+                } else {
+                    Some(t)
+                }
+            });
+            Some(NewsItemPublic {
+                id,
+                title,
+                url,
+                verdict,
+                reason,
+                created_at,
+                image_url,
+            })
+        })
+        .collect();
+
+    let next_before_id = if items.len() as i64 >= limit {
+        items.last().map(|i| i.id)
+    } else {
+        None
+    };
+
+    Ok(Json(NewsFeedResponse {
+        items,
+        next_before_id,
+    }))
 }

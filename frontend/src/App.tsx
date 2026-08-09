@@ -2,11 +2,90 @@ import { useEffect, useState } from 'react'
 import { castVote, fetchStatsWithRetry, type Choice, type Stats } from './api'
 import { pickQuotes, type Wisdom } from './quotes'
 import { SharePanel } from './SharePanel'
+import { SiteFooter } from './SiteFooter'
+import { SiteNav } from './SiteNav'
 import './App.css'
 
 function pct(part: number, total: number): number {
   if (total <= 0) return 0
   return Math.round((part / total) * 100)
+}
+
+const QUOTE_COUNT = 3
+const QUOTE_ROTATE_MS = 6500
+
+function QuoteCarousel({
+  quotes,
+  index,
+  onIndexChange,
+}: {
+  quotes: Wisdom[]
+  index: number
+  onIndexChange: (next: number) => void
+}) {
+  const n = quotes.length
+  const quote = quotes[index]
+  if (!quote || n === 0) return null
+
+  const go = (delta: number) => {
+    onIndexChange((index + delta + n) % n)
+  }
+
+  return (
+    <div
+      className="quote-carousel"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Мудрость дня"
+    >
+      <div className="quote-carousel-stage">
+        {n > 1 && (
+          <button
+            type="button"
+            className="quote-carousel-btn quote-carousel-btn-prev"
+            aria-label="Предыдущая цитата"
+            onClick={() => go(-1)}
+          >
+            ‹
+          </button>
+        )}
+
+        <blockquote className="quote-block hero-quote" key={index}>
+          <p className="quote-text">{quote.text}</p>
+          <footer className="quote-footer">
+            <cite className="quote-author">{quote.author}</cite>
+          </footer>
+        </blockquote>
+
+        {n > 1 && (
+          <button
+            type="button"
+            className="quote-carousel-btn quote-carousel-btn-next"
+            aria-label="Следующая цитата"
+            onClick={() => go(1)}
+          >
+            ›
+          </button>
+        )}
+      </div>
+
+      {n > 1 && (
+        <div className="quote-carousel-dots" role="tablist" aria-label="Цитаты">
+          {quotes.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={i === index}
+              aria-label={`Цитата ${i + 1} из ${n}`}
+              className={`quote-carousel-dot${i === index ? ' is-active' : ''}`}
+              onClick={() => onIndexChange(i)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function App() {
@@ -15,7 +94,8 @@ export default function App() {
   const [pending, setPending] = useState(false)
   const [loadingStats, setLoadingStats] = useState(true)
   const [justVoted, setJustVoted] = useState(false)
-  const [quotes, setQuotes] = useState<Wisdom[]>(() => pickQuotes(1))
+  const [quotes, setQuotes] = useState<Wisdom[]>(() => pickQuotes(QUOTE_COUNT))
+  const [quoteIndex, setQuoteIndex] = useState(0)
   const [canVote, setCanVote] = useState(false)
   const [statsReload, setStatsReload] = useState(0)
 
@@ -53,6 +133,16 @@ export default function App() {
     }
   }, [statsReload])
 
+  const voted = stats?.voted ?? false
+
+  useEffect(() => {
+    if (!voted || quotes.length < 2) return
+    const id = window.setInterval(() => {
+      setQuoteIndex((i) => (i + 1) % quotes.length)
+    }, QUOTE_ROTATE_MS)
+    return () => window.clearInterval(id)
+  }, [voted, quotes, quoteIndex])
+
   async function vote(choice: Choice) {
     if (stats?.voted || pending || !canVote) return
     setError(null)
@@ -61,7 +151,8 @@ export default function App() {
       const next = await castVote(choice)
       setStats(next)
       setJustVoted(true)
-      setQuotes(pickQuotes(1))
+      setQuotes(pickQuotes(QUOTE_COUNT))
+      setQuoteIndex(0)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
     } finally {
@@ -69,9 +160,9 @@ export default function App() {
     }
   }
 
-  const voted = stats?.voted ?? false
   const pizdatoPct = pct(stats?.pizdato ?? 0, stats?.total ?? 0)
   const huyevoPct = pct(stats?.huyevo ?? 0, stats?.total ?? 0)
+  const activeQuote = quotes[quoteIndex] ?? quotes[0]
 
   return (
     <div className="page">
@@ -79,8 +170,9 @@ export default function App() {
       <div className="glow glow-a" aria-hidden="true" />
       <div className="glow glow-b" aria-hidden="true" />
 
+      <SiteNav current="home" />
+
       <main className="hero">
-        <p className="eyebrow">pizdato.net</p>
         <div className="brand-lockup">
           <img
             className="brand-mark"
@@ -92,13 +184,12 @@ export default function App() {
           />
           <h1 className="brand">pizdato</h1>
         </div>
-        {voted && quotes[0] ? (
-          <blockquote className="quote-block hero-quote">
-            <p className="quote-text">{quotes[0].text}</p>
-            <footer className="quote-footer">
-              <cite className="quote-author">{quotes[0].author}</cite>
-            </footer>
-          </blockquote>
+        {voted && activeQuote ? (
+          <QuoteCarousel
+            quotes={quotes}
+            index={quoteIndex}
+            onIndexChange={setQuoteIndex}
+          />
         ) : (
           <>
             <p className="tagline">Мир делится на два лагеря.</p>
@@ -174,7 +265,9 @@ export default function App() {
 
             <p className="total">Всего голосов: {stats?.total ?? 0}</p>
 
-            {stats && quotes[0] && <SharePanel stats={stats} wisdom={quotes[0]} />}
+            {stats && activeQuote && (
+              <SharePanel stats={stats} wisdom={activeQuote} />
+            )}
           </section>
         )}
 
@@ -193,30 +286,7 @@ export default function App() {
         )}
       </main>
 
-      <footer className="site-footer">
-        <div className="footer-nav">
-          <a className="channel-link" href="/issledovanie">
-            Исследование
-          </a>
-          <span className="footer-sep" aria-hidden="true">
-            ·
-          </span>
-          <a className="channel-link" href="/faq">
-            FAQ
-          </a>
-          <span className="footer-sep" aria-hidden="true">
-            ·
-          </span>
-          <a
-            className="channel-link"
-            href="https://t.me/pizdato_net"
-            target="_blank"
-            rel="noopener noreferrer me"
-          >
-            Telegram-канал <span aria-hidden="true">@pizdato_net</span>
-          </a>
-        </div>
-      </footer>
+      <SiteFooter current="home" />
     </div>
   )
 }

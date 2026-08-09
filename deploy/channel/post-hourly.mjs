@@ -36,13 +36,14 @@ async function main() {
       return;
     }
 
-    const { verdict, reason, notes } = await generateVerdict(item);
+    const { verdict, reason, notes, item: enriched } = await generateVerdict(item);
     const saved = insertNewsAndVote({
       title: item.title,
       url: item.url,
       summary: item.summary || "",
       source: item.source || null,
       telegram: item.telegram || null,
+      imageUrl: enriched?.imageUrl || item.imageUrl || null,
       verdict,
       reason,
       score: item.score,

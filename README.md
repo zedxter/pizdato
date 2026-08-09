@@ -22,6 +22,8 @@ One meaningful vote per visitor is enforced with a soft anti-abuse layer (HTTP-o
 - Before vote: brand + tagline + two vote buttons (buttons unlock ~2s after stats load)
 - After vote: wisdom quote in the hero, live % bars, share panel with badge preview (Telegram / VK / copy / download / native share)
 - Essay: [pizdato.net/issledovanie](https://pizdato.net/issledovanie) — research piece on binary oppositions (linked from the footer)
+- Feed: [pizdato.net/lenta](https://pizdato.net/lenta) — news that moved humanity’s score, with verdicts and thumbnails
+- How it works: [pizdato.net/how](https://pizdato.net/how) — voting, news verdicts, and why your click still matters
 - FAQ: [pizdato.net/faq](https://pizdato.net/faq) — how voting works, one vote, privacy at a high level
 - Frontend retries `GET /api/stats` a few times and shows **Обновить** if the API is briefly unavailable
 
@@ -48,6 +50,7 @@ Open http://localhost:5173 — Vite proxies `/api` to the backend. For local MCP
 |--------|------|-------------|
 | `GET` | `/api/stats` | Issues/resumes `voter_id` cookie + session; returns counts and whether this client already voted |
 | `POST` | `/api/vote` | Body `{ "choice": "pizdato" \| "huyevo" }` |
+| `GET` | `/api/news` | Public feed from `news_items`; cursor `before_id`, `limit` (default 20, max 50) |
 
 Notable responses:
 
@@ -122,6 +125,8 @@ Technical SEO: `robots.txt`, `sitemap.xml`, Open Graph, JSON-LD, canonicals.
 Crawlable shells:
 
 - `/` → `index.html` (vote page meta)
+- `/lenta` → `lenta.html` (CollectionPage; feed via `GET /api/news`)
+- `/how` → `how.html` (how voting + news verdicts work)
 - `/issledovanie` → `issledovanie.html` (Article + BreadcrumbList meta, noscript excerpt)
 - `/faq` → `faq.html` (FAQPage JSON-LD); Caddy maps clean URLs via `try_files … {path}.html`
 
@@ -136,10 +141,8 @@ Same visual language, footer links, dedicated `*.html` shells + sitemap entries:
 
 | Path | Role | Notes |
 |------|------|--------|
-| `/kak-eto-rabotaet` | How voting works | One vote, session cookie, soft anti-abuse — public copy only |
 | `/mudrost` | Wisdom archive | Rotating/site quotes; shareable permalinks later |
 | `/statistika` | Live stats explainer | Aggregates + what the bars mean; link to MCP `/mcp` as curiosity |
-| `/faq` | Short FAQ | 4–6 questions people actually ask |
 | `/issledovanie/*` | Mini-essays | Optional series: like/dislike, equality, carnival language |
 
 Link each new URL from the footer and from Telegram posts (not only the homepage). Prefer fewer strong pages over a thin content farm.

@@ -61,6 +61,15 @@
         "@context": "https://schema.org",
         "@graph": [
           {
+            "@type": "WebSite",
+            "@id": "https://pizdato.net/#website",
+            "url": "https://pizdato.net/",
+            "name": "pizdato",
+            "inLanguage": "ru-RU",
+            "description": "Голосование: сделать пиздато или сделать хуёво.",
+            "publisher": { "@id": "https://pizdato.net/#organization" }
+          },
+          {
             "@type": "Organization",
             "@id": "https://pizdato.net/#organization",
             "name": "pizdato",
@@ -162,7 +171,13 @@
         <p>Чтобы выбор оставался жестом, а не накруткой.</p>
         <h2>Можно ли изменить голос?</h2>
         <p>Нет — после голосования выбор фиксируется.</p>
-        <p><a href="/issledovanie">Исследование</a> · <a href="https://t.me/pizdato_net">Telegram</a></p>
+        <p>
+          <a href="/">Голосование</a> ·
+          <a href="/how">Как это работает</a> ·
+          <a href="/lenta">Лента</a> ·
+          <a href="/issledovanie">Эссе</a> ·
+          <a href="https://t.me/pizdato_net">Telegram</a>
+        </p>
       </main>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>

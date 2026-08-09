@@ -72,6 +72,7 @@ export function insertNewsAndVote({
   summary = "",
   source = null,
   telegram = null,
+  imageUrl = null,
   verdict,
   reason = "",
   score = 0,
@@ -93,8 +94,8 @@ export function insertNewsAndVote({
   const insertNews = db.prepare(`
     INSERT INTO news_items (
       title, url, summary, source, telegram, verdict, reason,
-      score, cluster_size, engagement, voter_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      score, cluster_size, engagement, voter_id, image_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const insertVote = db.prepare(
     `INSERT INTO votes (choice, voter_id, ip_hash) VALUES (?, ?, NULL)`,
@@ -113,6 +114,9 @@ export function insertNewsAndVote({
       Math.max(1, Number(clusterSize) || 1),
       Math.max(0, Number(engagement) || 0),
       voterId,
+      imageUrl == null || String(imageUrl).trim() === ""
+        ? null
+        : String(imageUrl).trim(),
     );
     insertVote.run(verdict, voterId);
     return find.get(url);
@@ -140,10 +144,15 @@ CREATE TABLE IF NOT EXISTS news_items (
   engagement INTEGER NOT NULL DEFAULT 0,
   voter_id TEXT NOT NULL UNIQUE,
   posted_at TEXT,
+  image_url TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_news_items_created_at ON news_items (created_at);
 `);
+  const cols = db.prepare(`PRAGMA table_info(news_items)`).all();
+  if (!cols.some((c) => c.name === "image_url")) {
+    db.exec(`ALTER TABLE news_items ADD COLUMN image_url TEXT`);
+  }
 }
 
 /**

@@ -417,6 +417,9 @@ export async function generateVerdict(item) {
     if (fetched.finalUrl && fetched.finalUrl !== enriched.url) {
       enriched.resolvedUrl = fetched.finalUrl;
     }
+    if (fetched.imageUrl && !enriched.imageUrl) {
+      enriched.imageUrl = fetched.imageUrl;
+    }
     console.log(
       `article chars=${(enriched.articleText || "").length} final=${fetched.finalUrl || enriched.url}`,
     );
