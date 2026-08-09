@@ -47,6 +47,21 @@ export function listNewsUrls({ days = 30 } = {}) {
   return rows.map((r) => r.url).filter(Boolean);
 }
 
+/** Recent news rows for similarity / topic de-dupe (default last 24h). */
+export function listRecentNewsItems({ hours = 24 } = {}) {
+  const h = positiveInt(hours, 24, { max: 24 * 60 });
+  return getDb()
+    .prepare(
+      `
+SELECT id, title, url, summary, created_at
+FROM news_items
+WHERE created_at >= datetime('now', ?)
+ORDER BY created_at DESC
+`,
+    )
+    .all(`-${h} hours`);
+}
+
 /**
  * Insert news_items row + matching votes row in one transaction.
  * Idempotent on url: returns { inserted: false } if url already exists.

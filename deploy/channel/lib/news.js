@@ -7,6 +7,7 @@ const STATE_DIR =
 const STATE_FILE = join(STATE_DIR, "evening-posted.json");
 
 const FEEDS = [
+  // Wire / general (kept for coverage; absurd filter + dedupe cut the noise)
   "https://news.google.com/rss?hl=ru&gl=RU&ceid=RU:ru",
   "https://news.google.com/rss/headlines/section/topic/WORLD?hl=ru&gl=RU&ceid=RU:ru",
   "https://news.google.com/rss/headlines/section/topic/NATION?hl=ru&gl=RU&ceid=RU:ru",
@@ -15,12 +16,45 @@ const FEEDS = [
   "https://www.interfax.ru/rss.asp",
   "https://rssexport.rbc.ru/rbcnews/news/30/full.rss",
   "https://www.kommersant.ru/RSS/news.xml",
+  "https://meduza.io/rss/all",
   "https://feeds.bbci.co.uk/news/world/rss.xml",
   "https://feeds.bbci.co.uk/russian/rss.xml",
   "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
   "https://www.theguardian.com/world/rss",
+
+  // Science / space / odd discoveries
+  "https://nplus1.ru/rss",
+  "https://elementy.ru/rss/news",
+  "https://naked-science.ru/feed",
+  "https://www.sciencedaily.com/rss/top.xml",
+  "https://www.nasa.gov/rss/dyn/breaking_news.rss",
+  "https://www.space.com/feeds/all",
+  "https://www.livescience.com/feeds/all",
+  "https://newatlas.com/index.rss",
+  "https://www.atlasobscura.com/feeds/latest",
+  "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml",
+  "https://www.theguardian.com/science/rss",
+  "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
+
+  // Tech / gadgets (more glitches & quirks than wire politics)
   "https://habr.com/ru/rss/news/?fl=ru",
+  "https://vc.ru/rss",
+  "https://www.theverge.com/rss/index.xml",
+  "https://feeds.arstechnica.com/arstechnica/index",
+  "https://www.ixbt.com/export/news.rss",
+  "https://3dnews.ru/news/rss/",
+  "https://feeds.bbci.co.uk/news/technology/rss.xml",
+  "https://www.theguardian.com/technology/rss",
+  "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+
+  // Quirky / offbeat
+  "https://www.mentalfloss.com/feed",
+  "https://www.boredpanda.com/feed/",
 ];
+
+/** Hosts that skew toward weird / science / tech — boost absurd selection. */
+const QUIRK_HOST_RE =
+  /nplus1\.ru|elementy\.ru|naked-science\.ru|sciencedaily\.com|nasa\.gov|space\.com|livescience\.com|newatlas\.com|atlasobscura\.com|mentalfloss\.com|boredpanda\.com|theverge\.com|arstechnica\.com|vc\.ru|ixbt\.com|3dnews\.ru|habr\.com|meduza\.io|popmech\.ru/i;
 
 /** Host → official-ish Telegram channel, if known. */
 const SOURCE_TG_BY_HOST = {
@@ -46,6 +80,7 @@ const SOURCE_TG_BY_HOST = {
   "fontanka.ru": "https://t.me/fontankaspb",
   "habr.com": "https://t.me/habr_com",
   "vc.ru": "https://t.me/vcru",
+  "nplus1.ru": "https://t.me/nplusone",
   "theverge.com": "https://t.me/verge",
   "cnn.com": "https://t.me/cnn",
   "reuters.com": "https://t.me/Reuters",
@@ -103,6 +138,7 @@ function decodeXml(s) {
 
 function parseRss(xml, source) {
   const items = [];
+  // RSS 2.0
   const blocks = xml.split(/<item[\s>]/i).slice(1);
   for (const block of blocks) {
     const title = block.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
@@ -117,6 +153,27 @@ function parseRss(xml, source) {
     items.push({
       title: decodeXml(title),
       url: decodeXml(link).split(/\s/)[0],
+      summary: decodeXml(desc).slice(0, 500),
+      source,
+    });
+  }
+  if (items.length) return items;
+
+  // Atom (e.g. The Verge)
+  const entries = xml.split(/<entry[\s>]/i).slice(1);
+  for (const block of entries) {
+    const title = block.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+    const linkHref =
+      block.match(/<link[^>]+href=["']([^"']+)["'][^>]*>/i)?.[1] ||
+      block.match(/<link[^>]*>([\s\S]*?)<\/link>/i)?.[1];
+    const desc =
+      block.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i)?.[1] ||
+      block.match(/<content[^>]*>([\s\S]*?)<\/content>/i)?.[1] ||
+      "";
+    if (!title || !linkHref) continue;
+    items.push({
+      title: decodeXml(title),
+      url: decodeXml(linkHref).split(/\s/)[0],
       summary: decodeXml(desc).slice(0, 500),
       source,
     });
@@ -367,9 +424,10 @@ function scoreItem(item, clusterSize = 1) {
 
   const host = hostOf(item.url);
   if (/news\.google\.com/.test(item.source || "") || /news\.google/.test(host)) score += 8;
-  if (/lenta\.ru|ria\.ru|rbc\.ru|bbc\.|nytimes\.|guardian\.|interfax|kommersant|tass/.test(host))
+  if (/lenta\.ru|ria\.ru|rbc\.ru|bbc\.|nytimes\.|guardian\.|interfax|kommersant|tass|meduza/.test(host))
     score += 4;
-  if (/habr\.com|theverge\.com/.test(host)) score -= 3;
+  if (QUIRK_HOST_RE.test(host)) score += 6;
+  if (/habr\.com|theverge\.com/.test(host) && /релиз|обновлен|патч|версия/i.test(t)) score -= 3;
   return score;
 }
 
@@ -377,29 +435,86 @@ function scoreItem(item, clusterSize = 1) {
 const EVENING_HARD_SKIP_RE =
   /санкц|выборы|президент|правительств|госдум|сенат|конгресс|парламент|трамп|путин|байден|нато|мид\b|дипломат|законпроект|депутат|министр|минпром|минвест|минюст|кремл|белый дом|мобилиз|израил|хамас|орган(ы|ов)?\b|донор|трансплант|пересадк|инфаркт|онколог|рак\b|погиб|убит|теракт|расстрел|катастроф|землетряс|ураган|наводнен|газпром|хранилищ|инфляц|ликвидн|госконтракт|госзакуп|мигрант|нежелательн|дериватив|заблокированн|умерл|умерла|\bумер\b|эвтанази|суицид|похорон/i;
 
-/** Signals that a story is absurd / funny / delightfully weird. */
+/** Signals that a story is absurd / funny / delightfully weird / a quirky sensation. */
 const ABSURD_RE =
-  /абсурд|курьёз|курьез|смешн|забавн|розыгрыш|опечатка|перепутал|вместо\s|сбежал|зоопарк|в квартире|пенсионерк|крокодил|удав|кот[аыу]|собак|попуга|хомяк|капибар|енот|жираф|слон|обезьян|пингвин|утка|белка|медвед(?!ев)|голый|трусах|блогер|лерчек|титок|\bмем\b|rm\s*-rf|удалила данные|nintendo|mamma mia|кофе натощак|утренней привычк|каникул|вирусн(ых|ой)?\s+игр|суд обязал|роскошн\w*\s+автомобил|автомобил\w*\s+блогер|claude|chatgpt|взломал.*ии|ии.*взлом|антроп/i;
+  /абсурд|курьёз|курьез|смешн|забавн|необычн|странн|сенсац|розыгрыш|опечатка|перепутал|вместо\s|сбежал|зоопарк|в квартире|пенсионерк|крокодил|удав|кот[аыу]|собак|попуга|хомяк|капибар|енот|жираф|слон|обезьян|пингвин|утка|белка|медвед(?!ев)|голый|трусах|блогер|лерчек|титок|\bмем\b|rm\s*-rf|удалила данные|nintendo|mamma mia|кофе натощак|утренней привычк|каникул|вирусн(ых|ой)?\s+игр|суд обязал|роскошн\w*\s+автомобил|автомобил\w*\s+блогер|claude|chatgpt|взломал.*ии|ии.*взлом|антроп|нашли.*в\s|заблудил|потерял.*наш[её]л|ошибк[аиу].*ии|ии.*ошибк|вместо резерв|миллиард.*прокат|рекорд.*ягод|ежевик|обнаруж|впервые|загад|динозавр|окамен|экзопланет|марсиан|черв[яьи]|бактер|гриб|кит\b|дельфин|осьминог|кондиционер|пепелищ|глюк|баг\b|weird|bizarre|odd\b|strange|curious/i;
+
+/** Soft science/tech novelty cues for quirk hosts without slapstick keywords. */
+const QUIRK_SOFT_RE =
+  /обнаруж|впервые|необыч|странн|загад|рекорд|ошибк|вместо|глюк|баг\b|взлом|утечк|динозавр|окамен|экзопланет|марс|лун[аые]|черв|бактер|гриб|кит\b|дельфин|осьминог|robot|ai\b|llm|chatgpt|claude|glitch|bug\b|weird|bizarre/i;
+
+/** Repetitive wire templates that look «hot» but are the same story every hour. */
+const REPETITIVE_TOPIC_RE =
+  /аэропорт\w*.{0,40}ограничен|ограничен\w*.{0,40}аэропорт|временн\w*\s+ограничен\w*.{0,30}пол[её]т|пол[её]т\w*.{0,30}временн\w*\s+ограничен|сняли временн\w*\s+ограничен\w*.{0,30}аэропорт|ввели временн\w*\s+ограничен\w*.{0,30}аэропорт/i;
+
+function topicFingerprint(title, summary = "") {
+  const t = `${title} ${summary}`;
+  if (REPETITIVE_TOPIC_RE.test(t) || (/аэропорт/i.test(t) && /ограничен/i.test(t))) {
+    return "topic:airport-restrictions";
+  }
+  if (/санкц/i.test(t) && /(росси|против рф|против россии)/i.test(t)) {
+    return "topic:sanctions-russia";
+  }
+  return null;
+}
+
+/**
+ * True if candidate is too close to something already stored recently
+ * (same topic fingerprint or strong title-token overlap).
+ */
+export function findSimilarRecent(item, recentItems, { minOverlap = 3 } = {}) {
+  const title = item.title || "";
+  const summary = item.summary || "";
+  const fp = topicFingerprint(title, summary);
+  const tokens = titleTokens(title);
+
+  for (const prev of recentItems || []) {
+    const prevFp = topicFingerprint(prev.title || "", prev.summary || "");
+    if (fp && prevFp && fp === prevFp) {
+      return { reason: `topic ${fp}`, match: prev };
+    }
+    const overlap = overlapCount(tokens, titleTokens(prev.title || ""));
+    if (overlap >= minOverlap) {
+      return { reason: `title overlap=${overlap}`, match: prev };
+    }
+  }
+  return null;
+}
 
 function absurdScore(item) {
   const t = `${item.title} ${item.summary || ""}`;
+  const host = hostOf(item.url);
+  const quirkHost = QUIRK_HOST_RE.test(host);
   if (EVENING_HARD_SKIP_RE.test(t) || SKIP_RE.test(t)) return -999;
   if (/news\.google\.com/i.test(item.url)) return -40;
+  // Same wire blurb every hour (airports closed/opened) — never «абсурд дня».
+  if (topicFingerprint(item.title, item.summary) === "topic:airport-restrictions") {
+    return -80;
+  }
 
-  // Gate: without an absurd/funny signal, keep score ≤0 so evening won't pick it.
-  if (!ABSURD_RE.test(t)) {
+  const hasAbsurd = ABSURD_RE.test(t);
+  const softQuirk = quirkHost && QUIRK_SOFT_RE.test(t);
+
+  // Gate: without an absurd/funny signal, keep score ≤0 so evening/hourly won't pick it.
+  if (!hasAbsurd && !softQuirk) {
     return Math.min(item.clusterSize || 1, 3) - 5;
   }
 
-  let s = 60;
+  let s = softQuirk && !hasAbsurd ? 42 : 60;
   s += Math.min(item.clusterSize || 1, 6) * 4;
   s += Math.max(0, item.score || 0) * 0.1;
+  if (quirkHost) s += 18;
 
-  if (/крокодил|удав|зоопарк|сбежал|в квартире|пенсионерк/i.test(t)) s += 45;
+  if (/крокодил|удав|зоопарк|сбежал|в квартире|пенсионерк|кондиционер|пепелищ/i.test(t))
+    s += 45;
   if (/перепутал|опечатка|вместо\s|rm\s*-rf|удалила данные/i.test(t)) s += 40;
-  if (/блогер|лерчек|\bмем\b|титок|курьёз|забавн|смешн|абсурд/i.test(t)) s += 28;
-  if (/nintendo|mamma mia|кофе|каникул|привычк|roblox|claude|chatgpt/i.test(t)) s += 18;
-  if (/habr\.com/i.test(item.url) && /удал|ошиб|слома|вместо|rm/i.test(t)) s += 12;
+  if (/блогер|лерчек|\bмем\b|титок|курьёз|забавн|смешн|абсурд|необычн|странн|сенсац|weird|bizarre/i.test(t))
+    s += 28;
+  if (/nintendo|mamma mia|кофе|каникул|привычк|roblox|claude|chatgpt|atlas obscura/i.test(t))
+    s += 18;
+  if (/динозавр|окамен|экзопланет|марсиан|осьминог|дельфин/i.test(t)) s += 16;
+  if (/habr\.com|theverge\.com|arstechnica/i.test(host) && /удал|ошиб|слома|вместо|rm|glitch|bug/i.test(t))
+    s += 12;
   return s;
 }
 
@@ -446,6 +561,40 @@ export async function rankNews({ excludeUrls = [] } = {}) {
 
 export async function pickNews() {
   return pickAbsurdNews();
+}
+
+/**
+ * Hourly cron: pick the funniest / most absurd / quirky sensation that is
+ * NOT similar to anything stored in the last 24h.
+ * Returns null when nothing suitable — caller must skip DB write / vote.
+ */
+export async function pickHourlyAbsurdNews({
+  excludeUrls = [],
+  recentItems = [],
+} = {}) {
+  const ranked = await rankNews({ excludeUrls });
+  const byAbsurd = [...ranked]
+    .filter((i) => (i.absurdScore ?? absurdScore(i)) > 0)
+    .sort((a, b) => (b.absurdScore ?? 0) - (a.absurdScore ?? 0));
+
+  for (const cand of byAbsurd) {
+    const dup = findSimilarRecent(cand, recentItems);
+    if (dup) {
+      console.log(
+        `skip similar (${dup.reason}) :: ${cand.title} ≈ ${dup.match?.title || "?"}`,
+      );
+      continue;
+    }
+    console.log(
+      `hourly absurd=${cand.absurdScore} score=${cand.score} cluster=${cand.clusterSize} :: ${cand.title}`,
+    );
+    return cand;
+  }
+
+  console.log(
+    `hourly: no absurd/unique candidate (absurd pool=${byAbsurd.length}, ranked=${ranked.length})`,
+  );
+  return null;
 }
 
 /** Evening: pick the most absurd / funny story of the day (not hard politics). */

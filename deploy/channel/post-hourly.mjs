@@ -1,14 +1,22 @@
 #!/usr/bin/env node
 /**
- * Hourly: pick one hot news item, decide пиздато/хуёво, write to SQLite
- * (news_items + votes), notify owner in Telegram. Does not post to channel.
+ * Hourly: pick the most absurd / funny / unusual news item (not a repeat of
+ * the last 24h), decide пиздато/хуёво, write to SQLite (news_items + votes),
+ * notify owner. Does not post to channel.
+ *
+ * If nothing suitable is found — exit 0 without DB write or vote.
  */
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ensureNewsTable, insertNewsAndVote, listNewsUrls } from "./lib/db.js";
+import {
+  ensureNewsTable,
+  insertNewsAndVote,
+  listNewsUrls,
+  listRecentNewsItems,
+} from "./lib/db.js";
 import { loadPosterEnv } from "./lib/env.js";
 import { generateVerdict } from "./lib/generate.js";
-import { rankNews } from "./lib/news.js";
+import { pickHourlyAbsurdNews } from "./lib/news.js";
 import { notifyOwner } from "./lib/telegram.js";
 
 async function main() {
@@ -17,13 +25,16 @@ async function main() {
 
   try {
     const seen = listNewsUrls({ days: 60 });
-    const candidates = await rankNews({ excludeUrls: seen });
-    if (!candidates.length) throw new Error("no suitable news items");
+    const recent = listRecentNewsItems({ hours: 24 });
+    const item = await pickHourlyAbsurdNews({
+      excludeUrls: seen,
+      recentItems: recent,
+    });
 
-    const item = candidates[0];
-    console.log(
-      `hourly pick score=${item.score} cluster=${item.clusterSize} :: ${item.title}`,
-    );
+    if (!item) {
+      console.log("hourly skip: no absurd/unique news this hour");
+      return;
+    }
 
     const { verdict, reason, notes } = await generateVerdict(item);
     const saved = insertNewsAndVote({
@@ -53,7 +64,7 @@ async function main() {
       `Вердикт: ${label}`,
       `Почему: ${reason}`,
       "",
-      `score=${item.score} cluster=${item.clusterSize} id=${saved.id}`,
+      `absurd=${item.absurdScore ?? "?"} score=${item.score} cluster=${item.clusterSize} id=${saved.id}`,
     ];
     if (notes.length) {
       dm.push("", `tech: ${notes.join("; ")}`);
