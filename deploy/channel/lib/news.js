@@ -453,19 +453,33 @@ export function sourceFooter(item) {
   return lines.join("\n");
 }
 
-function titleTokens(title) {
-  const stop = new Set([
-    "этот", "этого", "после", "перед", "через", "также", "более", "между", "когда",
-    "чтобы", "только", "может", "будет", "были", "своей", "своих", "своём", "или",
-    "для", "при", "под", "над", "без", "что", "как", "это", "его", "её", "их",
-    "the", "and", "for", "with", "from", "that", "this", "are", "was", "were",
-    "сообщает", "заявил", "заявила", "рассказал", "стало", "известно",
-  ]);
-  return String(title || "")
+const TOKEN_STOP = new Set([
+  "этот", "этого", "после", "перед", "через", "также", "более", "между", "когда",
+  "чтобы", "только", "может", "будет", "были", "своей", "своих", "своём", "своего",
+  "своим", "своими", "или", "для", "при", "под", "над", "без", "что", "как", "это",
+  "его", "её", "их", "она", "они", "был", "была", "было", "летняя", "летний",
+  "летних", "году", "года", "лет", "the", "and", "for", "with", "from", "that",
+  "this", "are", "was", "were", "сообщает", "заявил", "заявила", "рассказал",
+  "стало", "известно", "получила", "получил", "дали",
+]);
+
+/** Crude RU/EN stem: cut long words so пенсионерке ≈ пенсионерка, заказала ≈ заказ. */
+function stemToken(w) {
+  if (w.length <= 5) return w;
+  return w.slice(0, 5);
+}
+
+function textTokens(text) {
+  return String(text || "")
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .split(/\s+/)
-    .filter((w) => w.length > 3 && !stop.has(w));
+    .filter((w) => w.length > 3 && !TOKEN_STOP.has(w))
+    .map(stemToken);
+}
+
+function titleTokens(title) {
+  return textTokens(title);
 }
 
 function overlapCount(a, b) {
@@ -544,24 +558,104 @@ function topicFingerprint(title, summary = "") {
   return null;
 }
 
+/** Stems too common across unrelated tech/wire copy — ignore in body similarity. */
+const GENERIC_STEMS = new Set([
+  "openai", "chatg", "claude", "googl", "micros", "yandex", "apple", "tesla",
+  "антро", "данны", "польз", "компан", "серви", "сайт", "прило", "новост",
+  "сообщ", "техно", "цифро", "интер", "систем", "верси", "обнов", "запус",
+  "предс", "разраб", "инжен", "учен", "иссле", "резул", "пробле", "вопрос",
+  "оказа", "получ", "сдела", "хотет", "может", "нужно", "сейча", "сегод",
+  "москв", "росси", "стран", "город", "людей", "человек", "время", "после",
+  "перед", "также", "котот", "котор", "своем", "своих", "своей", "своего",
+  "будет", "были", "было", "есть", "этот", "этого", "очень", "более", "между",
+  "через", "тольк", "чтобы", "когда", "если", "или", "при", "под", "над",
+  "агент", "модел", "нейрон", "искус", "алгор",
+]);
+
+function contentTokens(text) {
+  return textTokens(text).filter((t) => !GENERIC_STEMS.has(t));
+}
+
+function uniqueOverlap(a, b) {
+  const setB = new Set(b);
+  const hit = new Set();
+  for (const w of a) if (setB.has(w)) hit.add(w);
+  return hit.size;
+}
+
+function jaccard(a, b) {
+  const A = new Set(a);
+  const B = new Set(b);
+  if (A.size === 0 || B.size === 0) return 0;
+  let inter = 0;
+  for (const x of A) if (B.has(x)) inter += 1;
+  return inter / (A.size + B.size - inter);
+}
+
 /**
- * True if candidate is too close to something already stored recently
- * (same topic fingerprint or strong title-token overlap).
+ * True if candidate is too close to something already stored recently.
+ * Title stems catch wire rewrites; body uses content tokens + Jaccard so
+ * shared «OpenAI/данные» boilerplate does not kill unrelated stories.
  */
-export function findSimilarRecent(item, recentItems, { minOverlap = 3 } = {}) {
+export function findSimilarRecent(
+  item,
+  recentItems,
+  { minTitleOverlap = 3, minBodyJaccard = 0.22, minBodyOverlap = 14 } = {},
+) {
   const title = item.title || "";
-  const summary = item.summary || "";
-  const fp = topicFingerprint(title, summary);
-  const tokens = titleTokens(title);
+  const body = `${item.articleText || ""} ${item.summary || ""}`.trim();
+  const fp = topicFingerprint(title, body || item.summary || "");
+  const titleToks = textTokens(title);
+  const titleContent = contentTokens(title);
+  const bodyContent = contentTokens(body.slice(0, 3500));
 
   for (const prev of recentItems || []) {
-    const prevFp = topicFingerprint(prev.title || "", prev.summary || "");
+    const prevTitle = prev.title || "";
+    const prevBody = String(prev.summary || prev.articleText || "");
+    const prevFp = topicFingerprint(prevTitle, prevBody);
     if (fp && prevFp && fp === prevFp) {
       return { reason: `topic ${fp}`, match: prev };
     }
-    const overlap = overlapCount(tokens, titleTokens(prev.title || ""));
-    if (overlap >= minOverlap) {
-      return { reason: `title overlap=${overlap}`, match: prev };
+
+    const prevTitleToks = textTokens(prevTitle);
+    const titleOverlap = uniqueOverlap(titleToks, prevTitleToks);
+    if (titleOverlap >= minTitleOverlap) {
+      return { reason: `title overlap=${titleOverlap}`, match: prev };
+    }
+
+    const prevTitleContent = contentTokens(prevTitle);
+    const prevBodyContent = contentTokens(prevBody.slice(0, 3500));
+
+    // Title content words appearing in the other story's body (same event, different headline).
+    if (titleContent.length >= 3 && prevBodyContent.length >= 8) {
+      const titleInPrev = uniqueOverlap(titleContent, prevBodyContent);
+      if (
+        titleInPrev >= minTitleOverlap &&
+        titleInPrev / titleContent.length >= 0.55
+      ) {
+        return { reason: `title∈body overlap=${titleInPrev}`, match: prev };
+      }
+    }
+    if (prevTitleContent.length >= 3 && bodyContent.length >= 8) {
+      const prevInBody = uniqueOverlap(prevTitleContent, bodyContent);
+      if (
+        prevInBody >= minTitleOverlap &&
+        prevInBody / prevTitleContent.length >= 0.55
+      ) {
+        return { reason: `prevTitle∈body overlap=${prevInBody}`, match: prev };
+      }
+    }
+
+    // Body↔body: require both absolute overlap and Jaccard on content tokens.
+    if (bodyContent.length >= 12 && prevBodyContent.length >= 12) {
+      const bodyOverlap = uniqueOverlap(bodyContent, prevBodyContent);
+      const jac = jaccard(bodyContent, prevBodyContent);
+      if (bodyOverlap >= minBodyOverlap && jac >= minBodyJaccard) {
+        return {
+          reason: `body overlap=${bodyOverlap} jaccard=${jac.toFixed(2)}`,
+          match: prev,
+        };
+      }
     }
   }
   return null;
@@ -680,10 +774,11 @@ export async function pickHourlyAbsurdNews({
   const shortlist = byAbsurd.slice(0, Math.max(1, enrichTop));
   const enriched = [];
   for (const cand of shortlist) {
-    const dup = findSimilarRecent(cand, recentItems);
-    if (dup) {
+    // Cheap title-only pass before fetching the article.
+    const earlyDup = findSimilarRecent(cand, recentItems);
+    if (earlyDup) {
       console.log(
-        `skip similar (${dup.reason}) :: ${cand.title} ≈ ${dup.match?.title || "?"}`,
+        `skip similar (${earlyDup.reason}) :: ${cand.title} ≈ ${earlyDup.match?.title || "?"}`,
       );
       continue;
     }
@@ -710,6 +805,14 @@ export async function pickHourlyAbsurdNews({
         console.log(`skip non-russian body :: ${cand.title}`);
         continue;
       }
+      // Always re-check with article body vs recent summaries (wire rewrites).
+      const bodyDup = findSimilarRecent(cand, recentItems);
+      if (bodyDup) {
+        console.log(
+          `skip similar after body (${bodyDup.reason}) :: ${cand.title} ≈ ${bodyDup.match?.title || "?"}`,
+        );
+        continue;
+      }
       cand.absurdScore = absurdScore(cand);
       if (cand.absurdScore <= 0) {
         console.log(
@@ -721,7 +824,16 @@ export async function pickHourlyAbsurdNews({
     } catch (e) {
       console.warn(`hourly enrich fail: ${e.message} :: ${cand.title}`);
       // Title-only fallback still allowed if it already looked absurd.
-      if ((cand.absurdScore ?? 0) > 0) enriched.push(cand);
+      if ((cand.absurdScore ?? 0) > 0) {
+        const fallbackDup = findSimilarRecent(cand, recentItems);
+        if (fallbackDup) {
+          console.log(
+            `skip similar fallback (${fallbackDup.reason}) :: ${cand.title}`,
+          );
+          continue;
+        }
+        enriched.push(cand);
+      }
     }
   }
 
