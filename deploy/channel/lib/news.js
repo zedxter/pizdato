@@ -52,9 +52,28 @@ const FEEDS = [
   "https://www.boredpanda.com/feed/",
 ];
 
+/** Feeds biased to Russian copy — preferred for hourly (курьёзы / абсурд). */
+const FEEDS_HOURLY = [
+  "https://news.google.com/rss?hl=ru&gl=RU&ceid=RU:ru",
+  "https://lenta.ru/rss/news",
+  "https://ria.ru/export/rss2/archive/index.xml",
+  "https://www.interfax.ru/rss.asp",
+  "https://rssexport.rbc.ru/rbcnews/news/30/full.rss",
+  "https://www.kommersant.ru/RSS/news.xml",
+  "https://meduza.io/rss/all",
+  "https://feeds.bbci.co.uk/russian/rss.xml",
+  "https://nplus1.ru/rss",
+  "https://elementy.ru/rss/news",
+  "https://naked-science.ru/feed",
+  "https://habr.com/ru/rss/news/?fl=ru",
+  "https://vc.ru/rss",
+  "https://www.ixbt.com/export/news.rss",
+  "https://3dnews.ru/news/rss/",
+];
+
 /** Hosts that skew toward weird / science / tech — boost absurd selection. */
 const QUIRK_HOST_RE =
-  /nplus1\.ru|elementy\.ru|naked-science\.ru|sciencedaily\.com|nasa\.gov|space\.com|livescience\.com|newatlas\.com|atlasobscura\.com|mentalfloss\.com|boredpanda\.com|theverge\.com|arstechnica\.com|vc\.ru|ixbt\.com|3dnews\.ru|habr\.com|meduza\.io|popmech\.ru/i;
+  /nplus1\.ru|elementy\.ru|naked-science\.ru|popmech\.ru|sciencedaily\.com|nasa\.gov|space\.com|livescience\.com|newatlas\.com|atlasobscura\.com|mentalfloss\.com|boredpanda\.com|theverge\.com|arstechnica\.com|vc\.ru|ixbt\.com|3dnews\.ru|habr\.com|meduza\.io/i;
 
 /** Host → official-ish Telegram channel, if known. */
 const SOURCE_TG_BY_HOST = {
@@ -495,11 +514,20 @@ const EVENING_HARD_SKIP_RE =
 
 /** Signals that a story is absurd / funny / delightfully weird / a quirky sensation. */
 const ABSURD_RE =
-  /абсурд|курьёз|курьез|смешн|забавн|необычн|странн|сенсац|розыгрыш|опечатка|перепутал|вместо\s|сбежал|зоопарк|в квартире|пенсионерк|крокодил|удав|кот[аыу]|собак|попуга|хомяк|капибар|енот|жираф|слон|обезьян|пингвин|утка|белка|медвед(?!ев)|голый|трусах|блогер|лерчек|титок|\bмем\b|rm\s*-rf|удалила данные|nintendo|mamma mia|кофе натощак|утренней привычк|каникул|вирусн(ых|ой)?\s+игр|суд обязал|роскошн\w*\s+автомобил|автомобил\w*\s+блогер|claude|chatgpt|взломал.*ии|ии.*взлом|антроп|нашли.*в\s|заблудил|потерял.*наш[её]л|ошибк[аиу].*ии|ии.*ошибк|вместо резерв|миллиард.*прокат|рекорд.*ягод|ежевик|обнаруж|впервые|загад|динозавр|окамен|экзопланет|марсиан|черв[яьи]|бактер|гриб|кит\b|дельфин|осьминог|кондиционер|пепелищ|глюк|баг\b|weird|bizarre|odd\b|strange|curious/i;
+  /абсурд|курьёз|курьез|смешн|забавн|необычн|странн|сенсац|розыгрыш|опечатка|перепутал|вместо\s|сбежал|зоопарк|в квартире|пенсионерк|крокодил|удав|кот[аыу]|собак|попуга|хомяк|капибар|енот|жираф|слон|обезьян|пингвин|утка|белка|медвед(?!ев)|голубь|таракан|хомяч|хорьк|голый|трусах|блогер|лерчек|титок|\bмем\b|rm\s*-rf|удалила данные|nintendo|mamma mia|кофе натощак|утренней привычк|каникул|вирусн(ых|ой)?\s+игр|суд обязал|роскошн\w*\s+автомобил|автомобил\w*\s+блогер|claude|chatgpt|взломал.*ии|ии.*взлом|антроп|нашли.*в\s|заблудил|потерял.*наш[её]л|ошибк[аиу].*ии|ии.*ошибк|вместо резерв|миллиард.*прокат|рекорд.*ягод|ежевик|обнаруж|впервые|загад|динозавр|окамен|экзопланет|марсиан|черв[яьи]|бактер|гриб|кит\b|дельфин|осьминог|кондиционер|пепелищ|глюк|баг\b|лифт|сосед|свадьб|штраф за|запретили|разреш(или|ить).*в\s|нарисовал|тату|голышом|в трусах|забыл.*дома|перепутал.*рейс|сел не в тот|weird|bizarre|odd\b|strange|curious/i;
 
 /** Soft science/tech novelty cues for quirk hosts without slapstick keywords. */
 const QUIRK_SOFT_RE =
-  /обнаруж|впервые|необыч|странн|загад|рекорд|ошибк|вместо|глюк|баг\b|взлом|утечк|динозавр|окамен|экзопланет|марс|лун[аые]|черв|бактер|гриб|кит\b|дельфин|осьминог|robot|ai\b|llm|chatgpt|claude|glitch|bug\b|weird|bizarre/i;
+  /обнаруж|впервые|необыч|странн|загад|рекорд|ошибк|вместо|глюк|баг\b|взлом|утечк|динозавр|окамен|экзопланет|марс|лун[аые]|черв|бактер|гриб|кит\b|дельфин|осьминог|курьёз|забавн|robot|ai\b|llm|chatgpt|claude|glitch|bug\b|weird|bizarre/i;
+
+/** Majority Cyrillic letters → treat as Russian copy. */
+export function looksRussian(text) {
+  const s = String(text || "");
+  const letters = s.replace(/[^a-zA-Zа-яА-ЯёЁ]/g, "");
+  if (letters.length < 10) return false;
+  const cyr = (s.match(/[а-яА-ЯёЁ]/g) || []).length;
+  return cyr / letters.length >= 0.55;
+}
 
 /** Repetitive wire templates that look «hot» but are the same story every hour. */
 const REPETITIVE_TOPIC_RE =
@@ -540,8 +568,8 @@ export function findSimilarRecent(item, recentItems, { minOverlap = 3 } = {}) {
 }
 
 function absurdScore(item) {
-  const t = `${item.title} ${item.summary || ""}`;
-  const host = hostOf(item.url);
+  const t = `${item.title} ${item.summary || ""} ${item.articleText || ""}`;
+  const host = hostOf(item.resolvedUrl || item.url);
   const quirkHost = QUIRK_HOST_RE.test(host);
   if (EVENING_HARD_SKIP_RE.test(t) || SKIP_RE.test(t)) return -999;
   if (/news\.google\.com/i.test(item.url)) return -40;
@@ -558,29 +586,36 @@ function absurdScore(item) {
     return Math.min(item.clusterSize || 1, 3) - 5;
   }
 
-  let s = softQuirk && !hasAbsurd ? 42 : 60;
+  let s = softQuirk && !hasAbsurd ? 48 : 68;
   s += Math.min(item.clusterSize || 1, 6) * 4;
   s += Math.max(0, item.score || 0) * 0.1;
-  if (quirkHost) s += 18;
+  if (quirkHost) s += 22;
+  if (item.articleText && item.articleText.length > 200) s += 8;
 
-  if (/крокодил|удав|зоопарк|сбежал|в квартире|пенсионерк|кондиционер|пепелищ/i.test(t))
+  if (/крокодил|удав|зоопарк|сбежал|в квартире|пенсионерк|кондиционер|пепелищ|таракан|голубь/i.test(t))
+    s += 50;
+  if (/перепутал|опечатка|вместо\s|rm\s*-rf|удалила данные|сел не в тот|забыл.*дома/i.test(t))
     s += 45;
-  if (/перепутал|опечатка|вместо\s|rm\s*-rf|удалила данные/i.test(t)) s += 40;
   if (/блогер|лерчек|\bмем\b|титок|курьёз|забавн|смешн|абсурд|необычн|странн|сенсац|weird|bizarre/i.test(t))
-    s += 28;
-  if (/nintendo|mamma mia|кофе|каникул|привычк|roblox|claude|chatgpt|atlas obscura/i.test(t))
-    s += 18;
-  if (/динозавр|окамен|экзопланет|марсиан|осьминог|дельфин/i.test(t)) s += 16;
-  if (/habr\.com|theverge\.com|arstechnica/i.test(host) && /удал|ошиб|слома|вместо|rm|glitch|bug/i.test(t))
-    s += 12;
+    s += 32;
+  if (/nintendo|mamma mia|кофе|каникул|привычк|roblox|claude|chatgpt|atlas obscura|лифт|сосед|свадьб/i.test(t))
+    s += 20;
+  if (/динозавр|окамен|экзопланет|марсиан|осьминог|дельфин/i.test(t)) s += 18;
+  if (/habr\.com|theverge\.com|arstechnica|ixbt\.com|3dnews/i.test(host) && /удал|ошиб|слома|вместо|rm|glitch|bug|глюк/i.test(t))
+    s += 14;
   return s;
 }
 
 /** Rank RSS items; excludeUrls skips already-seen / already-stored links. */
-export async function rankNews({ excludeUrls = [] } = {}) {
+export async function rankNews({
+  excludeUrls = [],
+  russianOnly = false,
+  feeds = null,
+} = {}) {
   const excluded = new Set(excludeUrls);
+  const feedList = feeds || FEEDS;
   const all = [];
-  for (const feed of FEEDS) {
+  for (const feed of feedList) {
     try {
       all.push(...(await fetchFeed(feed)));
     } catch (e) {
@@ -601,7 +636,8 @@ export async function rankNews({ excludeUrls = [] } = {}) {
         tokens: titleTokens(normalized.title),
       };
     })
-    .filter((i) => !SKIP_RE.test(`${i.title} ${i.summary}`));
+    .filter((i) => !SKIP_RE.test(`${i.title} ${i.summary}`))
+    .filter((i) => !russianOnly || looksRussian(`${i.title} ${i.summary}`));
 
   for (const item of fresh) {
     let cluster = 1;
@@ -622,20 +658,28 @@ export async function pickNews() {
 }
 
 /**
- * Hourly cron: pick the funniest / most absurd / quirky sensation that is
+ * Hourly cron: pick the funniest / most absurd / quirky Russian story that is
  * NOT similar to anything stored in the last 24h.
+ * Fetches article bodies for top candidates so scoring/verdict see more than titles.
  * Returns null when nothing suitable — caller must skip DB write / vote.
  */
 export async function pickHourlyAbsurdNews({
   excludeUrls = [],
   recentItems = [],
+  enrichTop = 8,
 } = {}) {
-  const ranked = await rankNews({ excludeUrls });
+  const ranked = await rankNews({
+    excludeUrls,
+    russianOnly: true,
+    feeds: FEEDS_HOURLY,
+  });
   const byAbsurd = [...ranked]
     .filter((i) => (i.absurdScore ?? absurdScore(i)) > 0)
     .sort((a, b) => (b.absurdScore ?? 0) - (a.absurdScore ?? 0));
 
-  for (const cand of byAbsurd) {
+  const shortlist = byAbsurd.slice(0, Math.max(1, enrichTop));
+  const enriched = [];
+  for (const cand of shortlist) {
     const dup = findSimilarRecent(cand, recentItems);
     if (dup) {
       console.log(
@@ -643,14 +687,55 @@ export async function pickHourlyAbsurdNews({
       );
       continue;
     }
+    try {
+      const fetched = await fetchArticleBody(cand.url, { maxChars: 5000 });
+      if (fetched.notes?.length) {
+        console.warn("hourly article:", fetched.notes.join("; "));
+      }
+      if (fetched.text && fetched.text.length > 80) {
+        cand.articleText = fetched.text;
+        // Prefer body for scoring; keep a short summary for DB/display.
+        cand.summary = fetched.text.slice(0, 500);
+      }
+      if (fetched.finalUrl && !/news\.google\.com/i.test(fetched.finalUrl)) {
+        cand.resolvedUrl = fetched.finalUrl;
+        cand.url = fetched.finalUrl;
+      }
+      if (fetched.imageUrl) cand.imageUrl = fetched.imageUrl;
+      // Drop if article body is clearly not Russian (EN wire via RU feed title).
+      if (
+        cand.articleText &&
+        !looksRussian(`${cand.title} ${cand.articleText.slice(0, 800)}`)
+      ) {
+        console.log(`skip non-russian body :: ${cand.title}`);
+        continue;
+      }
+      cand.absurdScore = absurdScore(cand);
+      if (cand.absurdScore <= 0) {
+        console.log(
+          `skip after body (absurd=${cand.absurdScore}) :: ${cand.title}`,
+        );
+        continue;
+      }
+      enriched.push(cand);
+    } catch (e) {
+      console.warn(`hourly enrich fail: ${e.message} :: ${cand.title}`);
+      // Title-only fallback still allowed if it already looked absurd.
+      if ((cand.absurdScore ?? 0) > 0) enriched.push(cand);
+    }
+  }
+
+  enriched.sort((a, b) => (b.absurdScore ?? 0) - (a.absurdScore ?? 0));
+  const top = enriched[0];
+  if (top) {
     console.log(
-      `hourly absurd=${cand.absurdScore} score=${cand.score} cluster=${cand.clusterSize} :: ${cand.title}`,
+      `hourly absurd=${top.absurdScore} score=${top.score} cluster=${top.clusterSize} body=${(top.articleText || "").length} :: ${top.title}`,
     );
-    return cand;
+    return top;
   }
 
   console.log(
-    `hourly: no absurd/unique candidate (absurd pool=${byAbsurd.length}, ranked=${ranked.length})`,
+    `hourly: no absurd/unique RU candidate (shortlist=${shortlist.length}, ranked=${ranked.length})`,
   );
   return null;
 }

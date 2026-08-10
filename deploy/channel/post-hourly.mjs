@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Hourly: pick the most absurd / funny / unusual news item (not a repeat of
- * the last 24h), decide пиздато/хуёво, write to SQLite (news_items + votes),
- * notify owner. Does not post to channel.
+ * Hourly: pick the most absurd / funny / unusual *Russian* news item (not a
+ * repeat of the last 24h), decide пиздато/хуёво from article text, write to
+ * SQLite (news_items + votes). Does not post to channel and does not DM on
+ * success (лента on the site is enough). Failures still notify the owner.
  *
  * If nothing suitable is found — exit 0 without DB write or vote.
  */
@@ -32,15 +33,19 @@ async function main() {
     });
 
     if (!item) {
-      console.log("hourly skip: no absurd/unique news this hour");
+      console.log("hourly skip: no absurd/unique RU news this hour");
       return;
     }
 
     const { verdict, reason, notes, item: enriched } = await generateVerdict(item);
+    const summary =
+      (enriched?.articleText && enriched.articleText.slice(0, 1800)) ||
+      item.summary ||
+      "";
     const saved = insertNewsAndVote({
       title: item.title,
-      url: item.url,
-      summary: item.summary || "",
+      url: enriched?.resolvedUrl || item.url,
+      summary,
       source: item.source || null,
       telegram: item.telegram || null,
       imageUrl: enriched?.imageUrl || item.imageUrl || null,
@@ -55,23 +60,9 @@ async function main() {
       return;
     }
 
-    const label = verdict === "pizdato" ? "пиздато" : "хуёво";
-    console.log(`saved id=${saved.id} verdict=${verdict} voter=${saved.voterId}`);
-
-    const dm = [
-      `${item.title}`,
-      item.url,
-      "",
-      `Вердикт: ${label}`,
-      `Почему: ${reason}`,
-      "",
-      `absurd=${item.absurdScore ?? "?"} score=${item.score} cluster=${item.clusterSize} id=${saved.id}`,
-    ];
-    if (notes.length) {
-      dm.push("", `tech: ${notes.join("; ")}`);
-    }
-
-    await notifyOwner(dm.join("\n"), "📰 hourly news");
+    console.log(
+      `saved id=${saved.id} verdict=${verdict} voter=${saved.voterId} absurd=${item.absurdScore ?? "?"} notes=${notes.join("; ") || "—"}`,
+    );
   } catch (err) {
     console.error(err);
     try {
