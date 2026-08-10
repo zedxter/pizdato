@@ -22,6 +22,8 @@ html,
 body,
 #root {
   min-height: 100%;
+  /* Clip X here — not on .page — so position:sticky site-nav can stick to the viewport. */
+  overflow-x: clip;
 }
 
 body {
@@ -41,7 +43,8 @@ button {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  overflow: hidden;
+  /* Must stay visible: any non-visible overflow ancestor breaks sticky nav. */
+  overflow: visible;
   background:
     radial-gradient(120% 80% at 10% -10%, #1c3a2c 0%, transparent 55%),
     radial-gradient(90% 70% at 100% 0%, #3a1512 0%, transparent 50%),

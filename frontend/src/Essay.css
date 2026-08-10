@@ -1,4 +1,4 @@
-/* Vote hero locks overflow; essay/FAQ must scroll the document instead. */
+/* Content pages: document scroll (sticky site-nav) + no height lock. */
 .page.page-essay {
   overflow: visible;
   overscroll-behavior-y: auto;

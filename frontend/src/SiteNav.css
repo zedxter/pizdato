@@ -1,6 +1,14 @@
+.site-nav-anchor {
+  flex-shrink: 0;
+  /* Fallback until ResizeObserver measures the fixed bar. */
+  height: calc(3.3rem + env(safe-area-inset-top, 0px));
+}
+
 .site-nav {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 30;
   width: 100%;
   background: rgba(12, 18, 16, 0.78);
