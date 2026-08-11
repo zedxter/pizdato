@@ -31,6 +31,54 @@ fn is_db_locked(err: &sqlx::Error) -> bool {
     }
 }
 
+/// Transient SQLite failures worth retrying (locks, brief CANTOPEN under WAL writers).
+fn is_db_transient(err: &sqlx::Error) -> bool {
+    if is_db_locked(err) {
+        return true;
+    }
+    match err {
+        sqlx::Error::Database(db) => {
+            let msg = db.message().to_ascii_lowercase();
+            msg.contains("unable to open database file")
+                || msg.contains("disk i/o error")
+                || db.code().map(|c| c == "5" || c == "14" || c == "10").unwrap_or(false)
+        }
+        _ => false,
+    }
+}
+
+pub async fn with_sqlite_retry<T, F, Fut>(
+    label: &str,
+    attempts: u32,
+    mut op: F,
+) -> Result<T, sqlx::Error>
+where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = Result<T, sqlx::Error>>,
+{
+    let attempts = attempts.max(1);
+    let mut delay = Duration::from_millis(40);
+
+    for attempt in 1..=attempts {
+        match op().await {
+            Ok(v) => return Ok(v),
+            Err(e) if is_db_transient(&e) && attempt < attempts => {
+                tracing::warn!(
+                    attempt,
+                    next_delay_ms = delay.as_millis() as u64,
+                    error = %e,
+                    "{label}: transient sqlite error; retrying"
+                );
+                tokio::time::sleep(delay).await;
+                delay = (delay * 2).min(Duration::from_millis(800));
+            }
+            Err(e) => return Err(e),
+        }
+    }
+
+    unreachable!("with_sqlite_retry loop must return")
+}
+
 pub async fn connect(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
     let options = SqliteConnectOptions::from_str(database_url)?
         .create_if_missing(true)
@@ -416,11 +464,20 @@ impl AppState {
     }
 
     pub async fn register_session(&self, voter_id: &str) -> Result<(), sqlx::Error> {
-        sqlx::query("INSERT OR IGNORE INTO sessions (voter_id) VALUES (?1)")
-            .bind(voter_id)
-            .execute(&self.pool)
-            .await?;
-        Ok(())
+        let id = voter_id.to_string();
+        let pool = self.pool.clone();
+        with_sqlite_retry("register_session", 6, || {
+            let id = id.clone();
+            let pool = pool.clone();
+            async move {
+                sqlx::query("INSERT OR IGNORE INTO sessions (voter_id) VALUES (?1)")
+                    .bind(id)
+                    .execute(&pool)
+                    .await?;
+                Ok(())
+            }
+        })
+        .await
     }
 
     pub async fn seconds_since_last_ip_vote(

@@ -107,7 +107,7 @@ export default function App() {
     setError(null)
     setCanVote(false)
 
-    void fetchStatsWithRetry(3)
+    void fetchStatsWithRetry(5)
       .then((s) => {
         if (cancelled) return
         setStats(s)

@@ -138,36 +138,43 @@ async fn issue_or_resume_session(
     state: &AppState,
     cookies: &Cookies,
 ) -> Result<String, sqlx::Error> {
-    if let Some(existing) = voter_id_from_cookies(cookies) {
-        let known = state.session_exists(&existing).await?
-            || state.find_vote(&existing).await?.is_some();
-        if known {
-            state.register_session(&existing).await?;
-            // Refresh cookie lifetime for returning visitors.
-            set_voter_cookie(cookies, &existing, state.cookie_secure);
-            return Ok(existing);
+    crate::db::with_sqlite_retry("issue_or_resume_session", 6, || async {
+        if let Some(existing) = voter_id_from_cookies(cookies) {
+            let known = state.session_exists(&existing).await?
+                || state.find_vote(&existing).await?.is_some();
+            if known {
+                state.register_session(&existing).await?;
+                // Refresh cookie lifetime for returning visitors.
+                set_voter_cookie(cookies, &existing, state.cookie_secure);
+                return Ok(existing);
+            }
+            // Unknown/forged cookie — replace with a fresh registered session.
         }
-        // Unknown/forged cookie — replace with a fresh registered session.
-    }
 
-    let voter_id = Uuid::new_v4().to_string();
-    state.register_session(&voter_id).await?;
-    set_voter_cookie(cookies, &voter_id, state.cookie_secure);
-    Ok(voter_id)
+        let voter_id = Uuid::new_v4().to_string();
+        state.register_session(&voter_id).await?;
+        set_voter_cookie(cookies, &voter_id, state.cookie_secure);
+        Ok(voter_id)
+    })
+    .await
 }
 
 pub async fn stats(
     State(state): State<Arc<AppState>>,
     cookies: Cookies,
 ) -> Result<Json<StatsResponse>, StatusCode> {
-    let voter_id = issue_or_resume_session(&state, &cookies).await.map_err(|e| {
-        tracing::error!("session issue error: {e}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-    build_stats(&state, &voter_id).await.map(Json).map_err(|e| {
-        tracing::error!("stats error: {e}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })
+    match issue_or_resume_session(&state, &cookies).await {
+        Ok(voter_id) => build_stats(&state, &voter_id).await.map(Json).map_err(|e| {
+            tracing::error!("stats error: {e}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        }),
+        Err(e) => {
+            // Prefer showing live counts over a blank page when sessions briefly flake
+            // (e.g. hourly news writer contending on the same SQLite file).
+            tracing::error!("session issue error: {e}");
+            Ok(Json(counts_stats(&state).await))
+        }
+    }
 }
 
 pub async fn vote(

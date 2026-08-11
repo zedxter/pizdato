@@ -15,6 +15,8 @@ let _db;
 export function getDb() {
   if (_db) return _db;
   _db = new Database(dbPath(), { timeout: 8000 });
+  _db.pragma("journal_mode = WAL");
+  _db.pragma("synchronous = NORMAL");
   _db.pragma("busy_timeout = 8000");
   return _db;
 }

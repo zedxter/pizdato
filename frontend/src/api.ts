@@ -21,7 +21,7 @@ export async function fetchStats(): Promise<Stats> {
 }
 
 /** Retries transient failures (e.g. brief SQLite lock → 500). */
-export async function fetchStatsWithRetry(attempts = 3): Promise<Stats> {
+export async function fetchStatsWithRetry(attempts = 5): Promise<Stats> {
   const total = Math.max(1, attempts)
   let lastError: Error | undefined
 
@@ -31,7 +31,7 @@ export async function fetchStatsWithRetry(attempts = 3): Promise<Stats> {
     } catch (e) {
       lastError =
         e instanceof Error ? e : new Error('Не удалось загрузить статистику')
-      if (i < total) await sleep(300 * i)
+      if (i < total) await sleep(400 * i)
     }
   }
 
