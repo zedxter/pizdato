@@ -49,7 +49,7 @@ export function SiteFooter({ current, cta = false }: Props) {
             target="_blank"
             rel="noopener noreferrer me"
           >
-            Telegram <span aria-hidden="true">@pizdato_net</span>
+            Telegram-канал пиздато — @pizdato_net
           </a>
         </span>
       </div>

@@ -6,7 +6,7 @@
  *   node report-daily.mjs --today      # today so far
  *   node report-daily.mjs --dry-run    # print only, no Telegram
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { dayTrafficStats } from "./lib/db.js";
@@ -36,7 +36,9 @@ function isBotUa(ua) {
 
 function collectAccessStats(which) {
   let raw;
+  let st;
   try {
+    st = statSync(ACCESS_LOG);
     raw = readFileSync(ACCESS_LOG, "utf8");
   } catch (e) {
     return { ok: false, error: e.message };
@@ -58,6 +60,8 @@ function collectAccessStats(which) {
   const ipsHuman = new Set();
   const voteIps = new Set();
   let homeGets = 0;
+  let matchedLines = 0;
+  let parseableLines = 0;
 
   for (const line of raw.split("\n")) {
     if (!line.trim()) continue;
@@ -67,10 +71,12 @@ function collectAccessStats(which) {
     } catch {
       continue;
     }
+    parseableLines += 1;
     const ts = o.ts;
     if (ts == null) continue;
     const day = fmt.format(new Date(Number(ts) * 1000));
     if (day !== targetDay) continue;
+    matchedLines += 1;
     const req = o.request || {};
     const ip = req.client_ip || req.remote_ip;
     if (!ip) continue;
@@ -85,6 +91,12 @@ function collectAccessStats(which) {
     if (method === "POST" && uri.startsWith("/api/vote")) voteIps.add(ip);
   }
 
+  const ageHours = (Date.now() - st.mtimeMs) / 3600000;
+  const stale =
+    st.size === 0 ||
+    parseableLines === 0 ||
+    (matchedLines === 0 && ageHours > 36 && which === "yesterday");
+
   return {
     ok: true,
     day: targetDay,
@@ -92,6 +104,18 @@ function collectAccessStats(which) {
     uniqueIpsNonBot: ipsHuman.size,
     homeGets,
     votePostIps: voteIps.size,
+    matchedLines,
+    parseableLines,
+    fileBytes: st.size,
+    stale,
+    staleHint:
+      st.size === 0
+        ? "файл access-log пуст — Caddy, скорее всего, не пишет в него"
+        : parseableLines === 0
+          ? "в access-log нет JSON-строк"
+          : matchedLines === 0
+            ? "за выбранный день в access-log нет строк (лог мог не писаться)"
+            : null,
   };
 }
 
@@ -117,6 +141,11 @@ function buildReport({ db, access, label }) {
       `• GET /: ${access.homeGets}`,
       `• IP с POST /api/vote: ${access.votePostIps}`,
     );
+    if (access.stale || (access.matchedLines === 0 && db.sessions > 0)) {
+      lines.push(
+        `⚠️ ${access.staleHint || "access-log без записей за день при ненулевых сессиях в БД"}`,
+      );
+    }
   } else if (access && !access.ok) {
     lines.push("", `Access-log: недоступен (${access.error})`);
   }

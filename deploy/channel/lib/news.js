@@ -7,20 +7,34 @@ const STATE_DIR =
 const STATE_FILE = join(STATE_DIR, "evening-posted.json");
 
 const FEEDS = [
-  // Wire / general (kept for coverage; absurd filter + dedupe cut the noise)
+  // Wire / general
   "https://news.google.com/rss?hl=ru&gl=RU&ceid=RU:ru",
   "https://news.google.com/rss/headlines/section/topic/WORLD?hl=ru&gl=RU&ceid=RU:ru",
   "https://news.google.com/rss/headlines/section/topic/NATION?hl=ru&gl=RU&ceid=RU:ru",
+  "https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=ru&gl=RU&ceid=RU:ru",
+  "https://news.google.com/rss/headlines/section/topic/SPORTS?hl=ru&gl=RU&ceid=RU:ru",
+  "https://news.google.com/rss/headlines/section/topic/HEALTH?hl=ru&gl=RU&ceid=RU:ru",
   "https://lenta.ru/rss/news",
   "https://ria.ru/export/rss2/archive/index.xml",
   "https://www.interfax.ru/rss.asp",
   "https://rssexport.rbc.ru/rbcnews/news/30/full.rss",
   "https://www.kommersant.ru/RSS/news.xml",
   "https://meduza.io/rss/all",
+  "https://www.gazeta.ru/export/rss/first.xml",
+  "https://www.gazeta.ru/export/rss/politics.xml",
+  "https://www.mk.ru/rss/index.xml",
+  "https://iz.ru/xml/rss/all.xml",
+  "https://www.kp.ru/rss/allsections.xml",
   "https://feeds.bbci.co.uk/news/world/rss.xml",
   "https://feeds.bbci.co.uk/russian/rss.xml",
   "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
   "https://www.theguardian.com/world/rss",
+
+  // Society / life / sports (for humans, not only nerds)
+  "https://www.championat.com/rss/news/",
+  "https://www.sports.ru/rss/all_news.xml",
+  "https://www.theguardian.com/uk/lifeandstyle/rss",
+  "https://www.theguardian.com/football/rss",
 
   // Science / space / odd discoveries
   "https://nplus1.ru/rss",
@@ -36,7 +50,7 @@ const FEEDS = [
   "https://www.theguardian.com/science/rss",
   "https://rss.nytimes.com/services/xml/rss/nyt/Science.xml",
 
-  // Tech / gadgets (more glitches & quirks than wire politics)
+  // Tech / gadgets (kept for evening coverage; hourly soft-penalizes these)
   "https://habr.com/ru/rss/news/?fl=ru",
   "https://vc.ru/rss",
   "https://www.theverge.com/rss/index.xml",
@@ -52,28 +66,55 @@ const FEEDS = [
   "https://www.boredpanda.com/feed/",
 ];
 
-/** Feeds biased to Russian copy — preferred for hourly (курьёзы / абсурд). */
+/**
+ * Hourly feeds: Russian wire + life/sports/science.
+ * Deliberately light on pure IT outlets (habr/ixbt/3dnews) — those flood the лента.
+ */
 const FEEDS_HOURLY = [
   "https://news.google.com/rss?hl=ru&gl=RU&ceid=RU:ru",
+  "https://news.google.com/rss/headlines/section/topic/NATION?hl=ru&gl=RU&ceid=RU:ru",
+  "https://news.google.com/rss/headlines/section/topic/WORLD?hl=ru&gl=RU&ceid=RU:ru",
+  "https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=ru&gl=RU&ceid=RU:ru",
+  "https://news.google.com/rss/headlines/section/topic/SPORTS?hl=ru&gl=RU&ceid=RU:ru",
+  "https://news.google.com/rss/headlines/section/topic/HEALTH?hl=ru&gl=RU&ceid=RU:ru",
   "https://lenta.ru/rss/news",
   "https://ria.ru/export/rss2/archive/index.xml",
   "https://www.interfax.ru/rss.asp",
   "https://rssexport.rbc.ru/rbcnews/news/30/full.rss",
   "https://www.kommersant.ru/RSS/news.xml",
   "https://meduza.io/rss/all",
+  "https://www.gazeta.ru/export/rss/first.xml",
+  "https://www.gazeta.ru/export/rss/politics.xml",
+  "https://www.mk.ru/rss/index.xml",
+  "https://iz.ru/xml/rss/all.xml",
+  "https://www.kp.ru/rss/allsections.xml",
   "https://feeds.bbci.co.uk/russian/rss.xml",
+  "https://www.championat.com/rss/news/",
+  "https://www.sports.ru/rss/all_news.xml",
   "https://nplus1.ru/rss",
   "https://elementy.ru/rss/news",
   "https://naked-science.ru/feed",
-  "https://habr.com/ru/rss/news/?fl=ru",
+  // Occasional tech quirk only (still soft-penalized in absurdScore)
   "https://vc.ru/rss",
-  "https://www.ixbt.com/export/news.rss",
-  "https://3dnews.ru/news/rss/",
 ];
 
-/** Hosts that skew toward weird / science / tech — boost absurd selection. */
+/** Hosts that skew toward weird / science / human-interest — boost absurd selection. */
 const QUIRK_HOST_RE =
-  /nplus1\.ru|elementy\.ru|naked-science\.ru|popmech\.ru|sciencedaily\.com|nasa\.gov|space\.com|livescience\.com|newatlas\.com|atlasobscura\.com|mentalfloss\.com|boredpanda\.com|theverge\.com|arstechnica\.com|vc\.ru|ixbt\.com|3dnews\.ru|habr\.com|meduza\.io/i;
+  /nplus1\.ru|elementy\.ru|naked-science\.ru|popmech\.ru|sciencedaily\.com|nasa\.gov|space\.com|livescience\.com|newatlas\.com|atlasobscura\.com|mentalfloss\.com|boredpanda\.com|meduza\.io|kp\.ru|mk\.ru|gazeta\.ru/i;
+
+/** Pure gadget/IT hosts — fine for evening, dampened for hourly лента. */
+const TECH_HOST_RE =
+  /habr\.com|vc\.ru|ixbt\.com|3dnews\.ru|theverge\.com|arstechnica\.com/i;
+
+/**
+ * Hosts that often fail with NXDOMAIN on filter-DNS / some ISP resolvers
+ * (esp. outside RU). Soft-penalize so лента prefers a readable mirror.
+ */
+const DNS_FRAGILE_HOST_RE =
+  /(?:^|\.)(iz\.ru|ria\.ru|rian\.ru|tass\.ru|rt\.com)$/i;
+
+const TECH_TOPIC_RE =
+  /chatgpt|claude\b|openai|anthropic|llm\b|gpt-?\d|нейросет|ии-агент|ai-агент|javascript|typescript|фреймворк|рели[зз]\s+верси|pcie|rtx\s*\d|geforce|radeon|macos|windows\s*1[1-9]|android\s*\d|iphone\s*\d|gpu\b|cpu\b|ssd\b|nvme|docker|kubernetes|github|gitlab|npm\b|rust\b|golang|\.js\b|api\b|saas|стартап|криптовалют|биткои/i;
 
 /** Host → official-ish Telegram channel, if known. */
 const SOURCE_TG_BY_HOST = {
@@ -141,6 +182,17 @@ const OUTLET_TG_BY_NAME = {
 // No war / combat jokes — exclude military and battlefield topics entirely.
 const SKIP_RE =
   /сводк[аи]\s+сво|\bсво\b|обстрел|удар(ы|ов|ами)?\b|бпла|беспилот|шахед|дрон[аыуов]?\b|ракетн|баллист|фронт|ВСУ|Минобороны|минобороны|военн|арми[яи]|войн[аыеу]|боевы|бомб[аыуе]|авиаудар|ПВО|пво|мобилизац|контратак|оккупац|террор|израил|газа\b|хамас|хезболл|насильств|расчлен|порно|18\+/i;
+
+/** Politics — usually skipped for evening; hourly may allow ~30% of runs. */
+const POLITICS_RE =
+  /санкц|выборы|президент|правительств|госдум|сенат|конгресс|парламент|трамп|путин|байден|нато|мид\b|дипломат|законпроект|депутат|министр|минпром|минвест|минюст|кремл|белый дом|цик\b|\bяблок/i;
+
+/**
+ * Dull / medical-procurement topics — still skip.
+ * Catastrophes (аварии, землетрясения, наводнения…) are NOT here on purpose.
+ */
+const DULL_SKIP_RE =
+  /орган(ы|ов)?\b|донор|трансплант|пересадк|инфаркт|онколог|\bрак\b|эвтанази|суицид|похорон|газпром|хранилищ|ликвидн|госконтракт|госзакуп|дериватив|заблокированн|нежелательн\w*\s+организац/i;
 
 function decodeXml(s) {
   return s
@@ -318,10 +370,11 @@ function extractCanonicalUrl(html, baseUrl) {
 /**
  * Download article page and return plain text for LLM verdict.
  * Follows redirects; best-effort for Google News wrappers.
+ * `ok: false` when the URL does not open as a usable article page.
  */
 export async function fetchArticleBody(url, { maxChars = 7000 } = {}) {
   const ua =
-    "Mozilla/5.0 (compatible; pizdato-channel-bot/1.1; +https://pizdato.net)";
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
   const notes = [];
   let current = url;
 
@@ -335,24 +388,66 @@ export async function fetchArticleBody(url, { maxChars = 7000 } = {}) {
       redirect: "follow",
       signal: AbortSignal.timeout(20000),
     });
-    if (!res.ok) throw new Error(`article HTTP ${res.status}`);
     const finalUrl = res.url || target;
     const html = await res.text();
-    return { finalUrl, html };
+    return { res, finalUrl, html };
   };
 
   try {
-    let { finalUrl, html } = await get(current);
+    let { res, finalUrl, html } = await get(current);
+    if (!res.ok) {
+      notes.push(`article HTTP ${res.status}`);
+      return {
+        ok: false,
+        status: res.status,
+        text: "",
+        finalUrl,
+        notes,
+        imageUrl: null,
+      };
+    }
 
     // Google News often wraps the publisher page — hop to canonical if different.
     if (/news\.google\.com/i.test(finalUrl) || /news\.google\.com/i.test(current)) {
       const canon = extractCanonicalUrl(html, finalUrl);
       if (canon && !/news\.google\.com/i.test(canon)) {
         notes.push(`resolved google news → ${canon}`);
-        ({ finalUrl, html } = await get(canon));
+        ({ res, finalUrl, html } = await get(canon));
+        if (!res.ok) {
+          notes.push(`canonical HTTP ${res.status}`);
+          return {
+            ok: false,
+            status: res.status,
+            text: "",
+            finalUrl,
+            notes,
+            imageUrl: null,
+          };
+        }
       } else {
-        notes.push("google news wrapper; using page text as-is");
+        notes.push("google news wrapper unresolved");
+        return {
+          ok: false,
+          status: res.status,
+          text: "",
+          finalUrl,
+          notes,
+          imageUrl: null,
+        };
       }
+    }
+
+    const dead = deadPageReason(html, finalUrl);
+    if (dead) {
+      notes.push(dead);
+      return {
+        ok: false,
+        status: res.status,
+        text: "",
+        finalUrl,
+        notes,
+        imageUrl: null,
+      };
     }
 
     let text = htmlToText(html);
@@ -372,11 +467,56 @@ export async function fetchArticleBody(url, { maxChars = 7000 } = {}) {
     }
 
     const imageUrl = extractOgImage(html, finalUrl);
-    return { text, finalUrl, notes, imageUrl };
+    return {
+      ok: true,
+      status: res.status,
+      text,
+      finalUrl,
+      notes,
+      imageUrl,
+    };
   } catch (e) {
     notes.push(`article fetch failed: ${e.message}`);
-    return { text: "", finalUrl: url, notes, imageUrl: null };
+    return {
+      ok: false,
+      status: 0,
+      text: "",
+      finalUrl: url,
+      notes,
+      imageUrl: null,
+    };
   }
+}
+
+/** Soft-404 / block / empty shells that still return HTTP 200. */
+function deadPageReason(html, finalUrl) {
+  const raw = String(html || "");
+  if (raw.length < 400) return `page too small (${raw.length} bytes)`;
+  const title = (raw.match(/<title[^>]*>([^<]*)/i)?.[1] || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+  if (
+    /\b404\b/.test(title) ||
+    /not found|page not found|не найден|не найдена|удален[ао]?|does not exist|access denied|доступ запрещ/i.test(
+      title,
+    )
+  ) {
+    return `dead page title: ${title.slice(0, 80) || "—"}`;
+  }
+  if (/news\.google\.com/i.test(finalUrl)) {
+    return "still on google news URL";
+  }
+  // Cloudflare / antibot interstitial without article content
+  if (
+    raw.length < 8000 &&
+    /cdn-cgi\/challenge|just a moment|checking your browser|cf-browser-verification/i.test(
+      raw,
+    )
+  ) {
+    return "bot challenge page";
+  }
+  return null;
 }
 
 function loadState() {
@@ -522,9 +662,9 @@ function scoreItem(item, clusterSize = 1) {
   return score;
 }
 
-/** Heavy / dull topics — not for evening «абсурд дня». */
+/** Heavy / dull topics — evening always; hourly uses POLITICS_RE separately. */
 const EVENING_HARD_SKIP_RE =
-  /санкц|выборы|президент|правительств|госдум|сенат|конгресс|парламент|трамп|путин|байден|нато|мид\b|дипломат|законпроект|депутат|министр|минпром|минвест|минюст|кремл|белый дом|мобилиз|израил|хамас|орган(ы|ов)?\b|донор|трансплант|пересадк|инфаркт|онколог|рак\b|погиб|убит|теракт|расстрел|катастроф|землетряс|ураган|наводнен|газпром|хранилищ|инфляц|ликвидн|госконтракт|госзакуп|мигрант|нежелательн|дериватив|заблокированн|умерл|умерла|\bумер\b|эвтанази|суицид|похорон/i;
+  /санкц|выборы|президент|правительств|госдум|сенат|конгресс|парламент|трамп|путин|байден|нато|мид\b|дипломат|законпроект|депутат|министр|минпром|минвест|минюст|кремл|белый дом|мобилиз|израил|хамас|орган(ы|ов)?\b|донор|трансплант|пересадк|инфаркт|онколог|рак\b|эвтанази|суицид|похорон|газпром|хранилищ|инфляц|ликвидн|госконтракт|госзакуп|мигрант|нежелательн|дериватив|заблокированн/i;
 
 /** Signals that a story is absurd / funny / delightfully weird / a quirky sensation. */
 const ABSURD_RE =
@@ -661,26 +801,50 @@ export function findSimilarRecent(
   return null;
 }
 
-function absurdScore(item) {
+/**
+ * @param {object} item
+ * @param {{ mode?: "hourly"|"evening", allowPolitics?: boolean }} [opts]
+ */
+function absurdScore(item, opts = {}) {
+  const mode = opts.mode === "hourly" ? "hourly" : "evening";
+  const allowPolitics = Boolean(opts.allowPolitics);
   const t = `${item.title} ${item.summary || ""} ${item.articleText || ""}`;
   const host = hostOf(item.resolvedUrl || item.url);
   const quirkHost = QUIRK_HOST_RE.test(host);
-  if (EVENING_HARD_SKIP_RE.test(t) || SKIP_RE.test(t)) return -999;
+  const techHost = TECH_HOST_RE.test(host);
+  const techTopic = TECH_TOPIC_RE.test(t);
+
+  if (SKIP_RE.test(t) || DULL_SKIP_RE.test(t)) return -999;
   if (/news\.google\.com/i.test(item.url)) return -40;
-  // Same wire blurb every hour (airports closed/opened) — never «абсурд дня».
   if (topicFingerprint(item.title, item.summary) === "topic:airport-restrictions") {
     return -80;
   }
 
+  const isPolitics = POLITICS_RE.test(t);
+  if (isPolitics) {
+    if (mode === "evening" || !allowPolitics) return -999;
+    // Allowed political hour: score as «горячая сводка», not slapstick.
+    let ps = 52 + Math.min(item.clusterSize || 1, 8) * 6;
+    if (techHost || techTopic) ps -= 20;
+    return ps;
+  }
+
+  if (mode === "evening" && EVENING_HARD_SKIP_RE.test(t)) return -999;
+
   const hasAbsurd = ABSURD_RE.test(t);
   const softQuirk = quirkHost && QUIRK_SOFT_RE.test(t);
+  // Disasters / accidents can enter without quirky keywords (still usually «хуёво»).
+  const isDisaster =
+    /катастроф|землетряс|ураган|наводнен|пожар|авария|крушени|обруш|взрыв|эвакуац|пострад|жертв|трагед|погибли|погиб\b|умерл|умерла|\bумер\b|убит/i.test(
+      t,
+    );
 
-  // Gate: without an absurd/funny signal, keep score ≤0 so evening/hourly won't pick it.
-  if (!hasAbsurd && !softQuirk) {
+  if (!hasAbsurd && !softQuirk && !isDisaster) {
     return Math.min(item.clusterSize || 1, 3) - 5;
   }
 
   let s = softQuirk && !hasAbsurd ? 48 : 68;
+  if (isDisaster && !hasAbsurd) s = Math.max(s, 58);
   s += Math.min(item.clusterSize || 1, 6) * 4;
   s += Math.max(0, item.score || 0) * 0.1;
   if (quirkHost) s += 22;
@@ -692,11 +856,22 @@ function absurdScore(item) {
     s += 45;
   if (/блогер|лерчек|\bмем\b|титок|курьёз|забавн|смешн|абсурд|необычн|странн|сенсац|weird|bizarre/i.test(t))
     s += 32;
-  if (/nintendo|mamma mia|кофе|каникул|привычк|roblox|claude|chatgpt|atlas obscura|лифт|сосед|свадьб/i.test(t))
+  if (/nintendo|mamma mia|кофе|каникул|привычк|roblox|atlas obscura|лифт|сосед|свадьб/i.test(t))
     s += 20;
   if (/динозавр|окамен|экзопланет|марсиан|осьминог|дельфин/i.test(t)) s += 18;
-  if (/habr\.com|theverge\.com|arstechnica|ixbt\.com|3dnews/i.test(host) && /удал|ошиб|слома|вместо|rm|glitch|bug|глюк/i.test(t))
+
+  // Dampen pure IT for hourly so лента stays readable for non-tech people.
+  if (mode === "hourly") {
+    if (techHost) s -= 40;
+    if (techTopic) s -= 28;
+    if (/claude|chatgpt|openai|pcie|rtx|geforce/i.test(t)) s -= 12;
+  } else if (techHost && /удал|ошиб|слома|вместо|rm|glitch|bug|глюк/i.test(t)) {
     s += 14;
+  }
+
+  // Prefer outlets that usually resolve on filter-DNS / EU ISP resolvers.
+  if (DNS_FRAGILE_HOST_RE.test(host)) s -= 18;
+
   return s;
 }
 
@@ -705,6 +880,7 @@ export async function rankNews({
   excludeUrls = [],
   russianOnly = false,
   feeds = null,
+  scoreOpts = {},
 } = {}) {
   const excluded = new Set(excludeUrls);
   const feedList = feeds || FEEDS;
@@ -741,7 +917,7 @@ export async function rankNews({
     }
     item.clusterSize = cluster;
     item.score = scoreItem(item, cluster);
-    item.absurdScore = absurdScore(item);
+    item.absurdScore = absurdScore(item, scoreOpts);
   }
 
   return fresh.filter((i) => i.score > 0).sort((a, b) => b.score - a.score);
@@ -756,22 +932,36 @@ export async function pickNews() {
  * NOT similar to anything stored in the last 24h.
  * Fetches article bodies for top candidates so scoring/verdict see more than titles.
  * Returns null when nothing suitable — caller must skip DB write / vote.
+ *
+ * Walks up to `enrichMax` ranked candidates (not just the first 8): night runs
+ * often see the same wire stories score high on title, then die on body hard-skip
+ * / dedupe, which used to leave the hour empty.
  */
 export async function pickHourlyAbsurdNews({
   excludeUrls = [],
   recentItems = [],
   enrichTop = 8,
+  enrichMax = 28,
+  allowPolitics = null,
 } = {}) {
+  // ~30% of hours: let politics compete. Explicit override for tests.
+  const politicsOn =
+    allowPolitics == null ? Math.random() < 0.3 : Boolean(allowPolitics);
+  const scoreOpts = { mode: "hourly", allowPolitics: politicsOn };
+  console.log(`hourly allowPolitics=${politicsOn}`);
+
   const ranked = await rankNews({
     excludeUrls,
     russianOnly: true,
     feeds: FEEDS_HOURLY,
+    scoreOpts,
   });
   const byAbsurd = [...ranked]
-    .filter((i) => (i.absurdScore ?? absurdScore(i)) > 0)
+    .filter((i) => (i.absurdScore ?? absurdScore(i, scoreOpts)) > 0)
     .sort((a, b) => (b.absurdScore ?? 0) - (a.absurdScore ?? 0));
 
-  const shortlist = byAbsurd.slice(0, Math.max(1, enrichTop));
+  const limit = Math.max(enrichTop, enrichMax, 1);
+  const shortlist = byAbsurd.slice(0, limit);
   const enriched = [];
   for (const cand of shortlist) {
     // Cheap title-only pass before fetching the article.
@@ -786,6 +976,12 @@ export async function pickHourlyAbsurdNews({
       const fetched = await fetchArticleBody(cand.url, { maxChars: 5000 });
       if (fetched.notes?.length) {
         console.warn("hourly article:", fetched.notes.join("; "));
+      }
+      if (!fetched.ok) {
+        console.log(
+          `skip dead/unreachable link :: ${cand.title} :: ${cand.url}`,
+        );
+        continue;
       }
       if (fetched.text && fetched.text.length > 80) {
         cand.articleText = fetched.text;
@@ -813,7 +1009,7 @@ export async function pickHourlyAbsurdNews({
         );
         continue;
       }
-      cand.absurdScore = absurdScore(cand);
+      cand.absurdScore = absurdScore(cand, scoreOpts);
       if (cand.absurdScore <= 0) {
         console.log(
           `skip after body (absurd=${cand.absurdScore}) :: ${cand.title}`,
@@ -821,19 +1017,11 @@ export async function pickHourlyAbsurdNews({
         continue;
       }
       enriched.push(cand);
+      // Hourly only needs one keeper — stop burning fetches once we have it.
+      break;
     } catch (e) {
       console.warn(`hourly enrich fail: ${e.message} :: ${cand.title}`);
-      // Title-only fallback still allowed if it already looked absurd.
-      if ((cand.absurdScore ?? 0) > 0) {
-        const fallbackDup = findSimilarRecent(cand, recentItems);
-        if (fallbackDup) {
-          console.log(
-            `skip similar fallback (${fallbackDup.reason}) :: ${cand.title}`,
-          );
-          continue;
-        }
-        enriched.push(cand);
-      }
+      // Do not fall back to title-only: URL must open.
     }
   }
 
@@ -847,7 +1035,7 @@ export async function pickHourlyAbsurdNews({
   }
 
   console.log(
-    `hourly: no absurd/unique RU candidate (shortlist=${shortlist.length}, ranked=${ranked.length})`,
+    `hourly: no absurd/unique RU candidate (tried=${shortlist.length}, pool=${byAbsurd.length}, ranked=${ranked.length})`,
   );
   return null;
 }
@@ -855,41 +1043,85 @@ export async function pickHourlyAbsurdNews({
 /** Evening: pick the most absurd / funny story of the day (not hard politics). */
 export async function pickAbsurdNews() {
   const state = loadState();
-  const ranked = await rankNews({ excludeUrls: state.postedUrls });
+  const ranked = await rankNews({
+    excludeUrls: state.postedUrls,
+    scoreOpts: { mode: "evening", allowPolitics: false },
+  });
   const byAbsurd = [...ranked]
-    .filter((i) => (i.absurdScore ?? absurdScore(i)) > 0)
+    .filter((i) => (i.absurdScore ?? 0) > 0)
     .sort((a, b) => (b.absurdScore ?? 0) - (a.absurdScore ?? 0));
 
-  let top = byAbsurd[0];
+  console.log(
+    `evening candidates absurd>0: ${byAbsurd.length} (will probe URLs)`,
+  );
+
+  // Walk shortlist until a candidate has an openable publisher URL.
+  const eveningLimit = Math.min(20, Math.max(byAbsurd.length, 1));
+  let top = null;
+  for (let i = 0; i < eveningLimit; i++) {
+    const cand = byAbsurd[i];
+    if (!cand) break;
+    try {
+      const fetched = await fetchArticleBody(cand.url);
+      if (fetched.notes?.length) {
+        console.warn("article fetch:", fetched.notes.join("; "));
+      }
+      if (!fetched.ok) {
+        console.log(
+          `evening skip dead link :: ${cand.title} :: ${cand.url}`,
+        );
+        continue;
+      }
+      if (fetched.text && fetched.text.length > 120) {
+        cand.summary = fetched.text.slice(0, 1800);
+      }
+      if (fetched.finalUrl && !/news\.google\.com/i.test(fetched.finalUrl)) {
+        cand.resolvedUrl = fetched.finalUrl;
+        cand.url = fetched.finalUrl;
+      }
+      if (fetched.imageUrl) cand.imageUrl = fetched.imageUrl;
+      top = cand;
+      break;
+    } catch (e) {
+      console.warn("article enrich failed:", e.message);
+    }
+  }
+
   if (!top) {
-    // Soft fallback: least-political leftover by absurdScore (may be low).
+    // Soft fallback: least-political leftover, still must open.
     const soft = [...ranked]
-      .map((i) => ({ ...i, absurdScore: i.absurdScore ?? absurdScore(i) }))
+      .map((i) => ({
+        ...i,
+        absurdScore:
+          i.absurdScore ??
+          absurdScore(i, { mode: "evening", allowPolitics: false }),
+      }))
       .filter((i) => i.absurdScore > -100)
       .sort((a, b) => b.absurdScore - a.absurdScore);
-    top = soft[0];
+    for (const cand of soft.slice(0, 15)) {
+      const fetched = await fetchArticleBody(cand.url);
+      if (!fetched.ok) {
+        console.log(`evening soft skip dead link :: ${cand.title}`);
+        continue;
+      }
+      if (fetched.text && fetched.text.length > 120) {
+        cand.summary = fetched.text.slice(0, 1800);
+      }
+      if (fetched.finalUrl && !/news\.google\.com/i.test(fetched.finalUrl)) {
+        cand.resolvedUrl = fetched.finalUrl;
+        cand.url = fetched.finalUrl;
+      }
+      if (fetched.imageUrl) cand.imageUrl = fetched.imageUrl;
+      top = cand;
+      break;
+    }
   }
-  if (!top) throw new Error("no suitable absurd news items");
+
+  if (!top) throw new Error("no suitable absurd news items with openable URL");
 
   console.log(
     `picked absurd=${top.absurdScore} score=${top.score} cluster=${top.clusterSize} :: ${top.title}`,
   );
-
-  // Enrich summary with article body for a sharper evening take.
-  try {
-    const fetched = await fetchArticleBody(top.url);
-    if (fetched.notes?.length) {
-      console.warn("article fetch:", fetched.notes.join("; "));
-    }
-    if (fetched.text && fetched.text.length > 120) {
-      top.summary = fetched.text.slice(0, 1800);
-      if (fetched.finalUrl && !/news\.google\.com/i.test(fetched.finalUrl)) {
-        top.resolvedUrl = fetched.finalUrl;
-      }
-    }
-  } catch (e) {
-    console.warn("article enrich failed:", e.message);
-  }
 
   return { item: top, state };
 }

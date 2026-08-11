@@ -6,7 +6,8 @@ const CLEAN_PAGES = {
   '/issledovanie': '/issledovanie.html',
   '/faq': '/faq.html',
   '/lenta': '/lenta.html',
-  '/how': '/how.html',
+  '/pizdato': '/pizdato.html',
+  '/articles': '/articles.html',
 }
 
 /** Map clean URLs to MPA HTML entries in vite dev / preview. */
@@ -14,9 +15,15 @@ function cleanPageUrls() {
   const rewrite = (url) => {
     if (!url) return url
     const pathOnly = url.split('?')[0].replace(/\/+$/, '') || '/'
-    const target = CLEAN_PAGES[pathOnly]
-    if (target) {
-      return url.replace(url.split('?')[0], target)
+    const mapped = CLEAN_PAGES[pathOnly]
+    if (mapped) {
+      return url.replace(url.split('?')[0], mapped)
+    }
+    if (pathOnly.startsWith('/articles/')) {
+      const slug = pathOnly.slice('/articles/'.length)
+      if (slug && !slug.includes('/')) {
+        return url.replace(url.split('?')[0], `/articles/${slug}.html`)
+      }
     }
     return url
   }
@@ -47,7 +54,12 @@ export default defineConfig({
         issledovanie: 'issledovanie.html',
         faq: 'faq.html',
         lenta: 'lenta.html',
-        how: 'how.html',
+        pizdato: 'pizdato.html',
+        articles: 'articles.html',
+        'articles-chto-znachit-pizdato': 'articles/chto-znachit-pizdato.html',
+        'articles-pizdato-i-huyevo': 'articles/pizdato-i-huyevo.html',
+        'articles-zachem-odin-golos': 'articles/zachem-odin-golos.html',
+        'articles-tonkaya-gran': 'articles/tonkaya-gran-mezhdu-pizdato-i-pizdec.html',
       },
     },
   },

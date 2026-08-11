@@ -144,7 +144,7 @@ export function SiteNav({ current }: Props) {
                       rel="noopener noreferrer me"
                       onClick={() => setOpen(false)}
                     >
-                      Telegram
+                      Telegram-канал пиздато
                     </a>
                   </li>
                 </ul>

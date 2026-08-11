@@ -23,11 +23,11 @@ One meaningful vote per visitor is enforced with a soft anti-abuse layer (HTTP-o
 |-----|------|------------|
 | [/](https://pizdato.net/) | Голосование | Brand, two buttons, one vote; after vote — quote carousel, % bars, share |
 | [/lenta](https://pizdato.net/lenta) | Лента | Infinite scroll of news verdicts that moved the global score (title, thumbnail, пиздато/хуёво, reason) |
-| [/how](https://pizdato.net/how) | Как это работает | How human votes and news verdicts feed the same counter, and why one click still matters |
+| [/pizdato](https://pizdato.net/pizdato) | Пиздато | What the word means + how votes and news feed the same counter |
 | [/issledovanie](https://pizdato.net/issledovanie) | Эссе | Longer piece on binary oppositions (добро/зло → пиздато/хуёво) |
 | [/faq](https://pizdato.net/faq) | FAQ | Short answers: one vote, cookies/anti-abuse, Telegram, MCP, sharing |
 
-Navigation: shared top menu + matching footer on every page (Голосование · Лента · Как это работает · Эссе · FAQ · Telegram).
+Navigation: shared top menu + matching footer on every page (Голосование · Лента · Пиздато · Эссе · FAQ · Telegram).
 
 ### Home UX notes
 
@@ -54,7 +54,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 — Vite proxies `/api` to the backend and maps clean paths (`/lenta`, `/how`, …) to their HTML entries. For local MCP, point the client at `http://127.0.0.1:8080/mcp`.
+Open http://localhost:5173 — Vite proxies `/api` to the backend and maps clean paths (`/lenta`, `/pizdato`, …) to their HTML entries. For local MCP, point the client at `http://127.0.0.1:8080/mcp`.
 
 ## API
 
@@ -138,26 +138,37 @@ Crawlable shells (Caddy `try_files … {path}.html`):
 
 | Path | Shell | Notes |
 |------|-------|--------|
-| `/` | `index.html` | Vote page meta |
+| `/` | `index.html` | Vote page; title starts with «Пиздато» |
+| `/pizdato` | `pizdato.html` | Brand + mechanics; FAQPage JSON-LD (`/how` → 301 here) |
 | `/lenta` | `lenta.html` | `CollectionPage`; list loads via `GET /api/news` |
-| `/how` | `how.html` | Full article text in `noscript` for crawlers |
+| `/articles` | `articles.html` | Articles index (`CollectionPage`) |
+| `/articles/*` | `articles/*.html` | Short articles (`Article` JSON-LD) |
 | `/issledovanie` | `issledovanie.html` | Article + BreadcrumbList; illustrated essay |
 | `/faq` | `faq.html` | `FAQPage` JSON-LD |
 
 Sitemap: [https://pizdato.net/sitemap.xml](https://pizdato.net/sitemap.xml)
 
-To appear in search:
+### Indexing checklist (Google + Yandex)
 
-1. [Google Search Console](https://search.google.com/search-console) — add `https://pizdato.net/`, submit sitemap
-2. [Yandex Webmaster](https://webmaster.yandex.ru/) — same site + sitemap
+Do this after each meaningful SEO deploy (manual, needs your login):
+
+1. [Google Search Console](https://search.google.com/search-console) — property `https://pizdato.net/`
+2. Submit sitemap: `https://pizdato.net/sitemap.xml`
+3. URL Inspection → request indexing for `/`, `/pizdato`, `/articles`, `/articles/chto-znachit-pizdato`, `/issledovanie`
+4. [Yandex Webmaster](https://webmaster.yandex.ru/) — site already has verify file `yandex_6296b9a7f90fa42a.html`
+5. Add/refresh sitemap + «Переобход страниц» for the same URLs
+6. Keep linking `https://t.me/pizdato_net` from channel posts that also say «пиздато» and `pizdato.net` in the first lines
+7. Optional: 1–2 natural external mentions (blog / VC / catalogue) with links to the site and the channel — no PBNs
+
+Ranking for the bare query «пиздато» still depends on competition, links, and time. Brand queries (`пиздато.net`, `pizdato`) should move faster.
 
 ### Content roadmap (optional next)
 
 | Path | Role | Notes |
 |------|------|--------|
+| `/articles` | Articles | Live: word meaning, binary pair, one-vote; add 1–2/month |
 | `/mudrost` | Wisdom archive | Rotating/site quotes; shareable permalinks later |
 | `/statistika` | Live stats explainer | Aggregates + what the bars mean; link to MCP `/mcp` |
-| `/issledovanie/*` | Mini-essays | Optional series: like/dislike, equality, carnival language |
 
 Prefer fewer strong pages over a thin content farm. Ranking still depends on links, demand, and time.
 

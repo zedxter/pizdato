@@ -67,15 +67,23 @@ EOF
 fi
 
 echo "==> Configuring Caddy"
-sudo install -d -o caddy -g caddy /var/log/caddy
+sudo install -d -o caddy -g caddy -m 755 /var/log/caddy
+sudo mkdir -p /etc/systemd/system/caddy.service.d
+sudo tee /etc/systemd/system/caddy.service.d/pizdato-logs.conf >/dev/null <<'EOF'
+[Service]
+# Ensure access-log writer can open/roll files under ProtectSystem=full
+ReadWritePaths=/var/log/caddy
+EOF
+sudo systemctl daemon-reload
+# Recreate log file owned by caddy, then restart (reload can leave log writer stuck)
 sudo rm -f /var/log/caddy/pizdato-access.log
 sudo -u caddy touch /var/log/caddy/pizdato-access.log
+sudo chmod 644 /var/log/caddy/pizdato-access.log
 sudo cp /etc/caddy/Caddyfile "/etc/caddy/Caddyfile.bak.$(date +%s)" 2>/dev/null || true
 sudo install -m 644 "$ROOT/deploy/Caddyfile" /etc/caddy/Caddyfile
 
-sudo systemctl daemon-reload
 sudo systemctl enable --now pizdato
-sudo systemctl reload caddy || sudo systemctl restart caddy
+sudo systemctl restart caddy
 
 echo "==> Done. https://pizdato.net (Caddy handles TLS automatically)"
 echo "    DB backups: /var/lib/pizdato/backups (cron 03:15)"
