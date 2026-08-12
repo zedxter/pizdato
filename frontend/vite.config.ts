@@ -60,6 +60,7 @@ export default defineConfig({
         'articles-pizdato-i-huyevo': 'articles/pizdato-i-huyevo.html',
         'articles-zachem-odin-golos': 'articles/zachem-odin-golos.html',
         'articles-tonkaya-gran': 'articles/tonkaya-gran-mezhdu-pizdato-i-pizdec.html',
+        'articles-sindrom-otlozhennoj-zhizni': 'articles/sindrom-otlozhennoj-zhizni.html',
       },
     },
   },

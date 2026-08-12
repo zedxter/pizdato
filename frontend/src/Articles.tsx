@@ -14,7 +14,7 @@ import './Articles.css'
 
 const INDEX_TITLE = 'Статьи — пиздато, хуёво и голосование | pizdato.net'
 const INDEX_DESCRIPTION =
-  'Статьи pizdato.net: что значит пиздато, зачем пара пиздато / хуёво и почему на сайте только один голос.'
+  'Статьи pizdato.net: синдром отложенной жизни, что значит пиздато, пара пиздато / хуёво и почему на сайте только один голос.'
 
 function usePageMeta(title: string, description: string) {
   useEffect(() => {
@@ -69,6 +69,7 @@ function ArticleNotFound() {
 function ArticleView({ article }: { article: Article }) {
   const title = `${article.title} | pizdato.net`
   usePageMeta(title, article.description)
+  const { image } = article
 
   return (
     <div className="page page-essay page-articles">
@@ -103,6 +104,18 @@ function ArticleView({ article }: { article: Article }) {
             </time>
           </p>
         </header>
+
+        <figure className="essay-hero-figure">
+          <img
+            src={image.src}
+            alt={image.alt}
+            width={image.width}
+            height={image.height}
+            decoding="async"
+            fetchPriority="high"
+          />
+          <figcaption>{image.caption}</figcaption>
+        </figure>
 
         <div
           className="essay-body"
@@ -154,17 +167,28 @@ function ArticlesIndex() {
           {ARTICLES.map((article) => (
             <li key={article.slug} className="articles-item">
               <a className="articles-item-link" href={articleUrl(article.slug)}>
-                <h2 className="articles-item-title">{article.title}</h2>
-                <p className="articles-item-dek">{article.dek}</p>
-                <p className="articles-item-meta">
-                  <time dateTime={article.datePublished}>
-                    {formatArticleDate(article.datePublished)}
-                  </time>
-                  <span className="footer-sep" aria-hidden="true">
-                    ·
-                  </span>
-                  <span>~{article.readingMinutes} мин</span>
-                </p>
+                <img
+                  className="articles-item-thumb"
+                  src={article.image.src}
+                  alt=""
+                  width={160}
+                  height={107}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div className="articles-item-copy">
+                  <h2 className="articles-item-title">{article.title}</h2>
+                  <p className="articles-item-dek">{article.dek}</p>
+                  <p className="articles-item-meta">
+                    <time dateTime={article.datePublished}>
+                      {formatArticleDate(article.datePublished)}
+                    </time>
+                    <span className="footer-sep" aria-hidden="true">
+                      ·
+                    </span>
+                    <span>~{article.readingMinutes} мин</span>
+                  </p>
+                </div>
               </a>
             </li>
           ))}
