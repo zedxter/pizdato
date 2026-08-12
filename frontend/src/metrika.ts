@@ -5,44 +5,51 @@ export const METRIKA_ID = 111534101
 export const GOAL_VOTE_SUCCESS = 'vote_success'
 export const GOAL_TELEGRAM_CLICK = 'telegram_click'
 
-type YmFn = ((...args: unknown[]) => void) & { a?: unknown[][]; l?: number }
-
 declare global {
   interface Window {
-    ym?: YmFn
+    // Official loader uses a callable with `.a` / `.l` queue fields.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ym?: any
   }
 }
 
-function loadTagScript(): void {
-  const src = `https://mc.yandex.ru/metrika/tag.js?id=${METRIKA_ID}`
-  const scripts = document.scripts
-  for (let i = 0; i < scripts.length; i++) {
-    if (scripts[i]?.src === src) return
-  }
-  const s = document.createElement('script')
-  s.async = true
-  s.src = src
-  const first = document.getElementsByTagName('script')[0]
-  first?.parentNode?.insertBefore(s, first)
-}
-
-/** Init counter once per page load. Safe to call from main.tsx. */
+/**
+ * Exact official bootstrap (arguments queue, not rest-array), so tag.js
+ * drains init/reachGoal the same way as Metrika’s pasted snippet.
+ */
 export function initMetrika(): void {
   try {
-    const w = window
-    const ym: YmFn =
-      w.ym ||
-      function (...args: unknown[]) {
-        ;(ym.a = ym.a || []).push(args)
+    const counterId = METRIKA_ID
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(function (m: any, e: Document, t: string, r: string, i: string) {
+      m[i] =
+        m[i] ||
+        function () {
+          // eslint-disable-next-line prefer-rest-params
+          ;(m[i].a = m[i].a || []).push(arguments)
+        }
+      m[i].l = 1 * Date.now()
+      for (let j = 0; j < e.scripts.length; j++) {
+        if (e.scripts[j]?.src === r) return
       }
-    w.ym = ym
-    ym.l = Date.now()
-    loadTagScript()
-    ym(METRIKA_ID, 'init', {
+      const k = e.createElement(t) as HTMLScriptElement
+      const a = e.getElementsByTagName(t)[0]
+      k.async = true
+      k.src = r
+      a?.parentNode?.insertBefore(k, a)
+    })(
+      window,
+      document,
+      'script',
+      `https://mc.yandex.ru/metrika/tag.js?id=${counterId}`,
+      'ym',
+    )
+
+    window.ym(counterId, 'init', {
       ssr: true,
       webvisor: true,
       clickmap: true,
-      ecommerce: 'dataLayer',
+      triggerEvent: true,
       accurateTrackBounce: true,
       trackLinks: true,
     })
@@ -53,6 +60,9 @@ export function initMetrika(): void {
 
 export function reachGoal(goal: string): void {
   try {
+    if (typeof window.ym !== 'function') {
+      initMetrika()
+    }
     window.ym?.(METRIKA_ID, 'reachGoal', goal)
   } catch {
     /* ignore */
