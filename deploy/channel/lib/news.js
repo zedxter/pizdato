@@ -348,6 +348,51 @@ function htmlToText(html) {
     .trim();
 }
 
+/**
+ * Drop site chrome that survives HTML→text (KP.RU mega-menu, UI toggles).
+ * Without this, nav tokens (Политика/Общество/…) poison 24h body similarity
+ * and can hard-skip half the hourly shortlist against one polluted summary.
+ */
+export function stripSiteChrome(text) {
+  let t = String(text || "");
+  if (!t) return t;
+
+  // KP.RU: repeated «Меню / Россия / Фото Видео Спецоперация … Еще / Радио»
+  if (/Меню\s*\n\s*Россия\s*\n\s*Фото Видео/i.test(t)) {
+    const head = t.split(/\n\s*Меню\s*\n/)[0].trim();
+    const afterMenus = t
+      .split(/\n\s*Меню\s*\n/)
+      .slice(1)
+      .map((chunk) =>
+        chunk
+          .replace(/^[\s\S]*?\n\s*Еще\s*\n\s*Радио\s*\n/i, "")
+          .replace(/^[\s\S]*?Спецоперация Политика Общество Экономика[\s\S]{0,1200}?\n/i, "")
+          .trim(),
+      )
+      .filter((c) => c.length > 80);
+    const body = afterMenus.sort((a, b) => b.length - a.length)[0] || "";
+    t = [head, body].filter(Boolean).join("\n").trim();
+  }
+
+  t = t
+    .replace(/Выделить главное\s*\n\s*Вкл\s*\n\s*Выкл\s*\n/gi, "\n")
+    .replace(/Перейти к материалам\s*\n/gi, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return t;
+}
+
+/** True when stored/fetched text is mostly nav chrome (unsafe for body Jaccard). */
+export function isMostlySiteChrome(text) {
+  const t = String(text || "");
+  if (t.length < 40) return false;
+  if (/Меню\s*\n\s*Россия\s*\n\s*Фото Видео Спецоперация/i.test(t)) {
+    const withoutNav = stripSiteChrome(t);
+    return withoutNav.length < Math.min(200, t.length * 0.35);
+  }
+  return false;
+}
+
 function extractCanonicalUrl(html, baseUrl) {
   const patterns = [
     /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
@@ -450,11 +495,11 @@ export async function fetchArticleBody(url, { maxChars = 7000 } = {}) {
       };
     }
 
-    let text = htmlToText(html);
+    let text = stripSiteChrome(htmlToText(html));
     // Prefer <article> slice if present and long enough.
     const articleMatch = html.match(/<article[\s\S]*?<\/article>/i);
     if (articleMatch) {
-      const articleText = htmlToText(articleMatch[0]);
+      const articleText = stripSiteChrome(htmlToText(articleMatch[0]));
       if (articleText.length > 400) text = articleText;
     }
 
@@ -743,7 +788,9 @@ export function findSimilarRecent(
   { minTitleOverlap = 3, minBodyJaccard = 0.22, minBodyOverlap = 14 } = {},
 ) {
   const title = item.title || "";
-  const body = `${item.articleText || ""} ${item.summary || ""}`.trim();
+  const body = stripSiteChrome(
+    `${item.articleText || ""} ${item.summary || ""}`.trim(),
+  );
   const fp = topicFingerprint(title, body || item.summary || "");
   const titleToks = textTokens(title);
   const titleContent = contentTokens(title);
@@ -751,8 +798,12 @@ export function findSimilarRecent(
 
   for (const prev of recentItems || []) {
     const prevTitle = prev.title || "";
-    const prevBody = String(prev.summary || prev.articleText || "");
-    const prevFp = topicFingerprint(prevTitle, prevBody);
+    const prevBodyRaw = String(prev.summary || prev.articleText || "");
+    // Nav-only stored summaries must not participate in body Jaccard.
+    const prevBody = isMostlySiteChrome(prevBodyRaw)
+      ? ""
+      : stripSiteChrome(prevBodyRaw);
+    const prevFp = topicFingerprint(prevTitle, prevBody || prevBodyRaw);
     if (fp && prevFp && fp === prevFp) {
       return { reason: `topic ${fp}`, match: prev };
     }
