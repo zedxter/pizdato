@@ -13,10 +13,10 @@
 
 ## 3. SEO indexability (engineering)
 
-- [ ] 3.1 Add a small sync helper (or documented script) that builds article HTML shells from `articles.ts` (meta, JSON-LD including articleBody, `#root` + noscript full body, og image)
-- [ ] 3.2 Bring remaining articles to синдром-level static parity via the helper
-- [ ] 3.3 Ensure `/articles` index meta/ItemList stay in sync when magnets are added
-- [ ] 3.4 On publish path: update `sitemap.xml` `lastmod` for touched article + `/articles`; deploy and curl-verify full body in HTML without JS assumptions
+- [x] 3.1 Add a small sync helper (or documented script) that builds article HTML shells from `articles.ts` (meta, JSON-LD including articleBody, `#root` + noscript full body, og image)
+- [x] 3.2 Bring remaining articles to синдром-level static parity via the helper
+- [x] 3.3 Ensure `/articles` index meta/ItemList stay in sync when magnets are added
+- [x] 3.4 On publish path: update `sitemap.xml` `lastmod` for touched article + `/articles`; deploy and curl-verify full body in HTML without JS assumptions
 
 ## 4. Content magnet productization
 

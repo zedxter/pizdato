@@ -1,4 +1,5 @@
 // @ts-nocheck — vite config; Connect typings for req.url vary by @types/node presence
+import { readdirSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -9,6 +10,12 @@ const CLEAN_PAGES = {
   '/pizdato': '/pizdato.html',
   '/articles': '/articles.html',
 }
+
+const articleHtmlInputs = Object.fromEntries(
+  readdirSync('articles')
+    .filter((f) => f.endsWith('.html'))
+    .map((f) => [`articles-${f.replace(/\.html$/, '')}`, `articles/${f}`]),
+)
 
 /** Map clean URLs to MPA HTML entries in vite dev / preview. */
 function cleanPageUrls() {
@@ -56,11 +63,7 @@ export default defineConfig({
         lenta: 'lenta.html',
         pizdato: 'pizdato.html',
         articles: 'articles.html',
-        'articles-chto-znachit-pizdato': 'articles/chto-znachit-pizdato.html',
-        'articles-pizdato-i-huyevo': 'articles/pizdato-i-huyevo.html',
-        'articles-zachem-odin-golos': 'articles/zachem-odin-golos.html',
-        'articles-tonkaya-gran': 'articles/tonkaya-gran-mezhdu-pizdato-i-pizdec.html',
-        'articles-sindrom-otlozhennoj-zhizni': 'articles/sindrom-otlozhennoj-zhizni.html',
+        ...articleHtmlInputs,
       },
     },
   },

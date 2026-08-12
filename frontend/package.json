@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "sync:articles": "npx --yes tsx scripts/sync-article-shells.ts",
+    "build": "npm run sync:articles && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
