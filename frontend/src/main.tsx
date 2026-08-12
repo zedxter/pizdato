@@ -6,7 +6,11 @@ import Articles from './Articles.tsx'
 import Essay from './Essay.tsx'
 import Faq from './Faq.tsx'
 import Feed from './Feed.tsx'
+import { bindTelegramOutboundTracking, initMetrika } from './metrika.ts'
 import PizdatoBrand from './PizdatoBrand.tsx'
+
+initMetrika()
+bindTelegramOutboundTracking()
 
 const path = window.location.pathname.replace(/\/+$/, '') || '/'
 const Page =

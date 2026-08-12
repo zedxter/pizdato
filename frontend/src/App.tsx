@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { castVote, fetchStatsWithRetry, type Choice, type Stats } from './api'
+import { GOAL_VOTE_SUCCESS, reachGoal } from './metrika'
 import { pickQuotes, type Wisdom } from './quotes'
 import { SharePanel } from './SharePanel'
 import { SiteFooter } from './SiteFooter'
@@ -153,6 +154,7 @@ export default function App() {
       setJustVoted(true)
       setQuotes(pickQuotes(QUOTE_COUNT))
       setQuoteIndex(0)
+      reachGoal(GOAL_VOTE_SUCCESS)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ошибка')
     } finally {

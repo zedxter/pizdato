@@ -1,15 +1,15 @@
 ## 1. Yandex baseline (ops)
 
 - [ ] 1.1 In Yandex Webmaster, confirm sitemap accepted and note indexed vs excluded URL counts
-- [ ] 1.2 Set JavaScript rendering to prefer rendering (until static parity is done); run page check on `/articles/sindrom-otlozhennoj-zhizni` vs a thin article shell
+- [x] 1.2 Set JavaScript rendering to prefer rendering (until static parity is done); run page check on `/articles/sindrom-otlozhennoj-zhizni` vs a thin article shell
 - [ ] 1.3 Skim Google Search Console only as a mirror (coverage / sitemap); no Google-first changes
 
 ## 2. Growth measurement
 
-- [ ] 2.1 Create/confirm Yandex.Metrica counter; add snippet to public HTML entry points (home, articles index, article shells, lenta, pizdato, faq, issledovanie)
-- [ ] 2.2 Define and verify goal: successful home vote (`reachGoal` or equivalent after accepted vote)
-- [ ] 2.3 Define and verify goal: primary click to `t.me/pizdato_net`
-- [ ] 2.4 Smoke-check that voting still works with analytics blocked / failed
+- [x] 2.1 Create/confirm Yandex.Metrica counter; add snippet to public HTML entry points (home, articles index, article shells, lenta, pizdato, faq, issledovanie)
+- [x] 2.2 Define and verify goal: successful home vote (`reachGoal` or equivalent after accepted vote)
+- [x] 2.3 Define and verify goal: primary click to `t.me/pizdato_net`
+- [x] 2.4 Smoke-check that voting still works with analytics blocked / failed
 
 ## 3. SEO indexability (engineering)
 
