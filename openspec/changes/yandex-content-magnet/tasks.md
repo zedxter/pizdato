@@ -20,12 +20,12 @@
 
 ## 4. Content magnet productization
 
-- [ ] 4.1 Standardize dual CTA block at end of magnets (vote home + TG) in brand voice; apply to existing articles missing a clear TG CTA
-- [ ] 4.2 Document publish ritual in-repo (short checklist): registry → helper → sitemap → build/deploy → TG teaser with link preview + home CTA
-- [ ] 4.3 Draft 4–6 magnet topic candidates (demand query → pizdato pivot); pick the next one to write
+- [x] 4.1 Standardize dual CTA block at end of magnets (vote home + TG) in brand voice; apply to existing articles missing a clear TG CTA
+- [x] 4.2 Document publish ritual in-repo (short checklist): registry → helper → sitemap → build/deploy → TG teaser with link preview + home CTA
+- [x] 4.3 Draft 4–6 magnet topic candidates (demand query → pizdato pivot); pick the next one to write
 
 ## 5. First weekly cycle
 
-- [ ] 5.1 Write, illustrate, SEO-shell, and deploy the next magnet
-- [ ] 5.2 Publish same-day TG teaser + track Metrica (article landings, vote goal, TG goal) for 7 days
+- [x] 5.1 Write, illustrate, SEO-shell, and deploy the next magnet — **syndrom (morning) counts as this week’s magnet; evening draft `chuzhaya-lenta` pulled unpublished**
+- [ ] 5.2 Publish same-day TG teaser + track Metrica (article landings, vote goal, TG goal) for 7 days — **defer to next week’s magnet (no TG for pulled draft)**
 - [ ] 5.3 Review Webmaster queries/impressions after the cycle; adjust titles/topics if needed

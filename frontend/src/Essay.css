@@ -381,6 +381,28 @@ body:has(.page-essay) #root {
   border-bottom-color: var(--good);
 }
 
+.essay-body .magnet-dual-cta {
+  margin: 1.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.essay-body .magnet-dual-cta + .magnet-dual-cta {
+  margin-top: 0.65rem;
+}
+
+.essay-body .magnet-dual-cta a {
+  color: var(--good);
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(61, 255, 154, 0.35);
+}
+
+.essay-body .magnet-dual-cta a:hover {
+  border-bottom-color: var(--good);
+}
+
 /* Glow blobs can be huge in vw — keep them from forcing layout width */
 .page-essay .glow {
   max-width: 70vmin;
