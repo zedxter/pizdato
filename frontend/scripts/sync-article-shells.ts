@@ -188,6 +188,7 @@ function articleShell(a: Article): string {
     <meta name="twitter:description" content="${esc(a.dek)}" />
     <meta name="twitter:image" content="${imageAbs}" />
 
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="icon" href="/favicon.png" type="image/png" sizes="512x512" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
@@ -332,8 +333,9 @@ function syncArticlesIndex(articles: Article[]): void {
     })
     .join('\n')
 
+  // Update both #root and noscript article lists (same markup twice).
   html = html.replace(
-    /(<ul>\n)([\s\S]*?)(\n\s*<\/ul>\s*\n\s*<p>\s*\n\s*<a href="\/pizdato">)/,
+    /(<ul>\n)([\s\S]*?)(\n\s*<\/ul>\s*\n\s*<p>\s*\n\s*<a href="\/pizdato">)/g,
     (_m, open: string, _old: string, close: string) => `${open}${noscriptItems}${close}`,
   )
 
@@ -350,7 +352,7 @@ function main(): void {
   syncSitemap(ARTICLES)
   console.log('wrote public/sitemap.xml')
   syncArticlesIndex(ARTICLES)
-  console.log('updated articles.html ItemList + noscript')
+  console.log('updated articles.html ItemList + #root/noscript lists')
 }
 
 main()
