@@ -163,6 +163,18 @@ function articleShell(a: Article): string {
     <meta name="theme-color" content="#0c1210" />
     <meta name="color-scheme" content="dark" />
 
+    <script>
+      document.documentElement.classList.add('has-js')
+    </script>
+    <style>
+      html.has-js #root {
+        visibility: hidden;
+      }
+      html.has-js.app-ready #root {
+        visibility: visible;
+      }
+    </style>
+
     <link rel="canonical" href="${url}" />
     <link rel="alternate" hreflang="ru" href="${url}" />
     <link rel="alternate" hreflang="x-default" href="${url}" />

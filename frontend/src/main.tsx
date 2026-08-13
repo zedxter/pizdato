@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { flushSync } from 'react-dom'
 import './index.css'
 import App from './App.tsx'
 import Articles from './Articles.tsx'
@@ -26,8 +27,13 @@ const Page =
             ? Articles
             : App
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Page />
-  </StrictMode>,
-)
+const rootEl = document.getElementById('root')!
+flushSync(() => {
+  createRoot(rootEl).render(
+    <StrictMode>
+      <Page />
+    </StrictMode>,
+  )
+})
+// Reveal #root after React replaced the SEO shell (see inline head CSS).
+document.documentElement.classList.add('app-ready')
