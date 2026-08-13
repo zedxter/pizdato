@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import confetti from 'canvas-confetti'
 import { castVote, fetchStatsWithRetry, type Choice, type Stats } from './api'
 import { GOAL_VOTE_SUCCESS, reachGoal } from './metrika'
 import { pickQuotes, type Wisdom } from './quotes'
@@ -14,6 +15,121 @@ function pct(part: number, total: number): number {
 
 const QUOTE_COUNT = 3
 const QUOTE_ROTATE_MS = 6500
+
+const GOOD_COLORS = ['#3dff9a', '#22d97f', '#f2ff57', '#ffffff', '#7dffc8']
+const BAD_COLORS = ['#ff4d3d', '#ff7a3d', '#ffd23d', '#ffffff', '#ff8a7d']
+
+function buzz(durationMs: number | number[] = 60) {
+  try {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(durationMs)
+    }
+  } catch {
+    /* haptics not supported */
+  }
+}
+
+function celebrate(choice: Choice) {
+  const good = choice === 'pizdato'
+  const colors = good ? GOOD_COLORS : BAD_COLORS
+  // Central burst: two-sided cannons instead of a one-sided origin.
+  const tick = 40
+
+  // Haptics: short "tap" immediately, then a stronger pulse with the finale.
+  buzz(30)
+  window.setTimeout(() => buzz([20, 30, 20]), tick * 2)
+
+  // Left cannon
+  void confetti({
+    particleCount: 55,
+    spread: 60,
+    startVelocity: 45,
+    angle: 60,
+    ticks: 190,
+    origin: { x: 0.5, y: 0.6 },
+    colors,
+    scalar: 1.05,
+    zIndex: 9999,
+    disableForReducedMotion: true,
+  })
+  // Right cannon
+  void confetti({
+    particleCount: 55,
+    spread: 60,
+    startVelocity: 45,
+    angle: 120,
+    ticks: 190,
+    origin: { x: 0.5, y: 0.6 },
+    colors,
+    scalar: 1.05,
+    zIndex: 9999,
+    disableForReducedMotion: true,
+  })
+
+  window.setTimeout(() => {
+    // Rising fountains, both sides
+    void confetti({
+      particleCount: 40,
+      spread: 90,
+      startVelocity: 55,
+      gravity: 0.9,
+      ticks: 200,
+      origin: { x: 0.3, y: 0.75 },
+      colors,
+      shapes: ['square', 'circle'],
+      zIndex: 9999,
+      disableForReducedMotion: true,
+    })
+    void confetti({
+      particleCount: 40,
+      spread: 90,
+      startVelocity: 55,
+      gravity: 0.9,
+      ticks: 200,
+      origin: { x: 0.7, y: 0.75 },
+      colors,
+      shapes: ['square', 'circle'],
+      zIndex: 9999,
+      disableForReducedMotion: true,
+    })
+  }, tick)
+
+  window.setTimeout(() => {
+    // Finale: confetti rain from the top across the whole width
+    void confetti({
+      particleCount: 120,
+      spread: 160,
+      startVelocity: 25,
+      gravity: 1.1,
+      ticks: 240,
+      origin: { x: 0.5, y: -0.08 },
+      colors: good ? ['#3dff9a', '#ffffff'] : ['#ff4d3d', '#ffffff'],
+      shapes: ['circle'],
+      zIndex: 9999,
+      disableForReducedMotion: true,
+    })
+  }, tick * 3)
+}
+
+function AnimatedCounter({ from, to, label }: { from: number; to: number; label: string }) {
+  const [val, setVal] = useState(from)
+  useEffect(() => {
+    if (from === to) return
+    const duration = 1200
+    const start = performance.now()
+    let raf: number
+    function tick(now: number) {
+      const t = Math.min((now - start) / duration, 1)
+      // ease-out quad
+      const eased = 1 - (1 - t) * (1 - t)
+      setVal(Math.round(from + (to - from) * eased))
+      if (t < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [from, to])
+  return <span className="counter-num">{val}<span className="counter-pct">%</span> {label}</span>
+}
 
 function QuoteCarousel({
   quotes,
@@ -152,6 +268,7 @@ export default function App() {
       const next = await castVote(choice)
       setStats(next)
       setJustVoted(true)
+      celebrate(choice)
       setQuotes(pickQuotes(QUOTE_COUNT))
       setQuoteIndex(0)
       reachGoal(GOAL_VOTE_SUCCESS)
@@ -166,11 +283,17 @@ export default function App() {
   const huyevoPct = pct(stats?.huyevo ?? 0, stats?.total ?? 0)
   const activeQuote = quotes[quoteIndex] ?? quotes[0]
 
+  // Living background: glow intensity follows the vote ratio
+  const total = stats?.total ?? 0
+  const goodRatio = total > 0 ? (stats?.pizdato ?? 0) / total : 0.5
+  const glowA = 0.2 + goodRatio * 0.45
+  const glowB = 0.2 + (1 - goodRatio) * 0.45
+
   return (
     <div className="page">
       <div className="noise" aria-hidden="true" />
-      <div className="glow glow-a" aria-hidden="true" />
-      <div className="glow glow-b" aria-hidden="true" />
+      <div className="glow glow-a" aria-hidden="true" style={{ opacity: glowA }} />
+      <div className="glow glow-b" aria-hidden="true" style={{ opacity: glowB }} />
 
       <SiteNav current="home" />
 
@@ -229,6 +352,24 @@ export default function App() {
                   ? 'Ты сознательно сделал хуёво. Смелость тоже считается.'
                   : 'Вы уже проголосовали.'}
             </p>
+
+            {justVoted && stats && (
+              <p className="impact-bar">
+                {stats.choice === 'pizdato' ? (
+                  <>
+                    <AnimatedCounter from={0} to={pizdatoPct} label="пиздато" />
+                    <span className="impact-vs">vs</span>
+                    <span className="impact-counter">{huyevoPct}% хуёво</span>
+                  </>
+                ) : (
+                  <>
+                    <AnimatedCounter from={0} to={huyevoPct} label="хуёво" />
+                    <span className="impact-vs">vs</span>
+                    <span className="impact-counter">{pizdatoPct}% пиздато</span>
+                  </>
+                )}
+              </p>
+            )}
 
             <p className="stats-heading">
               Вот как сейчас обстоят дела у человечества:

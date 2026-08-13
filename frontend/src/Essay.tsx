@@ -70,7 +70,7 @@ export default function Essay() {
         <figure className="essay-hero-figure">
           <img
             src="/essay/essay-hero.jpg"
-            alt="Два полюса: пиздато и хуёво как геометрический раскол мира"
+            alt="Мир, разделённый на две половины: зелёная сторона с весельем и красная с комичными неудачами"
             width={1400}
             height={933}
             decoding="async"
