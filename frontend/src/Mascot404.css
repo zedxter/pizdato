@@ -11,6 +11,9 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  width: 100%;
+  max-width: 44rem;
+  margin-inline: auto;
   padding: 2rem 1.5rem 3rem;
   animation: rise 0.7s ease both;
 }

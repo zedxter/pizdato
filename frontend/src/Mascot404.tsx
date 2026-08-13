@@ -69,7 +69,7 @@ export default function Mascot404() {
 
         <div className="mascot-404-actions">
           <a href="/" className="btn btn-good">На главную</a>
-          <a href="/" className="btn btn-bad">Голосовать</a>
+          <a href="/lenta" className="btn btn-bad">Лента голосов</a>
         </div>
 
         {total > 0 && (
