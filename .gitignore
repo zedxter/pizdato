@@ -13,6 +13,9 @@ backend/target
 .env
 backend/.env
 /etc/
+# Virtual environments
+.venv
+venv
 # Accidental relative StoreSession nest from mcp-telegram cwd
 /home/
 
