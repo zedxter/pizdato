@@ -11,9 +11,10 @@ const DESCRIPTION = 'Страница не найдена. Забрёл в ху�
 
 export default function Mascot404() {
   const [stats, setStats] = useState<Stats | null>(null)
-  const [wisdom, setWisdom] = useState<Wisdom | null>(null)
+  const [wisdom] = useState<Wisdom | null>(() => pickQuotes(1)[0] ?? null)
 
   useEffect(() => {
+    const prevTitle = document.title
     document.title = TITLE
     let meta = document.querySelector('meta[name="description"]')
     const prevDesc = meta?.getAttribute('content') ?? null
@@ -23,21 +24,31 @@ export default function Mascot404() {
       document.head.appendChild(meta)
     }
     meta.setAttribute('content', DESCRIPTION)
+    let robots = document.querySelector('meta[name="robots"]')
+    const prevRobots = robots?.getAttribute('content') ?? null
+    if (!robots) {
+      robots = document.createElement('meta')
+      robots.setAttribute('name', 'robots')
+      document.head.appendChild(robots)
+    }
+    robots.setAttribute('content', 'noindex, follow')
     return () => {
+      document.title = prevTitle
       if (prevDesc !== null) meta?.setAttribute('content', prevDesc)
+      if (prevRobots !== null) robots?.setAttribute('content', prevRobots)
+      else robots?.remove()
     }
   }, [])
 
   useEffect(() => {
-    setWisdom(pickQuotes(1)[0] ?? null)
     fetchStats()
       .then(setStats)
       .catch(() => { /* silently fail, 404 page is forgiving */ })
   }, [])
 
   const total = stats?.total ?? 0
-  const pizdatoPct = total > 0 ? Math.round((stats!.pizdato / total) * 100) : 0
-  const huyevoPct = total > 0 ? Math.round((stats!.huyevo / total) * 100) : 0
+  const pizdatoPct = total > 0 ? Math.round(((stats?.pizdato ?? 0) / total) * 100) : 0
+  const huyevoPct = total > 0 ? Math.round(((stats?.huyevo ?? 0) / total) * 100) : 0
 
   return (
     <div className="page page-404">
@@ -45,12 +56,12 @@ export default function Mascot404() {
       <div className="glow glow-a" aria-hidden="true" />
       <div className="glow glow-b" aria-hidden="true" />
 
-      <SiteNav current="home" />
+      <SiteNav current="404" />
 
       <main className="mascot-404">
         <img
           className="mascot-img"
-          src="/mascot/mascot-404.png"
+          src="/mascot/mascot-404.webp"
           alt="Дядя Вова"
           width={256}
           height={256}
@@ -79,7 +90,7 @@ export default function Mascot404() {
         )}
       </main>
 
-      <SiteFooter current="home" />
+      <SiteFooter />
     </div>
   )
 }

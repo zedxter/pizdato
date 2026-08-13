@@ -1,4 +1,4 @@
-export type NavId = 'home' | 'brand' | 'lenta' | 'articles' | 'essay' | 'faq'
+export type NavId = 'home' | 'brand' | 'lenta' | 'articles' | 'essay' | 'faq' | '404'
 
 export const NAV_LINKS: { id: NavId; href: string; label: string }[] = [
   { id: 'home', href: '/', label: 'Голосование' },

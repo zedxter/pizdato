@@ -30,8 +30,9 @@ pizdato.net {
 
 	handle {
 		root * /var/www/pizdato
-		# Prefer real files, then MPA shells (e.g. /issledovanie → issledovanie.html), else SPA
-		try_files {path} {path}.html {path}/index.html /index.html
+		# Prefer real files, then MPA shells (e.g. /issledovanie → issledovanie.html),
+		# then the SPA shell for the home page; anything else → 404.html with real 404.
+		try_files {path} {path}.html {path}/index.html
 		file_server
 		header {
 			X-Content-Type-Options nosniff
@@ -42,6 +43,17 @@ pizdato.net {
 		header @html Cache-Control "no-cache"
 		@html_routes path /lenta /faq /pizdato /issledovanie /articles /articles/*
 		header @html_routes Cache-Control "no-cache"
+	}
+
+	# Unknown paths: serve /404.html with HTTP 404 instead of index.html (200).
+	handle_errors {
+		@notfound expression {http.error.status_code} == 404
+		rewrite @notfound /404.html
+		file_server
+		header {
+			Cache-Control "no-cache"
+			X-Content-Type-Options nosniff
+		}
 	}
 }
 
