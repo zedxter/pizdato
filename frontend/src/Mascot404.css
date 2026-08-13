@@ -81,6 +81,8 @@
 
 .mascot-404-actions {
   display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 0.85rem;
   margin-top: 1.75rem;
   animation: rise 0.85s ease 0.25s both;
