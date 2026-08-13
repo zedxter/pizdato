@@ -9,6 +9,7 @@ import Faq from './Faq.tsx'
 import Feed from './Feed.tsx'
 import { bindTelegramOutboundTracking, initMetrika } from './metrika.ts'
 import PizdatoBrand from './PizdatoBrand.tsx'
+import Mascot404 from './Mascot404.tsx'
 
 initMetrika()
 bindTelegramOutboundTracking()
@@ -25,7 +26,9 @@ const Page =
           ? PizdatoBrand
           : path === '/articles' || path.startsWith('/articles/')
             ? Articles
-            : App
+            : path === '/' || path === ''
+              ? App
+              : Mascot404
 
 const rootEl = document.getElementById('root')!
 flushSync(() => {
