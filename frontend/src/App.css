@@ -536,6 +536,7 @@ button {
   gap: 0.55rem;
   margin-top: 1.15rem;
   padding: 0.7rem 1.35rem;
+  max-width: 100%;
   border: 1px solid rgba(61, 255, 154, 0.4);
   border-radius: 0.55rem;
   background: rgba(61, 255, 154, 0.08);
@@ -550,7 +551,7 @@ button {
 }
 
 .share-channel-link:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   background: rgba(61, 255, 154, 0.14);
   border-color: rgba(61, 255, 154, 0.65);
 }
