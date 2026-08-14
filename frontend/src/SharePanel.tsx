@@ -146,6 +146,16 @@ export function SharePanel({ stats, wisdom }: Props) {
           </button>
         )}
       </div>
+
+      <a
+        className="share-channel-link"
+        href="https://t.me/pizdato_net"
+        target="_blank"
+        rel="noopener noreferrer me"
+      >
+        <IconTelegram className="share-icon" />
+        <span>Подписаться на @pizdato_net</span>
+      </a>
     </div>
   )
 }
