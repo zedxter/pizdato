@@ -147,15 +147,28 @@ export function SharePanel({ stats, wisdom }: Props) {
         )}
       </div>
 
-      <a
-        className="share-channel-link"
-        href="https://t.me/pizdato_net"
-        target="_blank"
-        rel="noopener noreferrer me"
-      >
-        <IconTelegram className="share-icon" />
-        <span>Подписаться на @pizdato_net</span>
-      </a>
+      <div className="share-links-row">
+        <a
+          className="share-channel-link"
+          href="https://t.me/pizdato_net"
+          target="_blank"
+          rel="noopener noreferrer me"
+        >
+          <svg className="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+          <span>Подписаться на @pizdato_net</span>
+        </a>
+
+        <a
+          className="share-sticker-link"
+          href="https://t.me/addstickers/UncleMishaPiz"
+          target="_blank"
+          rel="noopener noreferrer me"
+        >
+          <span>📦 Стикеры дяди Миши</span>
+        </a>
+      </div>
     </div>
   )
 }

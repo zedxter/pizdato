@@ -62,7 +62,7 @@ export default function Mascot404() {
         <img
           className="mascot-img"
           src="/mascot/mascot-404.webp"
-          alt="Дядя Вова"
+          alt="Дядя Миша"
           width={256}
           height={256}
           decoding="async"

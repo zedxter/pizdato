@@ -534,12 +534,13 @@ button {
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
-  margin-top: 1.15rem;
   padding: 0.7rem 1.35rem;
   max-width: 100%;
-  border: 1px solid rgba(61, 255, 154, 0.4);
+  flex-wrap: wrap;
+  border: 1px solid var(--good);
+  border-color: color-mix(in srgb, var(--good) 40%, transparent);
   border-radius: 0.55rem;
-  background: rgba(61, 255, 154, 0.08);
+  background: color-mix(in srgb, var(--good) 8%, transparent);
   color: var(--good);
   font-weight: 800;
   font-size: 0.98rem;
@@ -548,12 +549,46 @@ button {
     transform 0.15s ease,
     background 0.15s ease,
     border-color 0.15s ease;
+  white-space: nowrap;
 }
 
 .share-channel-link:hover {
   transform: translateY(-1px);
-  background: rgba(61, 255, 154, 0.14);
-  border-color: rgba(61, 255, 154, 0.65);
+  background: color-mix(in srgb, var(--good) 14%, transparent);
+  border-color: color-mix(in srgb, var(--good) 65%, transparent);
+}
+
+.share-sticker-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 0.98rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.share-sticker-link:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.share-links-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 1.15rem;
 }
 
 .error-block {
