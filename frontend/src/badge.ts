@@ -23,6 +23,7 @@ function roundRect(
   ctx.beginPath()
   ctx.moveTo(x + radius, y)
   ctx.arcTo(x + w, y, x + w, y + h, radius)
+  ctx.arcTo(x + w, y + h, x, y + h, radius)
   ctx.arcTo(x, y + h, x, y, radius)
   ctx.arcTo(x, y, x + w, y, radius)
   ctx.closePath()
@@ -157,9 +158,7 @@ export async function renderBadgeCanvas(
   const label =
     choice === 'pizdato'
       ? 'Я — ЗА ПИЗДАТО!'
-      : choice === 'huyevo'
-        ? 'Я — ЗА ХУЁВО!'
-        : 'ВЫБЕРИ СТОРОНУ'
+      : 'Я — ЗА ХУЁВО!'
 
   const padX = 28
   const contentRight = W - padX
@@ -187,7 +186,7 @@ export async function renderBadgeCanvas(
     H * 0.45,
     200,
   )
-  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.18)' : 'rgba(61,255,154,0.16)')
+  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.18)' : choice === 'pizdato' ? 'rgba(61,255,154,0.16)' : 'rgba(0,0,0,0)')
   glow.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, W, H)
@@ -198,7 +197,7 @@ export async function renderBadgeCanvas(
 
   ctx.fillStyle = accent
   ctx.font = '700 14px Manrope, system-ui, sans-serif'
-  const tag = choice === 'huyevo' ? 'хуёво' : 'пиздато'
+  const tag = choice === 'huyevo' ? 'хуёво' : choice === 'pizdato' ? 'пиздато' : '—'
   const tagW = ctx.measureText(tag).width
   ctx.fillText(tag, contentRight - tagW, 34)
 
@@ -260,9 +259,7 @@ export async function renderVerticalBadgeCanvas(
   const label =
     choice === 'pizdato'
       ? 'Я — ЗА ПИЗДАТО!'
-      : choice === 'huyevo'
-        ? 'Я — ЗА ХУЁВО!'
-        : 'ВЫБЕРИ СТОРОНУ'
+      : 'Я — ЗА ХУЁВО!'
 
   const padX = 40
   const padTop = 60
@@ -344,9 +341,7 @@ export async function renderVerticalBadgeCanvas(
   drawPills(ctx, padX, pillY, p, hPct)
 
   // Watermark
-  ctx.textAlign = 'center'
   drawWatermark(ctx, VW - padX, VH - 30)
-  ctx.textAlign = 'start'
 
   return canvas
 }

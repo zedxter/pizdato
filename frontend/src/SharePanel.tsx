@@ -85,6 +85,8 @@ export function SharePanel({ stats, wisdom }: Props) {
     setStoriesBusy(true)
     try {
       await downloadVerticalBadge(stats, wisdom)
+    } catch {
+      // swallow — beacon уже отправил данные для аналитики
     } finally {
       setStoriesBusy(false)
     }
@@ -152,7 +154,7 @@ export function SharePanel({ stats, wisdom }: Props) {
           disabled={storiesBusy}
           onClick={() => void onDownloadStories()}
         >
-          <svg className="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <rect x="4" y="4" width="16" height="16" rx="4" />
             <path d="M4 15h4a4 4 0 0 1 4 4v1" />
           </svg>
@@ -195,3 +197,4 @@ export function SharePanel({ stats, wisdom }: Props) {
     </div>
   )
 }
+

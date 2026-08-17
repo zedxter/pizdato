@@ -12,6 +12,21 @@ pizdato.net {
 	@legacy_how path /how /how/ /how.html
 	redir @legacy_how /pizdato permanent
 
+	handle /api/event* {
+		# Rate limit badge events: 10 requests / minute per IP
+		rate_limit {
+			zone api_event
+			key {remote_host}
+			events 10
+			window 1m
+		}
+		reverse_proxy 127.0.0.1:8080 {
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
 	handle /api/* {
 		reverse_proxy 127.0.0.1:8080 {
 			header_up X-Real-IP {remote_host}

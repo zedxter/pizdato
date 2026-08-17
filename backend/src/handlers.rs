@@ -394,3 +394,12 @@ pub async fn news_feed(
         next_before_id,
     }))
 }
+
+/// Log a badge download / share event. Rate limiting via Caddy.
+pub async fn event(
+    Query(params): Query<std::collections::HashMap<String, String>>,
+) -> StatusCode {
+    let event_type = params.get("type").map(|s| s.as_str()).unwrap_or("unknown");
+    tracing::info!("badge_event: {event_type}");
+    StatusCode::OK
+}
