@@ -26,10 +26,10 @@
 ## T2: Добавить трекинг скачивания
 
 - Файл: `frontend/src/badge.ts` — функция `downloadBadge()`
-- После `canvas.toBlob()` добавить `navigator.sendBeacon('/_/event?type=badge_download')`
+- После `canvas.toBlob()` добавить `navigator.sendBeacon('/api/event?type=badge_download')`
 - **Защита от накрутки:** добавить на бэкенде rate limiting по IP, аналогично /vote endpoint (не более N событий в минуту с одного IP)
 - Файл: `frontend/src/SharePanel.tsx` — кнопка «Сторис» (будет в T4)
-- Добавить `navigator.sendBeacon('/_/event?type=badge_share_stories')`
+- Добавить `navigator.sendBeacon('/api/event?type=badge_share_stories')`
 - Оценка: 15 минут
 
 ## T3: Создать вертикальный бейдж (540×960)
@@ -38,7 +38,7 @@
 - Новая функция `renderVerticalBadgeCanvas(stats, wisdom): Promise<HTMLCanvasElement>`
 - Размер: 540×960
 - Расположение:
-  - Верх: `PIZDATO.NET · МУДРОСТЬ ДНЯ` (15px)
+  - Верх: `МУДРОСТЬ ДНЯ` (15px) — без `PIZDATO.NET`, иначе дубляж с подписью внизу
   - Центр: выбор (42px) + цитата (19px) + автор (15px)
   - Низ: пиллы с процентами + `pizdato.net` подпись
 - Новая функция `downloadVerticalBadge(stats, wisdom)`
@@ -70,5 +70,5 @@
 
 ---
 
-**Итого:** ~2.5 часа работы
-**Зависимости:** T1, T2, T3, T4 можно делать параллельно, T5 после T2
+**Итого:** ~3ч15м работы (195 мин)
+**Зависимости:** T0а, T1, T2, T3 — параллельно; T4 после T3 (нужна `downloadVerticalBadge`); T5 после T2 (нужны события)
