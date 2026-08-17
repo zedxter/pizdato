@@ -12,14 +12,10 @@ pizdato.net {
 	@legacy_how path /how /how/ /how.html
 	redir @legacy_how /pizdato permanent
 
-	handle /api/event* {
-		# Rate limit badge events: 10 requests / minute per IP
-		rate_limit {
-			zone api_event
-			key {remote_host}
-			events 10
-			window 1m
-		}
+	# Badge events: rate limiting via backend (or nginx layer on deploy).
+	# NOTE: текущая сборка Caddy (v2.11.4, кастомные теги) не включает http.handlers.rate_limit,
+	# поэтому rate limiting реализован на уровне бэкенда — см. backend/src/handlers.rs
+	handle_path /api/event {
 		reverse_proxy 127.0.0.1:8080 {
 			header_up X-Real-IP {remote_host}
 			header_up X-Forwarded-For {remote_host}

@@ -76,6 +76,8 @@ export function SharePanel({ stats, wisdom }: Props) {
     setBadgeBusy(true)
     try {
       await downloadBadge(stats, wisdom)
+    } catch {
+      // swallow — ошибка не критична, пользователь может попробовать снова
     } finally {
       setBadgeBusy(false)
     }
@@ -86,7 +88,7 @@ export function SharePanel({ stats, wisdom }: Props) {
     try {
       await downloadVerticalBadge(stats, wisdom)
     } catch {
-      // swallow — beacon уже отправил данные для аналитики
+      // swallow — ошибка не критична, пользователь может попробовать снова
     } finally {
       setStoriesBusy(false)
     }

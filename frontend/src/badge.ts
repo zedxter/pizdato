@@ -152,13 +152,15 @@ export async function renderBadgeCanvas(
   if (!ctx) throw new Error('canvas unsupported')
 
   const choice = stats.choice
-  const accent = choice === 'huyevo' ? '#ff4d3d' : '#3dff9a'
+  const accent = choice === 'huyevo' ? '#ff4d3d' : choice === 'pizdato' ? '#3dff9a' : '#9aab9e'
   const p = pct(stats.pizdato, stats.total)
   const hPct = pct(stats.huyevo, stats.total)
   const label =
     choice === 'pizdato'
       ? 'Я — ЗА ПИЗДАТО!'
-      : 'Я — ЗА ХУЁВО!'
+      : choice === 'huyevo'
+        ? 'Я — ЗА ХУЁВО!'
+        : 'ВЫБЕРИ СТОРОНУ'
 
   const padX = 28
   const contentRight = W - padX
@@ -253,13 +255,15 @@ export async function renderVerticalBadgeCanvas(
   if (!ctx) throw new Error('canvas unsupported')
 
   const choice = stats.choice
-  const accent = choice === 'huyevo' ? '#ff4d3d' : '#3dff9a'
+  const accent = choice === 'huyevo' ? '#ff4d3d' : choice === 'pizdato' ? '#3dff9a' : '#9aab9e'
   const p = pct(stats.pizdato, stats.total)
   const hPct = pct(stats.huyevo, stats.total)
   const label =
     choice === 'pizdato'
       ? 'Я — ЗА ПИЗДАТО!'
-      : 'Я — ЗА ХУЁВО!'
+      : choice === 'huyevo'
+        ? 'Я — ЗА ХУЁВО!'
+        : 'ВЫБЕРИ СТОРОНУ'
 
   const padX = 40
   const padTop = 60
@@ -281,7 +285,7 @@ export async function renderVerticalBadgeCanvas(
     VW / 2, VH * 0.4, 10,
     VW / 2, VH * 0.4, 300,
   )
-  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.18)' : 'rgba(61,255,154,0.16)')
+  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.18)' : choice === 'pizdato' ? 'rgba(61,255,154,0.16)' : 'rgba(0,0,0,0)')
   glow.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, VW, VH)
@@ -294,7 +298,7 @@ export async function renderVerticalBadgeCanvas(
   // Tag
   ctx.fillStyle = accent
   ctx.font = '700 15px Manrope, system-ui, sans-serif'
-  const tag = choice === 'huyevo' ? 'хуёво' : 'пиздато'
+  const tag = choice === 'huyevo' ? 'хуёво' : choice === 'pizdato' ? 'пиздато' : '—'
   ctx.fillText(tag, VW - padX - ctx.measureText(tag).width, padTop + 20)
 
   // Main label
