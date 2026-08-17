@@ -171,8 +171,8 @@ export async function renderBadgeCanvas(
   const middleBottom = pillY - 16
 
   const bg = ctx.createLinearGradient(0, 0, W, H)
-  bg.addColorStop(0, '#14201a')
-  bg.addColorStop(1, '#0c1210')
+  bg.addColorStop(0, '#0d0d0d')
+  bg.addColorStop(1, '#0a0a0a')
   ctx.fillStyle = bg
   roundRect(ctx, 0, 0, W, H, 18)
   ctx.fill()
@@ -186,9 +186,9 @@ export async function renderBadgeCanvas(
     10,
     choice === 'huyevo' ? W - 60 : 100,
     H * 0.45,
-    200,
+    250,
   )
-  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.18)' : choice === 'pizdato' ? 'rgba(61,255,154,0.16)' : 'rgba(0,0,0,0)')
+  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.30)' : choice === 'pizdato' ? 'rgba(61,255,154,0.28)' : 'rgba(0,0,0,0)')
   glow.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, W, H)
@@ -270,8 +270,8 @@ export async function renderVerticalBadgeCanvas(
 
   // Background
   const bg = ctx.createLinearGradient(0, 0, VW, VH)
-  bg.addColorStop(0, '#14201a')
-  bg.addColorStop(1, '#0c1210')
+  bg.addColorStop(0, '#0d0d0d')
+  bg.addColorStop(1, '#0a0a0a')
   ctx.fillStyle = bg
   roundRect(ctx, 0, 0, VW, VH, 24)
   ctx.fill()
@@ -283,9 +283,9 @@ export async function renderVerticalBadgeCanvas(
   // Glow
   const glow = ctx.createRadialGradient(
     VW / 2, VH * 0.4, 10,
-    VW / 2, VH * 0.4, 300,
+    VW / 2, VH * 0.4, 350,
   )
-  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.18)' : choice === 'pizdato' ? 'rgba(61,255,154,0.16)' : 'rgba(0,0,0,0)')
+  glow.addColorStop(0, choice === 'huyevo' ? 'rgba(255,77,61,0.30)' : choice === 'pizdato' ? 'rgba(61,255,154,0.28)' : 'rgba(0,0,0,0)')
   glow.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = glow
   ctx.fillRect(0, 0, VW, VH)
