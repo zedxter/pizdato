@@ -292,7 +292,7 @@ export async function renderVerticalBadgeCanvas(
 
   // Header
   ctx.fillStyle = '#9aab9e'
-  ctx.font = '600 16px Manrope, system-ui, sans-serif'
+  ctx.font = '600 15px Manrope, system-ui, sans-serif'
   ctx.fillText('МУДРОСТЬ ДНЯ', padX, padTop + 20)
 
   // Tag
