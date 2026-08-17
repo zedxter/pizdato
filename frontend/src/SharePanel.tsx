@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Stats } from './api'
-import { downloadBadge, renderBadgeCanvas } from './badge'
+import { downloadBadge, downloadVerticalBadge, renderBadgeCanvas } from './badge'
 import type { Wisdom } from './quotes'
 import {
   IconCheck,
@@ -28,6 +28,7 @@ export function SharePanel({ stats, wisdom }: Props) {
   const [copied, setCopied] = useState(false)
   const [badgeUrl, setBadgeUrl] = useState<string | null>(null)
   const [badgeBusy, setBadgeBusy] = useState(false)
+  const [storiesBusy, setStoriesBusy] = useState(false)
   const shareText = buildQuoteShareText(wisdom)
   const canNativeShare = typeof navigator !== 'undefined' && 'share' in navigator
 
@@ -77,6 +78,15 @@ export function SharePanel({ stats, wisdom }: Props) {
       await downloadBadge(stats, wisdom)
     } finally {
       setBadgeBusy(false)
+    }
+  }
+
+  async function onDownloadStories() {
+    setStoriesBusy(true)
+    try {
+      await downloadVerticalBadge(stats, wisdom)
+    } finally {
+      setStoriesBusy(false)
     }
   }
 
@@ -133,6 +143,19 @@ export function SharePanel({ stats, wisdom }: Props) {
           onClick={() => void onDownloadBadge()}
         >
           <IconDownload className="share-icon" />
+        </button>
+        <button
+          type="button"
+          className="share-icon-btn"
+          title="Скачать бейдж для сторис"
+          aria-label="Скачать бейдж для сторис"
+          disabled={storiesBusy}
+          onClick={() => void onDownloadStories()}
+        >
+          <svg className="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="4" />
+            <path d="M4 15h4a4 4 0 0 1 4 4v1" />
+          </svg>
         </button>
         {canNativeShare && (
           <button
