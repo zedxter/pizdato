@@ -1,5 +1,13 @@
 # Tasks — Viral Badge
 
+## T0: Изучить best practices баджей
+
+- Проанализировать, где люди используют бейджи: подписи email, соцсети (Instagram, Twitter), шапки профилей, форумы, GitHub
+- Посмотреть примеры виральных баджей (GitHub, Stack Overflow, Strava, Duolingo)
+- Определить: какой формат и размер лучше всего подходит для каждой площадки
+- Записать выводы в `references/badge-best-practices.md`
+- Оценка: 30 минут
+
 ## T1: Добавить подпись `pizdato.net` в горизонтальный бейдж
 
 - Файл: `frontend/src/badge.ts`
@@ -11,6 +19,7 @@
 
 - Файл: `frontend/src/badge.ts` — функция `downloadBadge()`
 - После `canvas.toBlob()` добавить `navigator.sendBeacon('/_/event?type=badge_download')`
+- **Защита от накрутки:** добавить на бэкенде rate limiting по IP, аналогично /vote endpoint (не более N событий в минуту с одного IP)
 - Файл: `frontend/src/SharePanel.tsx` — кнопка «Сторис» (будет в T4)
 - Добавить `navigator.sendBeacon('/_/event?type=badge_share_stories')`
 - Оценка: 15 минут
