@@ -465,12 +465,20 @@ button {
 }
 
 .share-heading {
-  margin: 0 0 1rem;
+  margin: 0 0 0.4rem;
   font-size: 0.75rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
   font-weight: 700;
+}
+
+.share-result-line {
+  margin: 0 0 0.9rem;
+  font-size: 0.95rem;
+  color: var(--text);
+  text-align: center;
+  font-weight: 600;
 }
 
 .badge-preview {
