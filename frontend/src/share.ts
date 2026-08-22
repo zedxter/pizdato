@@ -33,6 +33,11 @@ export function buildQuoteCopyText(wisdom: Wisdom): string {
   return `${buildQuoteShareText(wisdom)}\n\n${SITE_URL}`
 }
 
+/** Clip: vote-result share with the link once (A2 «Поделиться результатом»). */
+export function buildShareCopyText(stats: Stats, wisdom?: Wisdom): string {
+  return `${buildShareText(stats, wisdom)}\n\n${SITE_URL}`
+}
+
 export function telegramShareUrl(text: string): string {
   const params = new URLSearchParams({ url: SITE_URL, text })
   return `https://t.me/share/url?${params.toString()}`
