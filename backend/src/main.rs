@@ -84,7 +84,7 @@ async fn main() {
         .route("/api/stats", get(handlers::stats))
         .route("/api/vote", post(handlers::vote))
         .route("/api/news", get(handlers::news_feed))
-        .route("/api/event", get(handlers::event))
+        .route("/api/event", get(handlers::event).post(handlers::event))
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 
