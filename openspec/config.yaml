@@ -1,32 +1,48 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Project context — injected into EVERY artifact prompt.
+context: |
+  pizdato.net — a voting site where users rate news/items as "пиздато"
+  (awesome) or "хуёво" (shitty), with live counts, wisdom quote carousel,
+  share/badge flow, and crawlable content pages. Two buttons per visitor,
+  enforced with soft anti-abuse (cookie session + hashed IP limits; no
+  captcha/login).
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Tech stack: frontend React + Vite (TypeScript), backend Rust (Axum) + SQLite,
+  public Streamable HTTP MCP endpoint (read-only stats). Deploy: Caddy +
+  systemd. Telegram integration for hourly news votes via cron.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Language policy: ALL repository content (specs, README, commits, PRs) is
+  ENGLISH. Internal team notes may stay Russian; GitHub-facing content is EN
+  only. The site itself is in Russian (user-facing content).
+
+  Spec-first law: no production code without an approved plan in openspec/.
+  Review gate: every spec/code PR is reviewed by aspect (tech/architecture =
+  Geralt, scope = Yennefer).
+
+rules:
+  proposal:
+    - State the single intent and explicit scope/non-goals up front
+    - Right-size the ceremony to the change: light-spec for refactor/docs/chore
+  specs:
+    - Write requirements in RFC-2119 MUST/SHOULD/MAY wording
+    - One behavior per requirement; no multi-behavior sentences
+    - Cover Given/When/Then scenarios including negative and edge cases
+    - Reference existing src patterns (React/TS frontend, Rust backend) before inventing new ones
+  design:
+    - Describe the technical approach and the alternatives considered
+    - Include a rollback path and the files/layers affected
+    - Note how changes affect the Rust backend or React frontend
+  tasks:
+    - Map each task to a requirement/scenario it satisfies
+    - Keep chunks to ~2h
+
+operations:
+  apply:
+    guidance:
+      - Run focused tests for the changed area before the full suite
+      - Verify both frontend and backend changes as applicable
+  archive:
+    guidance:
+      - Verify the implementation matches the delta spec before finalizing
+      - Keep the completion summary concise
