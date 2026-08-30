@@ -20,6 +20,11 @@ context: |
   Review gate: every spec/code PR is reviewed by aspect (tech/architecture =
   Geralt, scope = Yennefer).
 
+  Intent-Driven Development (IDD): every feature starts with an IDD brief
+  (scope, acceptance criteria, risks, must-nots, blocking decisions) before
+  OpenSpec propose. IDD defines *what we verify* and *what must not happen*;
+  OpenSpec spec describes *how the system behaves*.
+
 rules:
   proposal:
     - State the single intent and explicit scope/non-goals up front
