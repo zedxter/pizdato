@@ -96,6 +96,7 @@ async fn main() {
     );
 
     let app = Router::new()
+        .route("/health", get(handlers::health))
         .merge(api)
         .nest_service("/mcp", mcp)
         .layer(cors);

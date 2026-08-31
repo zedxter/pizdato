@@ -1,0 +1,23 @@
+# pizdato backend — production compose
+# Image from GHCR, tagged by git SHA. Pulled on VPS, never built there.
+services:
+  api:
+    image: ghcr.io/zedxter/pizdato-backend:${APP_TAG:-latest}
+    network_mode: host
+    environment:
+      # Container uses :8081 to run alongside systemd fallback on :8080
+      BIND: "127.0.0.1:8081"
+      DATABASE_URL: "sqlite:/var/lib/pizdato/votes.db?mode=rwc"
+      COOKIE_SECURE: "true"
+      RUST_LOG: "info"
+    volumes:
+      - "/var/lib/pizdato:/var/lib/pizdato"
+    env_file:
+      - "/etc/pizdato.env"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8081/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
