@@ -1,6 +1,6 @@
 # pizdato backend — multi-stage Rust build
 # Builder: compile with stable Rust
-FROM rust:1.85-bookworm AS builder
+FROM rust:latest AS builder
 
 WORKDIR /src
 
