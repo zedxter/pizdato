@@ -403,3 +403,8 @@ pub async fn event(
     tracing::info!("badge_event: {event_type}");
     StatusCode::OK
 }
+
+/// Health check endpoint for Docker / load balancer.
+pub async fn health() -> Json<serde_json::Value> {
+    Json(serde_json::json!({"ok": true}))
+}
