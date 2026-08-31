@@ -9,12 +9,14 @@ COPY Cargo.toml Cargo.lock /src/
 COPY backend/Cargo.toml /src/backend/
 RUN mkdir -p /src/backend/src && \
     echo "fn main() {}" > /src/backend/src/main.rs && \
-    cargo build -p backend --release 2>/dev/null || true && \
-    rm -rf /src/backend/src
+    cargo build -p backend --release 2>/dev/null || true
 
-# Real build
+# Real build — clear the cached (dummy) artifact first: COPY preserves git
+# checkout mtimes, so cargo would otherwise see the dummy binary as up-to-date
+# and ship it. rm the backend artifact so the real main.rs forces a rebuild.
 COPY backend /src/backend
-RUN cargo build -p backend --release
+RUN rm -f /src/target/release/backend /src/target/release/deps/backend-* && \
+    cargo build -p backend --release
 
 # Runtime — slim with curl for healthcheck
 FROM debian:12-slim
