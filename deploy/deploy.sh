@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Deploy pizdato backend image (GHCR:sha) onto this VPS.
+# Deploy pizdato backend + frontend image (GHCR:sha) onto this VPS.
 # Assumes: deploy user in docker group, /srv/pizdato has .env + data/,
 # /srv/pizdato/deploy has compose.yaml.
 # Current systemd backend on 127.0.0.1:8080 stays as fallback until Caddy is switched.
+# Frontend dist is extracted from the Docker image and rsynced to webroot.
 set -euo pipefail
 
 cd /srv/pizdato/deploy
@@ -35,6 +36,32 @@ if [ "$healthy" != "1" ]; then
     echo "rolled back to $PREVIOUS" >&2
   fi
   exit 1
+fi
+
+# ── Frontend deploy ──────────────────────────────────────────────────────
+# Extract frontend dist from the newly deployed Docker image and rsync to webroot.
+# This runs on every deploy, so frontend changes land atomically with backend.
+echo "Extracting frontend dist from ghcr.io/zedxter/pizdato-backend:${APP_TAG}" >&2
+WEBROOT=/var/www/pizdato
+INCOMING=/srv/pizdato/incoming
+
+EXTRACT_CONTAINER=$(docker create "ghcr.io/zedxter/pizdato-backend:${APP_TAG}")
+docker cp "${EXTRACT_CONTAINER}:/frontend/dist" "${INCOMING}" 2>/dev/null || {
+  docker rm "${EXTRACT_CONTAINER}" >/dev/null
+  echo "WARNING: /frontend/dist not found in image — skipping frontend deploy" >&2
+}
+docker rm "${EXTRACT_CONTAINER}" >/dev/null
+
+if [ -d "${INCOMING}/dist" ] && [ -f "${INCOMING}/dist/index.html" ]; then
+  rsync -a --delete "${INCOMING}/dist/" "${WEBROOT}/"
+  chmod -R a+rX "${WEBROOT}"
+  echo "frontend deployed: $(ls "${WEBROOT}/index.html")" >&2
+elif [ -d "${INCOMING}" ] && [ -f "${INCOMING}/index.html" ]; then
+  rsync -a --delete "${INCOMING}/" "${WEBROOT}/"
+  chmod -R a+rX "${WEBROOT}"
+  echo "frontend deployed (flat): $(ls "${WEBROOT}/index.html")" >&2
+else
+  echo "WARNING: no index.html found in extracted frontend — webroot unchanged" >&2
 fi
 
 echo "HEALTHY $APP_TAG" >&2
