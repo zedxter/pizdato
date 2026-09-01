@@ -1,0 +1,144 @@
+# Spec → Implementation Issues
+#
+# When a spec PR (labelled "spec") is merged to main, automatically creates
+# an Issue with tasks from the openspec change's tasks.md, and comments on
+# the merged PR linking the new issue.
+#
+# Branch convention: spec/<change-name> maps to openspec/changes/<change-name>/
+#
+# Requires: "spec" label on PRs.
+# Creates: "implementation" label if missing (auto).
+
+name: Spec → Implementation Issues
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  create-implementation-issue:
+    if: >
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'spec')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Extract change name from branch
+        id: change_name
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          CHANGE="${BRANCH#spec/}"
+          if [ "$CHANGE" = "$BRANCH" ]; then
+            echo "::error::Branch name does not follow spec/<change> convention: $BRANCH"
+            exit 1
+          fi
+          echo "name=$CHANGE" >> "$GITHUB_OUTPUT"
+          echo "Change: $CHANGE"
+
+      - name: Read tasks from tasks.md
+        id: tasks
+        run: |
+          CHANGE="${{ steps.change_name.outputs.name }}"
+          TASKS_FILE="openspec/changes/${CHANGE}/tasks.md"
+          if [ -f "$TASKS_FILE" ]; then
+            echo "Found tasks.md: $TASKS_FILE"
+            TASKS=$(sed -n 's/^- \[ \] //p' "$TASKS_FILE")
+            {
+              echo "content<<EOF"
+              echo "$TASKS"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            echo "Parsed $(echo "$TASKS" | wc -l) tasks"
+          else
+            echo "::warning::tasks.md not found at $TASKS_FILE"
+            echo "content=No tasks.md found. See the spec directory for scope." >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Ensure implementation label exists
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: labels } = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const hasLabel = labels.some(l => l.name === 'implementation');
+            if (!hasLabel) {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'implementation',
+                color: '0e8a16',
+                description: 'Implementation task spawned from a merged spec PR',
+              });
+              console.log('Created "implementation" label');
+            } else {
+              console.log('Label "implementation" already exists');
+            }
+
+      - name: Create implementation issue
+        id: create_issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changeNameRaw = '${{ steps.change_name.outputs.name }}';
+            const changeName = changeNameRaw
+              .replace(/-/g, ' ')
+              .replace(/\b\w/g, c => c.toUpperCase());
+            const specPr = ${{ github.event.pull_request.number }};
+            const specUrl = '${{ github.event.pull_request.html_url }}';
+            const tasksContent = `${{ steps.tasks.outputs.content }}`;
+
+            const taskLines = tasksContent
+              .split('\n')
+              .filter(t => t.trim())
+              .map(t => `- [ ] ${t}`)
+              .join('\n');
+
+            const body = [
+              `## Implementation: ${changeName}`,
+              '',
+              `**Spec PR:** [#${specPr}](${specUrl})`,
+              '',
+              '### Acceptance Criteria',
+              `See the spec at \`openspec/changes/${changeNameRaw}/specs/\` for details.`,
+              '',
+              '### Tasks',
+              taskLines || '_No tasks parsed — check the spec directory._',
+              '',
+              '---',
+              `_Auto-created from merged spec PR [#${specPr}](${specUrl})_`,
+            ].join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Implement: ${changeName}`,
+              body: body,
+              labels: ['implementation', 'enhancement'],
+            });
+
+            console.log(`Created implementation issue #${issue.data.number}`);
+            return issue.data.number;
+
+      - name: Comment on merged spec PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = ${{ steps.create_issue.outputs.result }};
+            const repoUrl = context.repo.html_url || `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.pull_request.number }},
+              body: `✅ Implementation tracking created: [#${issueNumber}](${repoUrl}/issues/${issueNumber})`,
+            });
+            console.log(`Commented on PR #${{ github.event.pull_request.number }} with link to issue #${issueNumber}`);
