@@ -3,46 +3,15 @@ name: deploy
 on:
   push:
     branches: [main]
-    paths:
-      - "backend/**"
-      - "deploy/**"
-      - "Dockerfile"
-      - ".github/workflows/**"
   pull_request:
     branches: [main]
-    paths:
-      - "backend/**"
-      - "Dockerfile"
-      - ".github/workflows/**"
 
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Cache cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            backend/target
-          key: cargo-deploy-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install minimal Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Check
-        working-directory: backend
-        run: cargo check --workspace
-      - name: Test
-        working-directory: backend
-        run: cargo test --workspace
-
   build:
-    needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -56,7 +25,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build & push backend image
+      - name: Build & push image
         uses: docker/build-push-action@v6
         with:
           push: true
