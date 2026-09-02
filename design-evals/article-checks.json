@@ -8,13 +8,6 @@
     ]
   },
   {
-    "selector": ".essay-masthead",
-    "props": [
-      {"property": "display", "token": "flex", "desc": "masthead — flex"},
-      {"property": "flex-direction", "token": "column", "desc": "masthead — колонка"}
-    ]
-  },
-  {
     "selector": ".essay-kicker",
     "props": [
       {"property": "letter-spacing", "token": "0.28em", "desc": "kicker — широкий трекинг", "tolerance": 0.05},
