@@ -64,6 +64,24 @@ else
   echo "WARNING: no index.html found in extracted frontend — webroot unchanged" >&2
 fi
 
+# ── Post-deploy webroot verification ─────────────────────────────────────
+echo "Verifying webroot file integrity..." >&2
+VERIFY_ERROR=0
+if [ ! -f "${WEBROOT}/design.css" ]; then
+  echo "ERROR: design.css missing from webroot (${WEBROOT}/design.css)" >&2
+  VERIFY_ERROR=1
+fi
+for PAGE in pizdato.html issledovanie.html faq.html; do
+  if [ ! -f "${WEBROOT}/${PAGE}" ]; then
+    echo "ERROR: ${PAGE} missing from webroot" >&2
+    VERIFY_ERROR=1
+  fi
+done
+if [ "$VERIFY_ERROR" = "1" ]; then
+  echo "WARNING: webroot verification failed — some files are missing" >&2
+fi
+echo "webroot verification complete" >&2
+
 echo "HEALTHY $APP_TAG" >&2
 
 # ── Caddy config deploy ──────────────────────────────────────────────────
