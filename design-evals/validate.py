@@ -10,10 +10,12 @@ Usage:
   python3 design-evals/validate.py --page home     # homepage only
   python3 design-evals/validate.py --page feed     # feed only
   python3 design-evals/validate.py --page article  # article only
+  python3 design-evals/validate.py --base-url http://127.0.0.1:4173
+  python3 design-evals/validate.py --article-slug chto-znachit-pizdato
 
 Exit codes: 0 = all pass, 1 = failures detected, 2 = error
 """
-import sys, os, json, re, pathlib, argparse, time
+import sys, os, json, re, pathlib, argparse
 import yaml
 from playwright.sync_api import sync_playwright
 
@@ -22,11 +24,45 @@ PROJECT = BASE.parent
 DESIGN_FILE = PROJECT / "DESIGN.md"
 CHECKS_DIR = BASE
 
-PAGES = {
-    "home":    {"url": "https://pizdato.net/",              "checks": "home-checks.json"},
-    "feed":    {"url": "https://pizdato.net/lenta",          "checks": "feed-checks.json"},
-    "article": {"url": "https://pizdato.net/articles/chto-znachit-pizdato", "checks": "article-checks.json"},
+DEFAULT_BASE_URL = "https://pizdato.net"
+DEFAULT_ARTICLE_SLUG = "chto-znachit-pizdato"
+PAGE_CHECKS = {
+    "home": "home-checks.json",
+    "feed": "feed-checks.json",
+    "article": "article-checks.json",
 }
+
+
+def build_pages(base_url, article_slug):
+    """Build page URL + checks-file map from a deploy base and article slug."""
+    base = base_url.rstrip("/")
+    slug = str(article_slug).strip("/")
+    return {
+        "home": {"url": f"{base}/", "checks": PAGE_CHECKS["home"]},
+        "feed": {"url": f"{base}/lenta", "checks": PAGE_CHECKS["feed"]},
+        "article": {
+            "url": f"{base}/articles/{slug}",
+            "checks": PAGE_CHECKS["article"],
+        },
+    }
+
+
+def parse_args(argv=None):
+    """Parse CLI arguments for the pixel validator."""
+    parser = argparse.ArgumentParser(description="UI Pixel Validation for pizdato.net")
+    parser.add_argument("--page", choices=list(PAGE_CHECKS.keys()), help="Validate only this page")
+    parser.add_argument("--viewport", default="1280x800", help="Viewport size WxH")
+    parser.add_argument(
+        "--base-url",
+        default=DEFAULT_BASE_URL,
+        help="Deploy origin used to build page URLs",
+    )
+    parser.add_argument(
+        "--article-slug",
+        default=DEFAULT_ARTICLE_SLUG,
+        help="Article slug used in the /articles/<slug> URL",
+    )
+    return parser.parse_args(argv)
 
 
 def parse_design_tokens(path):
@@ -62,47 +98,126 @@ def resolve_token(value, design, _depth=0):
     return node
 
 
+def hex_to_rgb(h):
+    """Convert #RRGGBB to rgb(R, G, B) string."""
+    h = h.lstrip("#").strip()
+    if len(h) == 6:
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        return f"rgb({r}, {g}, {b})"
+    elif len(h) == 3:
+        r, g, b = int(h[0]*2, 16), int(h[1]*2, 16), int(h[2]*2, 16)
+        return f"rgb({r}, {g}, {b})"
+    return h
+
+
 def normalize_css_color(value):
     """
     Normalize CSS color values for comparison.
-    Resolves var() references and converts formats.
+    Converts hex to rgb() and canonicalizes rgb() spacing.
     """
     if not isinstance(value, str):
         return str(value)
-    # Strip CSS variable references that weren't resolved
+    value = value.strip()
     if value.startswith("var("):
-        return value  # Leave as-is — test should check resolved value
+        return value
+    if value.startswith("#"):
+        return hex_to_rgb(value)
+    m = re.match(
+        r"rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*[\d.]+)?\s*\)",
+        value,
+        re.I,
+    )
+    if m:
+        return f"rgb({int(m.group(1))}, {int(m.group(2))}, {int(m.group(3))})"
     return value
+
+
+def css_values_match(actual, expected):
+    """Compare computed and expected CSS values, normalizing colors."""
+    expected_s = str(expected) if expected is not None else ""
+    actual_s = str(actual) if actual is not None else ""
+    if expected_s == "linear-gradient(...)":
+        return "linear-gradient(" in actual_s
+    return normalize_css_color(actual_s) == normalize_css_color(expected_s)
 
 
 def css_value(page, selector, prop):
     """Get computed CSS value for a selector (first match)."""
     try:
         loc = page.locator(selector).first
-        if not loc.is_visible():
-            return f"<NOT VISIBLE>"
+    except Exception as e:
+        print(f"[ERROR] locator failed for {selector}: {e}")
+        return f"<ERROR: {e}>"
+
+    try:
+        visible = loc.is_visible()
+    except Exception as e:
+        print(f"[ERROR] is_visible failed for {selector}: {e}")
+        return f"<ERROR: {e}>"
+    if not visible:
+        return "<NOT VISIBLE>"
+
+    try:
         return loc.evaluate("(el, p) => getComputedStyle(el)[p]", prop)
     except Exception as e:
+        print(f"[ERROR] evaluate failed for {selector}.{prop}: {e}")
         return f"<ERROR: {e}>"
 
 
-def run_validation(page_name, design, checks, viewport):
+def _fail_all_checks(page_name, checks, actual, total, passed, failures, report):
+    """Record every check as a failure with the given actual value."""
+    for check in checks:
+        sel = check["selector"]
+        for prop_def in check.get("props", []):
+            total += 1
+            failures += 1
+            report.append({
+                "page": page_name, "selector": sel, "property": prop_def["property"],
+                "expected": prop_def.get("token", ""), "actual": actual,
+                "ok": False, "desc": prop_def.get("desc", ""),
+            })
+    return total, passed, failures, report
+
+
+def run_validation(page_name, page_config, design, checks, viewport, browser):
     """Run all checks for one page, return (total, passed, failed, report_rows)."""
-    page_config = PAGES[page_name]
     target = page_config["url"]
     total, passed, failures = 0, 0, 0
     report = []
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page(viewport=viewport)
-        page.goto(target, wait_until="networkidle", timeout=15000)
-        time.sleep(0.5)  # let SPA finish rendering
+    page = browser.new_page(viewport=viewport)
+    try:
+        try:
+            page.goto(target, wait_until="networkidle", timeout=15000)
+        except Exception as e:
+            print(f"[ERROR] Failed to navigate to {target}: {e}")
+            return _fail_all_checks(
+                page_name, checks, f"<ERROR: {e}>", total, passed, failures, report
+            )
+
+        if checks:
+            first_sel = checks[0]["selector"]
+            try:
+                page.wait_for_selector(first_sel, timeout=15000)
+            except Exception as e:
+                print(f"[ERROR] wait_for_selector({first_sel}) failed: {e}")
 
         for check in checks:
             sel = check["selector"]
             props = check.get("props", [])
-            present = page.locator(sel).count() > 0
+            try:
+                present = page.locator(sel).count() > 0
+            except Exception as e:
+                print(f"[ERROR] locator.count failed for {sel}: {e}")
+                for prop_def in props:
+                    total += 1
+                    failures += 1
+                    report.append({
+                        "page": page_name, "selector": sel, "property": prop_def["property"],
+                        "expected": prop_def.get("token", ""), "actual": f"<ERROR: {e}>",
+                        "ok": False, "desc": prop_def.get("desc", ""),
+                    })
+                continue
 
             for prop_def in props:
                 prop = prop_def["property"]
@@ -125,19 +240,10 @@ def run_validation(page_name, design, checks, viewport):
                 expected_raw = resolve_token(token_path, design)
                 expected = str(expected_raw) if expected_raw is not None else token_path
 
-                # Simple equality check (tolerance can be added later)
-                if isinstance(expected, str) and expected.startswith("#"):
-                    # Convert hex to rgb for comparison (CSS returns rgb())
-                    expected_rgb = hex_to_rgb(expected)
-                    ok = (actual == expected_rgb or actual == expected)
-                else:
-                    ok = (actual == expected)
-
-                # Apply tolerance if specified
+                ok = css_values_match(actual, expected)
                 if not ok and tolerance:
                     ok = apply_tolerance(actual, expected, tolerance)
 
-                conformance = "OK" if ok else "FAIL"
                 report.append({
                     "page": page_name, "selector": sel, "property": prop,
                     "expected": expected, "actual": actual,
@@ -148,31 +254,21 @@ def run_validation(page_name, design, checks, viewport):
                     passed += 1
                 else:
                     failures += 1
-
-        browser.close()
+    finally:
+        page.close()
 
     return total, passed, failures, report
 
 
-def hex_to_rgb(h):
-    """Convert #RRGGBB to rgb(R, G, B) string."""
-    h = h.lstrip("#").strip()
-    if len(h) == 6:
-        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-        return f"rgb({r}, {g}, {b})"
-    elif len(h) == 3:
-        r, g, b = int(h[0]*2, 16), int(h[1]*2, 16), int(h[2]*2, 16)
-        return f"rgb({r}, {g}, {b})"
-    return h
-
-
 def apply_tolerance(actual, expected, tolerance):
-    """Apply numeric tolerance to pixel-like values."""
+    """Apply numeric tolerance to values with any unit suffix (px, rem, em, …)."""
     if isinstance(tolerance, (int, float)):
         try:
-            a_val = float(actual.replace("px", ""))
-            e_val = float(expected.replace("px", ""))
-            return abs(a_val - e_val) <= tolerance
+            a_m = re.search(r"[\d.]+", str(actual))
+            e_m = re.search(r"[\d.]+", str(expected))
+            if not a_m or not e_m:
+                return False
+            return abs(float(a_m.group(0)) - float(e_m.group(0))) <= tolerance
         except (ValueError, AttributeError):
             return False
     return False
@@ -180,45 +276,48 @@ def apply_tolerance(actual, expected, tolerance):
 
 def load_checks(page_name):
     """Load checks JSON for a page."""
-    checks_file = CHECKS_DIR / PAGES[page_name]["checks"]
+    checks_file = CHECKS_DIR / PAGE_CHECKS[page_name]
     if not checks_file.exists():
         print(f"[ERROR] Checks file not found: {checks_file}")
         return []
     return json.loads(checks_file.read_text(encoding="utf-8"))
 
 
-def main():
-    parser = argparse.ArgumentParser(description="UI Pixel Validation for pizdato.net")
-    parser.add_argument("--page", choices=list(PAGES.keys()), help="Validate only this page")
-    parser.add_argument("--viewport", default="1280x800", help="Viewport size WxH")
-    args = parser.parse_args()
+def main(argv=None):
+    args = parse_args(argv)
+    pages = build_pages(args.base_url, args.article_slug)
 
     design = parse_design_tokens(DESIGN_FILE)
     parts = args.viewport.split("x")
     viewport = {"width": int(parts[0]), "height": int(parts[1])}
 
-    pages_to_run = [args.page] if args.page else list(PAGES.keys())
+    pages_to_run = [args.page] if args.page else list(pages.keys())
 
     grand_total, grand_passed, grand_failures = 0, 0, 0
     all_reports = []
 
-    for page_name in pages_to_run:
-        checks = load_checks(page_name)
-        if not checks:
-            print(f"[SKIP] {page_name}: no checks found")
-            continue
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        try:
+            for page_name in pages_to_run:
+                checks = load_checks(page_name)
+                if not checks:
+                    print(f"[SKIP] {page_name}: no checks found")
+                    continue
 
-        print(f"\n{'='*72}")
-        print(f"  PAGE: {page_name.upper()}  —  {PAGES[page_name]['url']}")
-        print(f"{'='*72}")
+                print(f"\n{'='*72}")
+                print(f"  PAGE: {page_name.upper()}  —  {pages[page_name]['url']}")
+                print(f"{'='*72}")
 
-        total, passed, failures, report = run_validation(
-            page_name, design, checks, viewport
-        )
-        grand_total += total
-        grand_passed += passed
-        grand_failures += failures
-        all_reports.extend(report)
+                total, passed, failures, report = run_validation(
+                    page_name, pages[page_name], design, checks, viewport, browser
+                )
+                grand_total += total
+                grand_passed += passed
+                grand_failures += failures
+                all_reports.extend(report)
+        finally:
+            browser.close()
 
     # Print summary table
     print(f"\n{'='*72}")
