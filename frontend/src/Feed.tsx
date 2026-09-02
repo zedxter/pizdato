@@ -2,9 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchNewsPage, type NewsItem } from './api'
 import { SiteFooter } from './SiteFooter'
 import { SiteNav } from './SiteNav'
-import './App.css'
 import './Essay.css'
-import './Feed.css'
 
 const TITLE = 'Лента голосов — pizdato'
 const DESCRIPTION =

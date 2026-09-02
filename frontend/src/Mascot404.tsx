@@ -3,7 +3,6 @@ import { fetchStats, type Stats } from './api'
 import { pickQuotes, type Wisdom } from './quotes'
 import { SiteFooter } from './SiteFooter'
 import { SiteNav } from './SiteNav'
-import './App.css'
 import './Mascot404.css'
 
 const TITLE = '404 — ничего нет | pizdato.net'

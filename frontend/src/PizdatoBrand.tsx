@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { SiteFooter } from './SiteFooter'
 import { SiteNav } from './SiteNav'
-import './App.css'
 import './Essay.css'
 
 const TITLE = 'Пиздато — что это и как работает | pizdato.net'
