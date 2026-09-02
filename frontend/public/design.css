@@ -650,6 +650,7 @@ button {
 
 .quote-carousel-dot {
   appearance: none;
+  box-sizing: content-box;
   border: 0;
   padding: 1.15rem;
   width: 0.45rem;
@@ -1339,6 +1340,7 @@ button {
   align-items: center;
   gap: 0.45rem;
   margin: 0;
+  min-width: 2.75rem;
   min-height: 2.75rem;
   padding: 0.5rem 0.75rem;
   border: 1px solid rgba(242, 245, 240, 0.18);
