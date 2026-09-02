@@ -3,9 +3,7 @@
 use std::sync::Arc;
 
 use rmcp::{
-    ErrorData as McpError, ServerHandler,
-    handler::server::router::tool::ToolRouter,
-    model::*,
+    ErrorData as McpError, ServerHandler, handler::server::router::tool::ToolRouter, model::*,
     tool, tool_handler, tool_router,
 };
 
@@ -32,9 +30,10 @@ impl PizdatoMcp {
         description = "Get live pizdato.net vote statistics: pizdato count, huyevo count, and total."
     )]
     async fn get_stats(&self) -> Result<CallToolResult, McpError> {
-        let (pizdato, huyevo) = self.state.counts().await.map_err(|_| {
-            McpError::internal_error("failed to read vote stats".to_string(), None)
-        })?;
+        let (pizdato, huyevo) =
+            self.state.counts().await.map_err(|_| {
+                McpError::internal_error("failed to read vote stats".to_string(), None)
+            })?;
         let total = pizdato + huyevo;
         let pct_p = if total > 0 {
             (pizdato as f64) * 100.0 / (total as f64)
@@ -76,7 +75,6 @@ impl ServerHandler for PizdatoMcp {
                 "Tools for pizdato.net. Use get_stats to read live vote counts (пиздато / хуёво). Read-only."
                     .into(),
             ),
-            ..Default::default()
         }
     }
 }

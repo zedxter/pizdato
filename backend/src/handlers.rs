@@ -1,30 +1,28 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
+    Json,
     extract::{ConnectInfo, Query, State},
     http::{HeaderMap, StatusCode},
-    Json,
 };
 use tower_cookies::{Cookie, Cookies};
 use uuid::Uuid;
 
 use crate::{
     db::AppState,
-    models::{
-        Choice, ErrorResponse, NewsFeedResponse, NewsItemPublic, StatsResponse, VoteRequest,
-    },
+    models::{Choice, ErrorResponse, NewsFeedResponse, NewsItemPublic, StatsResponse, VoteRequest},
 };
 const VOTER_COOKIE: &str = "voter_id";
 const COOKIE_MAX_AGE: tower_cookies::cookie::time::Duration =
     tower_cookies::cookie::time::Duration::days(365);
 
 fn client_ip(headers: &HeaderMap, addr: SocketAddr) -> String {
-    if let Some(xff) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
-        if let Some(first) = xff.split(',').next() {
-            let ip = first.trim();
-            if !ip.is_empty() {
-                return ip.to_string();
-            }
+    if let Some(xff) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok())
+        && let Some(first) = xff.split(',').next()
+    {
+        let ip = first.trim();
+        if !ip.is_empty() {
+            return ip.to_string();
         }
     }
     if let Some(real) = headers.get("x-real-ip").and_then(|v| v.to_str().ok()) {
@@ -262,20 +260,18 @@ pub async fn vote(
     })?;
 
     if already.is_some() {
-        let stats = build_stats(&state, &voter_id).await.unwrap_or(StatsResponse {
-            pizdato: 0,
-            huyevo: 0,
-            total: 0,
-            voted: true,
-            choice: already,
-        });
+        let stats = build_stats(&state, &voter_id)
+            .await
+            .unwrap_or(StatsResponse {
+                pizdato: 0,
+                huyevo: 0,
+                total: 0,
+                voted: true,
+                choice: already,
+            });
         // Conflict is normal re-click — still counts toward daily request budget.
         note_vote_outcome(&state, &ip_hash, StatusCode::CONFLICT).await;
-        return Err(reject(
-            StatusCode::CONFLICT,
-            "вы уже проголосовали",
-            stats,
-        ));
+        return Err(reject(StatusCode::CONFLICT, "вы уже проголосовали", stats));
     }
 
     let recent_secs = state
@@ -286,18 +282,18 @@ pub async fn vote(
             internal_err(empty_stats())
         })?;
 
-    if let Some(secs) = recent_secs {
-        if secs < state.ip_min_interval_secs {
-            let stats = build_stats(&state, &voter_id)
-                .await
-                .unwrap_or_else(|_| empty_stats());
-            note_vote_outcome(&state, &ip_hash, StatusCode::TOO_MANY_REQUESTS).await;
-            return Err(reject(
-                StatusCode::TOO_MANY_REQUESTS,
-                "слишком часто. подождите немного и попробуйте снова",
-                stats,
-            ));
-        }
+    if let Some(secs) = recent_secs
+        && secs < state.ip_min_interval_secs
+    {
+        let stats = build_stats(&state, &voter_id)
+            .await
+            .unwrap_or_else(|_| empty_stats());
+        note_vote_outcome(&state, &ip_hash, StatusCode::TOO_MANY_REQUESTS).await;
+        return Err(reject(
+            StatusCode::TOO_MANY_REQUESTS,
+            "слишком часто. подождите немного и попробуйте снова",
+            stats,
+        ));
     }
 
     match state.insert_vote(body.choice, &voter_id, &ip_hash).await {
@@ -316,22 +312,20 @@ pub async fn vote(
             Ok((StatusCode::OK, Json(stats)))
         }
         Err(e) => {
-            if let sqlx::Error::Database(db_err) = &e {
-                if db_err.is_unique_violation() {
-                    let stats = build_stats(&state, &voter_id).await.unwrap_or(StatsResponse {
+            if let sqlx::Error::Database(db_err) = &e
+                && db_err.is_unique_violation()
+            {
+                let stats = build_stats(&state, &voter_id)
+                    .await
+                    .unwrap_or(StatsResponse {
                         pizdato: 0,
                         huyevo: 0,
                         total: 0,
                         voted: true,
                         choice: None,
                     });
-                    note_vote_outcome(&state, &ip_hash, StatusCode::CONFLICT).await;
-                    return Err(reject(
-                        StatusCode::CONFLICT,
-                        "вы уже проголосовали",
-                        stats,
-                    ));
-                }
+                note_vote_outcome(&state, &ip_hash, StatusCode::CONFLICT).await;
+                return Err(reject(StatusCode::CONFLICT, "вы уже проголосовали", stats));
             }
             tracing::error!("insert vote error: {e}");
             Err(internal_err(empty_stats()))
@@ -365,11 +359,7 @@ pub async fn news_feed(
             let verdict = Choice::parse(&verdict)?;
             let image_url = image_url.and_then(|s| {
                 let t = s.trim().to_string();
-                if t.is_empty() {
-                    None
-                } else {
-                    Some(t)
-                }
+                if t.is_empty() { None } else { Some(t) }
             });
             Some(NewsItemPublic {
                 id,
@@ -396,9 +386,7 @@ pub async fn news_feed(
 }
 
 /// Log a badge download / share event. Rate limiting via Caddy.
-pub async fn event(
-    Query(params): Query<std::collections::HashMap<String, String>>,
-) -> StatusCode {
+pub async fn event(Query(params): Query<std::collections::HashMap<String, String>>) -> StatusCode {
     let event_type = params.get("type").map(|s| s.as_str()).unwrap_or("unknown");
     tracing::info!("badge_event: {event_type}");
     StatusCode::OK

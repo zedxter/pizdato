@@ -4,12 +4,11 @@ mod mcp;
 mod models;
 
 use axum::{
-    routing::{get, post},
     Router,
+    routing::{get, post},
 };
 use rmcp::transport::streamable_http_server::{
-    StreamableHttpService,
-    session::local::LocalSessionManager,
+    StreamableHttpService, session::local::LocalSessionManager,
 };
 use std::{net::SocketAddr, sync::Arc};
 use tower_cookies::CookieManagerLayer;
@@ -34,8 +33,8 @@ async fn main() {
         .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
         .init();
 
-    let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite:votes.db?mode=rwc".to_string());
+    let database_url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite:votes.db?mode=rwc".to_string());
     let cookie_secure = std::env::var("COOKIE_SECURE")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
