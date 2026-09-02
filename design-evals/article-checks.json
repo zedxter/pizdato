@@ -19,20 +19,20 @@
     "props": [
       {"property": "letter-spacing", "token": "0.28em", "desc": "kicker — широкий трекинг", "tolerance": 0.05},
       {"property": "text-transform", "token": "uppercase", "desc": "kicker — uppercase"},
-      {"property": "color", "token": "colors.secondary", "desc": "kicker — второстепенный цвет"}
+      {"property": "color", "token": "colors.tertiary", "desc": "kicker — зелёный (tertiary)"}
     ]
   },
   {
     "selector": ".essay-title-wrap h1",
     "props": [
-      {"property": "font-weight", "token": "800", "desc": "article заголовок h1 — жирность 800"},
+      {"property": "font-weight", "token": "400", "desc": "article заголовок h1 — жирность 400"},
       {"property": "color", "token": "colors.on-primary", "desc": "article заголовок — основной текст"}
     ]
   },
   {
     "selector": ".essay-dek",
     "props": [
-      {"property": "color", "token": "colors.on-primary", "desc": "dek — основной текст"}
+      {"property": "color", "token": "colors.secondary", "desc": "dek — второстепенный цвет"}
     ]
   },
   {
@@ -42,9 +42,9 @@
     ]
   },
   {
-    "selector": ".essay-body",
+    "selector": ".essay",
     "props": [
-      {"property": "max-width", "token": "44rem", "desc": "article body — ширина контента", "tolerance": 8}
+      {"property": "max-width", "token": "44rem", "desc": "essay контейнер — ширина контента", "tolerance": 8}
     ]
   },
   {

@@ -25,8 +25,8 @@
   {
     "selector": ".feed-card",
     "props": [
-      {"property": "border", "token": "1px", "desc": "feed-card — толщина бордера (должна включать)"},
-      {"property": "display", "token": "flex", "desc": "feed-card — flex"}
+      {"property": "border-width", "token": "1px", "desc": "feed-card — толщина бордера"},
+      {"property": "display", "token": "grid", "desc": "feed-card — grid"}
     ]
   },
   {

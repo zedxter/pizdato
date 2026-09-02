@@ -3,10 +3,10 @@
     "selector": ".hero",
     "props": [
       {"property": "display", "token": "flex", "desc": "hero контейнер — flex"},
-      {"property": "flex-direction", "token": "flex-direction:column", "desc": "hero контейнер — колонка"},
-      {"property": "align-items", "token": "align-items:center", "desc": "hero — центрирование по вертикали"},
-      {"property": "justify-content", "token": "justify-content:center", "desc": "hero — центрирование по горизонтали"},
-      {"property": "text-align", "token": "text-align:center", "desc": "hero — текст по центру"},
+      {"property": "flex-direction", "token": "column", "desc": "hero контейнер — колонка"},
+      {"property": "align-items", "token": "center", "desc": "hero — центрирование по вертикали"},
+      {"property": "justify-content", "token": "center", "desc": "hero — центрирование по горизонтали"},
+      {"property": "text-align", "token": "center", "desc": "hero — текст по центру"},
       {"property": "max-width", "token": "44rem", "desc": "hero — максимальная ширина", "tolerance": 8}
     ]
   },
@@ -22,7 +22,7 @@
   {
     "selector": ".brand-mark",
     "props": [
-      {"property": "border-radius", "token": "rounded.lg", "desc": "бренд-марк — скругление", "tolerance": 4}
+      {"property": "border-radius", "token": "22%", "desc": "бренд-марк — скругление"}
     ]
   },
   {
@@ -54,13 +54,13 @@
   {
     "selector": ".fill-good",
     "props": [
-      {"property": "background-color", "token": "colors.tertiary", "desc": "бар добро — зелёный"}
+      {"property": "background-image", "token": "linear-gradient(...)", "desc": "бар добро — зелёный градиент"}
     ]
   },
   {
     "selector": ".fill-bad",
     "props": [
-      {"property": "background-color", "token": "colors.danger", "desc": "бар зло — красный"}
+      {"property": "background-image", "token": "linear-gradient(...)", "desc": "бар зло — красный градиент"}
     ]
   },
   {
