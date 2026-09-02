@@ -269,7 +269,7 @@ def check_scenario(scenario: dict, css_rules: dict, root_vars: dict) -> list:
 def main():
     runner_dir = Path(__file__).resolve().parent
     repo_root = runner_dir.parent
-    design_css_path = repo_root / 'design.css'
+    design_css_path = repo_root / 'frontend' / 'public' / 'design.css'
     evals_dir = runner_dir
 
     if not design_css_path.exists():

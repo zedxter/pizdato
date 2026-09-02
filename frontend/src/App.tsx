@@ -376,7 +376,7 @@ export default function App() {
               Вот как сейчас обстоят дела у человечества:
             </p>
 
-            <div className="bars">
+            <div className="bars" data-testid="stat-strip">
               <div className="bar-row">
                 <div className="bar-meta">
                   <span>Пиздато</span>
