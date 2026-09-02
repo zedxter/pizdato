@@ -1,0 +1,72 @@
+[
+  {
+    "selector": ".hero",
+    "props": [
+      {"property": "display", "token": "flex", "desc": "hero контейнер — flex"},
+      {"property": "flex-direction", "token": "column", "desc": "hero контейнер — колонка"},
+      {"property": "align-items", "token": "center", "desc": "hero — центрирование по вертикали"},
+      {"property": "justify-content", "token": "center", "desc": "hero — центрирование по горизонтали"},
+      {"property": "text-align", "token": "center", "desc": "hero — текст по центру"},
+      {"property": "max-width", "token": "44rem", "desc": "hero — максимальная ширина", "tolerance": 8}
+    ]
+  },
+  {
+    "selector": ".brand",
+    "props": [
+      {"property": "font-family", "token": "'Bebas Neue', Impact, sans-serif", "desc": "бренд — шрифт (Bebas Neue)"},
+      {"property": "font-weight", "token": "400", "desc": "бренд — вес 400"},
+      {"property": "text-transform", "token": "lowercase", "desc": "бренд — lowercase"},
+      {"property": "color", "token": "transparent", "desc": "бренд — прозрачный (градиентный текст)"}
+    ]
+  },
+  {
+    "selector": ".brand-mark",
+    "props": [
+      {"property": "border-radius", "token": "22%", "desc": "бренд-марк — скругление"}
+    ]
+  },
+  {
+    "selector": ".page",
+    "props": [
+      {"property": "display", "token": "flex", "desc": "page — flex контейнер"},
+      {"property": "flex-direction", "token": "column", "desc": "page — колонка"},
+      {"property": "min-height", "token": "100dvh", "desc": "page — минимальная высота"}
+    ]
+  },
+  {
+    "selector": ".site-nav",
+    "props": [
+      {"property": "display", "token": "flex", "desc": "nav — flex"}
+    ]
+  },
+  {
+    "selector": ".site-nav-name",
+    "props": [
+      {"property": "font-family", "token": "'Bebas Neue', Impact, sans-serif", "desc": "nav brand — Bebas Neue"}
+    ]
+  },
+  {
+    "selector": ".bar-row",
+    "props": [
+      {"property": "display", "token": "flex", "desc": "бар-строка — flex"}
+    ]
+  },
+  {
+    "selector": ".fill-good",
+    "props": [
+      {"property": "background-image", "token": "linear-gradient(...)", "desc": "бар добро — зелёный градиент"}
+    ]
+  },
+  {
+    "selector": ".fill-bad",
+    "props": [
+      {"property": "background-image", "token": "linear-gradient(...)", "desc": "бар зло — красный градиент"}
+    ]
+  },
+  {
+    "selector": ".site-footer",
+    "props": [
+      {"property": "display", "token": "flex", "desc": "footer — flex"}
+    ]
+  }
+]
