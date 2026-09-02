@@ -48,6 +48,6 @@ No soft-vote board needed (organic feedback, no paid funnel).
 
 ## Related
 
-- Vault: `~/vault/pizdato/projects/pizdato-net/`
+- Vault: internal team vault
 - Design: `DESIGN.md`, `frontend/public/design.css`
-- Deploy: Docker compose, VPS at 202.61.253.55
+- Deploy: Docker compose, VPS: internal
