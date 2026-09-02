@@ -1068,12 +1068,6 @@ button {
   border-bottom-color: rgba(61, 255, 154, 0.45);
 }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes grow {
   from {
     transform: scaleX(0);
