@@ -15,21 +15,8 @@
     <link rel="icon" href="/favicon.png" type="image/png" sizes="512x512" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
 
+    <link rel="stylesheet" href="/design.css" />
     <style>
-      * { box-sizing: border-box; }
-      html, body { height: 100%; margin: 0; }
-      body {
-        font-family: 'Manrope', system-ui, sans-serif;
-        background: #0c1210;
-        color: #f2f5f0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 2rem;
-        -webkit-font-smoothing: antialiased;
-      }
       img {
         width: clamp(7rem, 22vw, 12rem);
         height: clamp(7rem, 22vw, 12rem);
@@ -56,38 +43,17 @@
         font-weight: 700;
         color: #9aab9e;
       }
-      .actions {
-        display: flex;
-        gap: 0.85rem;
-        margin-top: 1.75rem;
-      }
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.7rem 1.6rem;
-        font-size: 1rem;
-        font-weight: 800;
-        font-family: 'Bebas Neue', Impact, sans-serif;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        text-decoration: none;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: transform 0.15s ease;
-      }
-      .btn:hover { transform: translateY(-2px); }
-      .btn-good { background: #0f8f52; color: #3dff9a; }
-      .btn-bad { background: #a31f14; color: #ff4d3d; }
     </style>
   </head>
-  <body>
-    <img src="/mascot/mascot-404.webp" alt="Дядя Миша" width="256" height="256" />
-    <h1>404</h1>
-    <p>Ты забрёл в хуёвый угол</p>
-    <div class="actions">
-      <a href="/" class="btn btn-good">На главную</a>
-      <a href="/lenta" class="btn btn-bad">Лента голосов</a>
-    </div>
+  <body class="page">
+    <main class="hero">
+      <img src="/mascot/mascot-404.webp" alt="Дядя Миша" width="256" height="256" />
+      <h1>404</h1>
+      <p>Ты забрёл в хуёвый угол</p>
+      <div class="hero-actions">
+        <a href="/" class="btn btn-primary" data-testid="btn-primary">На главную</a>
+        <a href="/lenta" class="btn btn-secondary" data-testid="btn-secondary">Лента голосов</a>
+      </div>
+    </main>
   </body>
 </html>

@@ -56,29 +56,20 @@ checks:
     expected:
       background: "linear-gradient(135deg, var(--color-tertiary), #9dffc8)"
       color: var(--color-on-tertiary)
-      border-radius: var(--radius-sm)
-      font-weight: 800
-      font-size: var(--font-body-lg)
-      letter-spacing: 0.01em
-    tolerance:
-      font-size: "0.05rem"
-      letter-spacing: "0.01em"
+    tolerance: {}
 
   # ── Danger button (Huyovo — red) ────────────────────────────
   - selector: ".btn-secondary"
     expected:
       background: "linear-gradient(135deg, var(--color-danger), #ff9a7a)"
       color: var(--color-on-danger)
-      border-radius: var(--radius-sm)
-      font-weight: 800
-      font-size: var(--font-body-lg)
     tolerance: {}
 
   # ── Base button (shared props) ──────────────────────────────
   - selector: ".btn"
     expected:
       padding: "1rem 1.5rem"
-      min-width: "14rem"
+      min-width: "min(100%, 14rem)"
       font-family: var(--font-body)
       font-weight: 800
       font-size: var(--font-body-lg)

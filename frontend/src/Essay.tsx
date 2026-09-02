@@ -7,7 +7,6 @@ import {
 } from './essayHtml'
 import { SiteFooter } from './SiteFooter'
 import { SiteNav } from './SiteNav'
-import './App.css'
 import './Essay.css'
 
 const TITLE =

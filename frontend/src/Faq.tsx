@@ -1,7 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { SiteFooter } from './SiteFooter'
 import { SiteNav } from './SiteNav'
-import './App.css'
 import './Essay.css'
 import './Faq.css'
 

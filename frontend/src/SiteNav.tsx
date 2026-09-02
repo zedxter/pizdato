@@ -1,7 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { NAV_LINKS, type NavId } from './nav'
-import './SiteNav.css'
 
 export type { NavId }
 
