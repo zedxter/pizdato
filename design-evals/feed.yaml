@@ -1,0 +1,168 @@
+# Feed page — card list with verdict colors, data table
+# Source: DESIGN.md (version alpha) + design.css
+scenario: feed
+description: "Feed page: card list with verdict colour-coded rows, data table with good/bad columns"
+viewport:
+  width: 1280
+  height: 800
+
+checks:
+  # ── Card base ───────────────────────────────────────────────
+  - selector: ".card"
+    expected:
+      border: "1px solid var(--color-line)"
+      border-radius: var(--radius-card)
+      background: "rgba(8, 14, 11, 0.45)"
+      padding: "var(--spacing-md) 1.05rem 1.05rem"
+    tolerance:
+      border-radius: "1px"
+      background: "exact"
+
+  # ── Card hover ──────────────────────────────────────────────
+  - selector: ".card:hover"
+    expected:
+      border-color: var(--color-line-hover)
+    tolerance:
+      border-color: "exact"
+
+  # ── Card primary variant ────────────────────────────────────
+  - selector: ".card-primary"
+    expected:
+      background: var(--color-primary)
+      border-color: transparent
+    tolerance:
+      background: "exact"
+      border-color: "exact"
+
+  # ── Card primary hover ──────────────────────────────────────
+  - selector: ".card-primary:hover"
+    expected:
+      background: var(--color-neutral)
+      border-color: var(--color-line)
+    tolerance:
+      background: "exact"
+      border-color: "exact"
+
+  # ── Card title ──────────────────────────────────────────────
+  - selector: ".card-title"
+    expected:
+      font-size: var(--font-h2)
+      font-weight: 800
+      line-height: 1.3
+      color: var(--color-on-primary)
+    tolerance:
+      font-size: "0.1rem"
+
+  # ── Card body ───────────────────────────────────────────────
+  - selector: ".card-body"
+    expected:
+      font-size: var(--font-body-md)
+      font-weight: 600
+      line-height: 1.45
+      color: var(--color-on-primary)
+      opacity: 0.9
+    tolerance:
+      font-size: "0.05rem"
+      opacity: "0.05"
+
+  # ── Card verdict (good — green) ─────────────────────────────
+  - selector: ".card-verdict.is-good"
+    expected:
+      color: var(--color-tertiary)
+      font-size: var(--font-label-small)
+      font-weight: 700
+      letter-spacing: 0.01em
+    tolerance:
+      color: "exact"
+      font-size: "0.05rem"
+
+  # ── Card verdict (bad — red) ────────────────────────────────
+  - selector: ".card-verdict.is-bad"
+    expected:
+      color: var(--color-danger)
+      font-size: var(--font-label-small)
+      font-weight: 700
+      letter-spacing: 0.01em
+    tolerance:
+      color: "exact"
+      font-size: "0.05rem"
+
+  # ── Data table ──────────────────────────────────────────────
+  - selector: ".data-table"
+    expected:
+      width: 100%
+      max-width: var(--content-max-width)
+      border-collapse: collapse
+      font-family: var(--font-body)
+    tolerance:
+      max-width: "0.5rem"
+
+  # ── Data table header ───────────────────────────────────────
+  - selector: ".data-table th"
+    expected:
+      padding: "var(--spacing-sm) var(--spacing-md)"
+      font-size: var(--font-label-caps)
+      font-weight: 700
+      letter-spacing: 0.18em
+      text-transform: uppercase
+      color: var(--color-secondary)
+      text-align: left
+      border-bottom: "1px solid var(--color-line)"
+    tolerance:
+      font-size: "0.05rem"
+      letter-spacing: "0.02em"
+      border-bottom: "exact"
+
+  # ── Data table cell ─────────────────────────────────────────
+  - selector: ".data-table td"
+    expected:
+      padding: "var(--spacing-sm) var(--spacing-md)"
+      font-size: var(--font-body-md)
+      font-weight: 600
+      color: var(--color-on-primary)
+      border-bottom: "1px solid var(--color-line)"
+    tolerance:
+      font-size: "0.05rem"
+      border-bottom: "exact"
+
+  # ── Data table row hover ────────────────────────────────────
+  - selector: ".data-table tr:hover td"
+    expected:
+      background: var(--color-neutral)
+    tolerance:
+      background: "exact"
+
+  # ── Data table good verdict cell ────────────────────────────
+  - selector: ".data-table .is-good"
+    expected:
+      color: var(--color-tertiary)
+      font-weight: 700
+    tolerance:
+      color: "exact"
+
+  # ── Data table bad verdict cell ─────────────────────────────
+  - selector: ".data-table .is-bad"
+    expected:
+      color: var(--color-danger)
+      font-weight: 700
+    tolerance:
+      color: "exact"
+
+  # ── Card secondary variant ──────────────────────────────────
+  - selector: ".card-secondary"
+    expected:
+      background: transparent
+      border-color: var(--color-line)
+      border-style: dashed
+    tolerance:
+      border-color: "exact"
+      border-style: "exact"
+
+  # ── Card secondary hover ────────────────────────────────────
+  - selector: ".card-secondary:hover"
+    expected:
+      border-color: var(--color-line-hover)
+      border-style: solid
+    tolerance:
+      border-color: "exact"
+      border-style: "exact"
