@@ -64,3 +64,22 @@ jobs:
       - name: Build
         working-directory: frontend
         run: npm run build
+
+  design-eval:
+    name: Design Eval (css vs spec)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Design Eval
+        run: python3 design-evals/design-eval.py
