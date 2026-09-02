@@ -3,7 +3,8 @@
    ====================================================
    Source of truth: DESIGN.md (feat/design-md-21)
    Agents write HTML with these classes — they NEVER read this file.
-   ====================================================
+      Last updated: 2026-09-02
+      ==================================================== */
    Usage:
      <link rel="stylesheet" href="/design.css">
      <div class="card card-primary">...</div>
