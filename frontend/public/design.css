@@ -46,6 +46,7 @@
      Manrope — everything else */
   --font-display:         'Bebas Neue', Impact, sans-serif;
   --font-body:            'Manrope', system-ui, sans-serif;
+  color-scheme: dark;
 
   /* Type scale (pizdato-specific from DESIGN.md) */
   --font-display-hero:    clamp(5.5rem, 22vw, 11rem);
@@ -192,6 +193,7 @@
   max-width: 34rem;
 }
 
+.hero-actions.is-pending { opacity: 0.7; }
 
 /* ====================================================
    Stat strip — metrics row
@@ -489,20 +491,6 @@
   animation: rise 0.7s ease both;
 }
 
-:root {
-  --bg-deep: #0c1210;
-  --bg-mid: #14201a;
-  --ink: #f2f5f0;
-  --muted: #9aab9e;
-  --good: #3dff9a;
-  --good-deep: #0f8f52;
-  --bad: #ff4d3d;
-  --bad-deep: #a31f14;
-  --line: rgba(242, 245, 240, 0.12);
-  --font-display: 'Bebas Neue', Impact, sans-serif;
-  --font-body: 'Manrope', system-ui, sans-serif;
-}
-
 *,
 *::before,
 *::after {
@@ -527,17 +515,6 @@ body {
 
 button {
   font: inherit;
-}
-
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-  /* Must stay visible: any non-visible overflow ancestor breaks sticky nav. */
-  overflow: visible;
-  background:
-    radial-gradient(120% 80% at 10% -10%, #1c3a2c 0%, transparent 55%),
-    radial-gradient(90% 70% at 100% 0%, #3a1512 0%, transparent 50%),
-    linear-gradient(160deg, var(--bg-mid), var(--bg-deep) 60%);
 }
 
 .noise {
@@ -583,20 +560,6 @@ button {
   }
 }
 
-  z-index: 1;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 44rem;
-  margin-inline: auto;
-  padding: clamp(1rem, 3.5vw, 2.5rem) clamp(1.5rem, 5vw, 4rem)
-    clamp(1.5rem, 5vw, 4rem);
-  text-align: center;
-}
-
 .eyebrow {
   margin: 0 0 0.4rem;
   font-size: 0.85rem;
@@ -604,224 +567,6 @@ button {
   text-transform: uppercase;
   color: var(--muted);
   animation: rise 0.7s ease both;
-}
-
-.brand-lockup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(1rem, 3.2vw, 1.85rem);
-  margin: 0.5rem 0 0.25rem;
-  padding: 0.35rem 0 0.15rem;
-  animation: rise 0.75s ease both;
-}
-
-.brand-mark {
-  width: clamp(5rem, 15vw, 8rem);
-  height: clamp(5rem, 15vw, 8rem);
-  border-radius: 22%;
-  object-fit: cover;
-  flex-shrink: 0;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-}
-
-.brand {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(5.5rem, 22vw, 11rem);
-  line-height: 0.85;
-  letter-spacing: 0.02em;
-  text-transform: lowercase;
-  background: linear-gradient(120deg, #fff 20%, var(--good) 55%, #ffe6a8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: rise 0.8s ease 0.05s both;
-}
-
-.tagline {
-  margin: 1.25rem auto 0;
-  max-width: 28rem;
-  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--ink);
-  animation: rise 0.8s ease 0.12s both;
-}
-
-.chance-note {
-  margin: 0.85rem auto 0;
-  max-width: 28rem;
-  font-size: clamp(0.98rem, 2.1vw, 1.12rem);
-  font-weight: 700;
-  line-height: 1.4;
-  color: var(--muted);
-  animation: rise 0.85s ease 0.18s both;
-}
-
-.hero-quote {
-  margin-top: 0;
-  width: 100%;
-  max-width: none;
-  animation: quote-in 0.55s ease both;
-}
-
-.quote-carousel {
-  margin-top: 1.35rem;
-  width: 100%;
-  max-width: 38rem;
-  animation: rise 0.8s ease 0.12s both;
-}
-
-.quote-carousel-stage {
-  display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr) 2rem;
-  gap: 0.55rem;
-  align-items: center;
-}
-
-.quote-carousel-btn {
-  appearance: none;
-  border: 1px solid rgba(242, 245, 240, 0.18);
-  background: rgba(8, 14, 11, 0.35);
-  color: var(--ink);
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.35rem;
-  font-size: 1.35rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
-  justify-self: center;
-}
-
-.quote-carousel-btn:hover {
-  border-color: rgba(61, 255, 154, 0.45);
-  color: var(--good);
-}
-
-.quote-carousel-dots {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  margin-top: 0.75rem;
-}
-
-.quote-carousel-dot {
-  appearance: none;
-  border: 0;
-  padding: 0;
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: rgba(242, 245, 240, 0.28);
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.quote-carousel-dot.is-active {
-  background: var(--good);
-  transform: scale(1.25);
-}
-
-@keyframes quote-in {
-  from {
-    opacity: 0;
-    transform: translateY(0.35rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.quote-block {
-  margin: 0;
-  padding: 1.1rem 0.35rem 0;
-  border-top: 3px solid var(--good);
-  min-height: 7.5rem;
-}
-
-.quote-text {
-  margin: 0;
-  font-size: clamp(1.05rem, 2.4vw, 1.22rem);
-  font-weight: 700;
-  line-height: 1.45;
-  color: var(--ink);
-}
-
-.quote-footer {
-  margin: 0.85rem 0 0;
-  text-align: center;
-}
-
-.quote-author {
-  font-size: 0.88rem;
-  font-weight: 600;
-  font-style: italic;
-  color: var(--muted);
-}
-
-.quote-author::before {
-  content: '—\00a0';
-}
-
-@media (max-width: 420px) {
-  .quote-carousel-stage {
-    grid-template-columns: 1.75rem minmax(0, 1fr) 1.75rem;
-    gap: 0.35rem;
-  }
-
-  .quote-carousel-btn {
-    width: 1.75rem;
-    height: 1.75rem;
-    font-size: 1.2rem;
-  }
-}
-
-.actions {
-  margin-top: clamp(1.5rem, 4.5vw, 2.4rem);
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.9rem;
-  width: 100%;
-  max-width: 34rem;
-  animation: rise 0.85s ease 0.24s both;
-}
-
-.actions.is-pending {
-  opacity: 0.7;
-}
-
-  border: 0;
-  cursor: pointer;
-  padding: 1rem 1.5rem;
-  min-width: min(100%, 14rem);
-  font-weight: 800;
-  font-size: 1.05rem;
-  letter-spacing: 0.01em;
-  color: #06100b;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    filter 0.18s ease;
-}
-
-  filter: grayscale(0.2);
-}
-
-}
-
-}
-
-  box-shadow: 0 12px 30px rgba(61, 255, 154, 0.22);
-}
-
-  box-shadow: 0 12px 30px rgba(255, 77, 61, 0.22);
 }
 
 .results {
@@ -951,7 +696,7 @@ button {
 .share-result-line {
   margin: 0 0 0.9rem;
   font-size: 0.95rem;
-  color: var(--text);
+  color: var(--color-on-primary);
   text-align: center;
   font-weight: 600;
 }

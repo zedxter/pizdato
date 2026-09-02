@@ -138,7 +138,7 @@ export default function Feed() {
 
         <div className="feed-list">
           {items.map((item) => (
-            <article key={item.id} className="feed-card">
+            <article key={item.id} className="feed-card" data-testid="feed-card">
               <div className="feed-card-body">
                 <time className="feed-when" dateTime={item.created_at}>
                   {formatWhen(item.created_at)}

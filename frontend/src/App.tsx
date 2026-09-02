@@ -296,7 +296,7 @@ export default function App() {
 
       <SiteNav current="home" />
 
-      <main className="hero">
+      <main className="hero" data-testid="hero">
         <div className="brand-lockup">
           <img
             className="brand-mark"
@@ -327,7 +327,7 @@ export default function App() {
           <div className={`hero-actions ${pending ? 'is-pending' : ''}`}>
             <button
               type="button"
-              className="btn btn-primary"
+              className="btn btn-primary" data-testid="btn-primary">
               disabled={pending || !stats || !canVote || loadingStats}
               onClick={() => void vote('pizdato')}
             >
@@ -335,7 +335,7 @@ export default function App() {
             </button>
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary" data-testid="btn-secondary">
               disabled={pending || !stats || !canVote || loadingStats}
               onClick={() => void vote('huyevo')}
             >
