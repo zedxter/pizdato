@@ -1,0 +1,149 @@
+# Home page — hero block with two buttons and stat strip
+# Source: DESIGN.md (version alpha) + design.css
+scenario: home
+description: "Hero block: brand mark, title, two action buttons (primary/danger), stat strip with metrics"
+viewport:
+  width: 1280
+  height: 800
+
+checks:
+  # ── Hero container ──────────────────────────────────────────
+  - selector: ".hero"
+    expected:
+      display: flex
+      flex-direction: column
+      align-items: center
+      justify-content: center
+      text-align: center
+      max-width: "44rem"
+    tolerance:
+      max-width: "0.5rem"
+
+  # ── Hero title (brand display) ──────────────────────────────
+  - selector: ".hero-title"
+    expected:
+      font-family: "'Bebas Neue', Impact, sans-serif"
+      font-weight: 400
+      line-height: 0.85
+      letter-spacing: 0.02em
+      text-transform: lowercase
+    tolerance:
+      font-family: "exact"
+
+  # ── Hero subtitle ───────────────────────────────────────────
+  - selector: ".hero-subtitle"
+    expected:
+      font-size: var(--font-body-lg)
+      font-weight: 600
+      line-height: 1.35
+      color: var(--color-on-primary)
+    tolerance:
+      color: "exact"
+
+  # ── Hero actions row ────────────────────────────────────────
+  - selector: ".hero-actions"
+    expected:
+      display: flex
+      flex-wrap: wrap
+      justify-content: center
+      gap: 0.9rem
+      max-width: "34rem"
+    tolerance:
+      gap: "0.1rem"
+
+  # ── Primary button (Pizdato — green) ────────────────────────
+  - selector: ".btn-primary"
+    expected:
+      background: "linear-gradient(135deg, var(--color-tertiary), #9dffc8)"
+      color: var(--color-on-tertiary)
+      border-radius: var(--radius-sm)
+      font-weight: 800
+      font-size: var(--font-body-lg)
+      letter-spacing: 0.01em
+    tolerance:
+      font-size: "0.05rem"
+      letter-spacing: "0.01em"
+
+  # ── Danger button (Huyovo — red) ────────────────────────────
+  - selector: ".btn-secondary"
+    expected:
+      background: "linear-gradient(135deg, var(--color-danger), #ff9a7a)"
+      color: var(--color-on-danger)
+      border-radius: var(--radius-sm)
+      font-weight: 800
+      font-size: var(--font-body-lg)
+    tolerance: {}
+
+  # ── Base button (shared props) ──────────────────────────────
+  - selector: ".btn"
+    expected:
+      padding: "1rem 1.5rem"
+      min-width: "14rem"
+      font-family: var(--font-body)
+      font-weight: 800
+      font-size: var(--font-body-lg)
+      border-radius: var(--radius-sm)
+      border: 0
+    tolerance:
+      min-width: "0.5rem"
+
+  # ── Stat strip ──────────────────────────────────────────────
+  - selector: ".stat-strip"
+    expected:
+      display: flex
+      flex-wrap: wrap
+      gap: var(--spacing-md)
+      justify-content: center
+      padding: var(--spacing-md) 0
+      max-width: "44rem"
+    tolerance:
+      gap: "2px"
+
+  # ── Stat strip value (display number) ───────────────────────
+  - selector: ".stat-strip-value"
+    expected:
+      font-family: var(--font-display)
+      font-size: var(--font-display-ui)
+      letter-spacing: 0.04em
+      line-height: 1
+      color: var(--color-tertiary)
+    tolerance:
+      font-size: "0.1rem"
+      letter-spacing: "0.01em"
+
+  # ── Stat strip label ────────────────────────────────────────
+  - selector: ".stat-strip-label"
+    expected:
+      font-size: var(--font-label-small)
+      font-weight: 700
+      letter-spacing: 0.01em
+      color: var(--color-secondary)
+      text-transform: uppercase
+    tolerance:
+      font-size: "0.05rem"
+
+  # ── Stat strip item ─────────────────────────────────────────
+  - selector: ".stat-strip-item"
+    expected:
+      display: flex
+      flex-direction: column
+      align-items: center
+      gap: var(--spacing-xs)
+      text-align: center
+      min-width: "5rem"
+    tolerance:
+      min-width: "0.5rem"
+
+  # ── Hover: primary button translate ─────────────────────────
+  - selector: ".btn:not(:disabled):hover"
+    expected:
+      transform: "translateY(-2px) scale(1.02)"
+    tolerance:
+      transform: "exact"
+
+  # ── Active: primary button translate ────────────────────────
+  - selector: ".btn:not(:disabled):active"
+    expected:
+      transform: "translateY(1px) scale(0.98)"
+    tolerance:
+      transform: "exact"
