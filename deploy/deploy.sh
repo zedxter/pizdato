@@ -64,23 +64,38 @@ else
   echo "WARNING: no index.html found in extracted frontend — webroot unchanged" >&2
 fi
 
-# ── Post-deploy webroot verification ─────────────────────────────────────
-echo "Verifying webroot file integrity..." >&2
+# ── Post-deploy content verification ──────────────────────────────────────
+echo "Verifying deployed content..." >&2
 VERIFY_ERROR=0
+
+# Check that design.css exists in webroot
 if [ ! -f "${WEBROOT}/design.css" ]; then
-  echo "ERROR: design.css missing from webroot (${WEBROOT}/design.css)" >&2
+  echo "ERROR: design.css missing from webroot" >&2
   VERIFY_ERROR=1
 fi
-for PAGE in pizdato.html issledovanie.html faq.html; do
-  if [ ! -f "${WEBROOT}/${PAGE}" ]; then
-    echo "ERROR: ${PAGE} missing from webroot" >&2
+
+# Verify key pages serve correct content by checking their <title> tags
+declare -A TITLE_CHECKS=(
+  ["pizdato.html"]="Пиздато — что это и как работает"
+  ["issledovanie.html"]="Пиздато и хуёво: исследование"
+  ["faq.html"]="FAQ — частые вопросы"
+)
+for FILENAME in "${!TITLE_CHECKS[@]}"; do
+  FILE="${WEBROOT}/${FILENAME}"
+  if [ ! -f "$FILE" ]; then
+    echo "ERROR: ${FILENAME} missing from webroot" >&2
+    VERIFY_ERROR=1
+  elif ! grep -q "<title>${TITLE_CHECKS[$FILENAME]}" "$FILE"; then
+    echo "ERROR: ${FILENAME} has wrong content (title mismatch)" >&2
+    head -20 "$FILE" | grep -i '<title' >&2
     VERIFY_ERROR=1
   fi
 done
-if [ "$VERIFY_ERROR" = "1" ]; then
-  echo "WARNING: webroot verification failed — some files are missing" >&2
+
+if [ "$VERIFY_ERROR" != "0" ]; then
+  echo "WARNING: some deployed content checks failed — review above" >&2
 fi
-echo "webroot verification complete" >&2
+echo "content verification complete" >&2
 
 echo "HEALTHY $APP_TAG" >&2
 
