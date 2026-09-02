@@ -65,4 +65,10 @@ else
 fi
 
 echo "HEALTHY $APP_TAG" >&2
+
+# ── Caddy config deploy ──────────────────────────────────────────────────
+sudo cp /srv/pizdato/deploy/Caddyfile /etc/caddy/conf.d/pizdato.net
+sudo caddy reload --config /etc/caddy/Caddyfile
+echo "caddy reloaded" >&2
+
 exit 0
