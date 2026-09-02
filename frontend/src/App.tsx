@@ -6,7 +6,6 @@ import { pickQuotes, type Wisdom } from './quotes'
 import { SharePanel } from './SharePanel'
 import { SiteFooter } from './SiteFooter'
 import { SiteNav } from './SiteNav'
-import './App.css'
 
 function pct(part: number, total: number): number {
   if (total <= 0) return 0
@@ -297,7 +296,7 @@ export default function App() {
 
       <SiteNav current="home" />
 
-      <main className="hero">
+      <main className="hero" data-testid="hero">
         <div className="brand-lockup">
           <img
             className="brand-mark"
@@ -307,7 +306,7 @@ export default function App() {
             alt=""
             decoding="async"
           />
-          <h1 className="brand">pizdato</h1>
+          <h1 className="hero-title">pizdato</h1>
         </div>
         {voted && activeQuote ? (
           <QuoteCarousel
@@ -317,7 +316,7 @@ export default function App() {
           />
         ) : (
           <>
-            <p className="tagline">Мир делится на два лагеря.</p>
+            <p className="hero-subtitle">Мир делится на два лагеря.</p>
             <p className="chance-note">
               У тебя только один шанс повлиять на этот мир — выбирай с умом.
             </p>
@@ -325,10 +324,11 @@ export default function App() {
         )}
 
         {!voted ? (
-          <div className={`actions ${pending ? 'is-pending' : ''}`}>
+          <div className={`hero-actions ${pending ? 'is-pending' : ''}`}>
             <button
               type="button"
-              className="btn btn-good"
+              className="btn btn-primary"
+              data-testid="btn-primary"
               disabled={pending || !stats || !canVote || loadingStats}
               onClick={() => void vote('pizdato')}
             >
@@ -336,7 +336,8 @@ export default function App() {
             </button>
             <button
               type="button"
-              className="btn btn-bad"
+              className="btn btn-secondary"
+              data-testid="btn-secondary"
               disabled={pending || !stats || !canVote || loadingStats}
               onClick={() => void vote('huyevo')}
             >
@@ -375,7 +376,7 @@ export default function App() {
               Вот как сейчас обстоят дела у человечества:
             </p>
 
-            <div className="bars">
+            <div className="bars" data-testid="stat-strip">
               <div className="bar-row">
                 <div className="bar-meta">
                   <span>Пиздато</span>

@@ -3,7 +3,6 @@ import { fetchStats, type Stats } from './api'
 import { pickQuotes, type Wisdom } from './quotes'
 import { SiteFooter } from './SiteFooter'
 import { SiteNav } from './SiteNav'
-import './App.css'
 import './Mascot404.css'
 
 const TITLE = '404 — ничего нет | pizdato.net'
@@ -79,8 +78,8 @@ export default function Mascot404() {
         )}
 
         <div className="mascot-404-actions">
-          <a href="/" className="btn btn-good">На главную</a>
-          <a href="/lenta" className="btn btn-bad">Лента голосов</a>
+          <a href="/" className="btn btn-primary">На главную</a>
+          <a href="/lenta" className="btn btn-secondary">Лента голосов</a>
         </div>
 
         {total > 0 && (

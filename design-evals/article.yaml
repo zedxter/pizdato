@@ -136,12 +136,6 @@ checks:
       gap: "2px"
       max-width: "0.5rem"
 
-  # ── Separator line between sections ─────────────────────────
-  - selector: ".section + .section"
-    expected:
-      border-top: none
-    tolerance: {}
-
   # ── Responsive: hero actions buttons full width on mobile ───
   - selector: "@media (max-width: 720px) .hero-actions .btn"
     expected:

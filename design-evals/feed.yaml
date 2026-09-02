@@ -65,27 +65,28 @@ checks:
       font-size: "0.05rem"
       opacity: "0.05"
 
-  # ── Card verdict (good — green) ─────────────────────────────
-  - selector: ".card-verdict.is-good"
+  # ── Card verdict (base typography) ──────────────────────────
+  - selector: ".card-verdict"
     expected:
-      color: var(--color-tertiary)
       font-size: var(--font-label-small)
       font-weight: 700
       letter-spacing: 0.01em
     tolerance:
-      color: "exact"
       font-size: "0.05rem"
+
+  # ── Card verdict (good — green) ─────────────────────────────
+  - selector: ".card-verdict.is-good"
+    expected:
+      color: var(--color-tertiary)
+    tolerance:
+      color: "exact"
 
   # ── Card verdict (bad — red) ────────────────────────────────
   - selector: ".card-verdict.is-bad"
     expected:
       color: var(--color-danger)
-      font-size: var(--font-label-small)
-      font-weight: 700
-      letter-spacing: 0.01em
     tolerance:
       color: "exact"
-      font-size: "0.05rem"
 
   # ── Data table ──────────────────────────────────────────────
   - selector: ".data-table"
