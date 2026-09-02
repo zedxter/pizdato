@@ -45,7 +45,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: "deploy/deploy.sh,deploy/compose.yaml"
+          source: "deploy/deploy.sh,deploy/compose.yaml,deploy/Caddyfile"
           target: /srv/pizdato
           strip_components: 0
       - name: Run deploy

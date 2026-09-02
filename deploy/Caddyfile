@@ -20,13 +20,11 @@ pizdato.net {
 		}
 	}
 
-	handle /mcp* {
-		reverse_proxy 127.0.0.1:8081 {
-			header_up X-Real-IP {remote_host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-		}
+	handle /health {
+		reverse_proxy 127.0.0.1:8081
 	}
+
+	# /mcp* removed 2026-08-20 — doesn't need to be public. Falls to 404 via handle_errors.
 
 	handle {
 		root * /var/www/pizdato
