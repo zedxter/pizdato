@@ -1,0 +1,69 @@
+[
+  {
+    "selector": ".page-essay",
+    "props": [
+      {"property": "display", "token": "flex", "desc": "article page — flex контейнер"},
+      {"property": "flex-direction", "token": "column", "desc": "article page — колонка"},
+      {"property": "min-height", "token": "100dvh", "desc": "article page — минимальная высота"}
+    ]
+  },
+  {
+    "selector": ".essay-masthead",
+    "props": [
+      {"property": "display", "token": "flex", "desc": "masthead — flex"},
+      {"property": "flex-direction", "token": "column", "desc": "masthead — колонка"}
+    ]
+  },
+  {
+    "selector": ".essay-kicker",
+    "props": [
+      {"property": "letter-spacing", "token": "0.28em", "desc": "kicker — широкий трекинг", "tolerance": 0.05},
+      {"property": "text-transform", "token": "uppercase", "desc": "kicker — uppercase"},
+      {"property": "color", "token": "colors.secondary", "desc": "kicker — второстепенный цвет"}
+    ]
+  },
+  {
+    "selector": ".essay-title-wrap h1",
+    "props": [
+      {"property": "font-weight", "token": "800", "desc": "article заголовок h1 — жирность 800"},
+      {"property": "color", "token": "colors.on-primary", "desc": "article заголовок — основной текст"}
+    ]
+  },
+  {
+    "selector": ".essay-dek",
+    "props": [
+      {"property": "color", "token": "colors.on-primary", "desc": "dek — основной текст"}
+    ]
+  },
+  {
+    "selector": ".essay-byline",
+    "props": [
+      {"property": "color", "token": "colors.secondary", "desc": "byline — второстепенный цвет"}
+    ]
+  },
+  {
+    "selector": ".essay-body",
+    "props": [
+      {"property": "max-width", "token": "44rem", "desc": "article body — ширина контента", "tolerance": 8}
+    ]
+  },
+  {
+    "selector": ".essay-hero-figure",
+    "props": [
+      {"property": "display", "token": "flex", "desc": "hero-figure — flex"},
+      {"property": "flex-direction", "token": "column", "desc": "hero-figure — колонка"}
+    ]
+  },
+  {
+    "selector": ".site-nav-link.is-active",
+    "props": [
+      {"property": "color", "token": "colors.tertiary", "desc": "активная нав-ссылка — зелёный"}
+    ]
+  },
+  {
+    "selector": ".site-footer",
+    "props": [
+      {"property": "display", "token": "flex", "desc": "footer — flex"}
+    ]
+  }
+]
