@@ -133,6 +133,10 @@
   background: var(--color-neutral);
 }
 
+.section + .section {
+  border-top: none;
+}
+
 
 /* ====================================================
    Hero block
@@ -342,10 +346,16 @@
 
 .card-verdict.is-good {
   color: var(--color-tertiary);
+  font-size: var(--font-label-small);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.01em;
 }
 
 .card-verdict.is-bad {
   color: var(--color-danger);
+  font-size: var(--font-label-small);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.01em;
 }
 
 
@@ -386,12 +396,19 @@
   background: linear-gradient(135deg, var(--color-tertiary), #9dffc8);
   color: var(--color-on-tertiary);
   box-shadow: var(--shadow-btn-good);
+  border-radius: var(--radius-sm);
+  font-weight: var(--weight-extrabold);
+  font-size: var(--font-body-lg);
+  letter-spacing: 0.01em;
 }
 
 .btn-secondary {
   background: linear-gradient(135deg, var(--color-danger), #ff9a7a);
   color: var(--color-on-danger);
   box-shadow: var(--shadow-btn-bad);
+  border-radius: var(--radius-sm);
+  font-weight: var(--weight-extrabold);
+  font-size: var(--font-body-lg);
 }
 
 /* Neutral outline button for secondary actions */

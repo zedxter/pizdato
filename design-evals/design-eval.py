@@ -181,7 +181,12 @@ def values_match(expected, actual, root_vars=None, tolerance=None) -> tuple:
     actual = str(actual).strip()
 
     if tolerance == "exact":
-        return (expected == actual, f"expected '{expected}', got '{actual}'")
+        norm_exp = normalize_value(expected)
+        norm_act = normalize_value(actual)
+        if root_vars:
+            norm_exp = resolve_vars(norm_exp, root_vars)
+            norm_act = resolve_vars(norm_act, root_vars)
+        return (norm_exp == norm_act, f"expected '{expected}', got '{actual}'")
 
     exp_norm = normalize_value(expected)
     act_norm = normalize_value(actual)
