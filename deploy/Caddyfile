@@ -8,6 +8,9 @@ pizdato.net {
 		}
 	}
 
+	# Security headers
+	header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mc.yandex.ru; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://mc.yandex.ru; connect-src 'self' https://mc.yandex.ru; frame-src 'none'; object-src 'none'"
+
 	# Old «Как это работает» URL — keep both /how and /how.html off the index fallback
 	@legacy_how path /how /how/ /how.html
 	redir @legacy_how /pizdato permanent
