@@ -78,7 +78,7 @@ checks:
   - selector: ".btn"
     expected:
       padding: "1rem 1.5rem"
-      min-width: "14rem"
+      min-width: "min(100%, 14rem)"
       font-family: var(--font-body)
       font-weight: 800
       font-size: var(--font-body-lg)

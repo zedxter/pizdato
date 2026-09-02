@@ -12,6 +12,10 @@ pizdato.net {
 	@legacy_how path /how /how/ /how.html
 	redir @legacy_how /pizdato permanent
 
+	# CORS for design assets (fonts, design.css)
+	@design_cors path /design.css /fonts/*
+	header @design_cors Access-Control-Allow-Origin "*"
+
 	handle /api/* {
 		reverse_proxy 127.0.0.1:8081 {
 			header_up X-Real-IP {remote_host}

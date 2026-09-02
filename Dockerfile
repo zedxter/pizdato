@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 COPY --from=backend-builder /src/target/release/backend /backend
 COPY --from=frontend-builder /app/frontend/dist /frontend/dist
+# Design system stylesheet served alongside frontend assets
+COPY design.css /frontend/dist/design.css
 
 EXPOSE 8080
 
