@@ -2,8 +2,8 @@ use std::{str::FromStr, time::Duration};
 
 use sha2::{Digest, Sha256};
 use sqlx::{
-    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
     SqlitePool,
+    sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous},
 };
 
 use crate::models::Choice;
@@ -41,7 +41,10 @@ fn is_db_transient(err: &sqlx::Error) -> bool {
             let msg = db.message().to_ascii_lowercase();
             msg.contains("unable to open database file")
                 || msg.contains("disk i/o error")
-                || db.code().map(|c| c == "5" || c == "14" || c == "10").unwrap_or(false)
+                || db
+                    .code()
+                    .map(|c| c == "5" || c == "14" || c == "10")
+                    .unwrap_or(false)
         }
         _ => false,
     }
@@ -119,12 +122,11 @@ pub async fn migrate_with_retry(pool: &SqlitePool, attempts: u32) -> Result<(), 
 }
 
 async fn table_exists(pool: &SqlitePool, name: &str) -> Result<bool, sqlx::Error> {
-    let count: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
-    )
-    .bind(name)
-    .fetch_one(pool)
-    .await?;
+    let count: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?1")
+            .bind(name)
+            .fetch_one(pool)
+            .await?;
     Ok(count > 0)
 }
 
@@ -266,12 +268,11 @@ pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
-    let pruned_req = sqlx::query(
-        "DELETE FROM ip_vote_requests WHERE created_at < datetime('now', '-7 days')",
-    )
-    .execute(pool)
-    .await?
-    .rows_affected();
+    let pruned_req =
+        sqlx::query("DELETE FROM ip_vote_requests WHERE created_at < datetime('now', '-7 days')")
+            .execute(pool)
+            .await?
+            .rows_affected();
     if pruned_req > 0 {
         tracing::info!(pruned_req, "pruned old ip vote request logs");
     }
@@ -308,11 +309,9 @@ pub async fn migrate(pool: &SqlitePool) -> Result<(), sqlx::Error> {
             .await?;
     }
 
-    sqlx::query(
-        "CREATE INDEX IF NOT EXISTS idx_news_items_created_at ON news_items (created_at)",
-    )
-    .execute(pool)
-    .await?;
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_news_items_created_at ON news_items (created_at)")
+        .execute(pool)
+        .await?;
 
     Ok(())
 }
@@ -344,19 +343,14 @@ impl AppState {
     }
 
     pub async fn is_ip_blacklisted(&self, ip_hash: &str) -> Result<bool, sqlx::Error> {
-        let count: i64 =
-            sqlx::query_scalar("SELECT COUNT(*) FROM ip_blacklist WHERE ip_hash = ?1")
-                .bind(ip_hash)
-                .fetch_one(&self.pool)
-                .await?;
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM ip_blacklist WHERE ip_hash = ?1")
+            .bind(ip_hash)
+            .fetch_one(&self.pool)
+            .await?;
         Ok(count > 0)
     }
 
-    pub async fn record_vote_request(
-        &self,
-        ip_hash: &str,
-        status: i64,
-    ) -> Result<(), sqlx::Error> {
+    pub async fn record_vote_request(&self, ip_hash: &str, status: i64) -> Result<(), sqlx::Error> {
         sqlx::query("INSERT INTO ip_vote_requests (ip_hash, status) VALUES (?1, ?2)")
             .bind(ip_hash)
             .bind(status)
@@ -365,10 +359,7 @@ impl AppState {
         Ok(())
     }
 
-    pub async fn vote_requests_from_ip_last_day(
-        &self,
-        ip_hash: &str,
-    ) -> Result<i64, sqlx::Error> {
+    pub async fn vote_requests_from_ip_last_day(&self, ip_hash: &str) -> Result<i64, sqlx::Error> {
         let count: i64 = sqlx::query_scalar(
             r#"
             SELECT COUNT(*)
@@ -411,13 +402,12 @@ impl AppState {
         if forbidden < self.ip_403_blacklist_after {
             return Ok(false);
         }
-        let res = sqlx::query(
-            "INSERT OR IGNORE INTO ip_blacklist (ip_hash, reason) VALUES (?1, ?2)",
-        )
-        .bind(ip_hash)
-        .bind(reason)
-        .execute(&self.pool)
-        .await?;
+        let res =
+            sqlx::query("INSERT OR IGNORE INTO ip_blacklist (ip_hash, reason) VALUES (?1, ?2)")
+                .bind(ip_hash)
+                .bind(reason)
+                .execute(&self.pool)
+                .await?;
         if res.rows_affected() > 0 {
             tracing::warn!(
                 forbidden,
@@ -430,20 +420,18 @@ impl AppState {
     }
 
     pub async fn find_vote(&self, voter_id: &str) -> Result<Option<Choice>, sqlx::Error> {
-        let row: Option<(String,)> =
-            sqlx::query_as("SELECT choice FROM votes WHERE voter_id = ?1")
-                .bind(voter_id)
-                .fetch_optional(&self.pool)
-                .await?;
+        let row: Option<(String,)> = sqlx::query_as("SELECT choice FROM votes WHERE voter_id = ?1")
+            .bind(voter_id)
+            .fetch_optional(&self.pool)
+            .await?;
         Ok(row.and_then(|(c,)| Choice::parse(&c)))
     }
 
     pub async fn session_exists(&self, voter_id: &str) -> Result<bool, sqlx::Error> {
-        let count: i64 =
-            sqlx::query_scalar("SELECT COUNT(*) FROM sessions WHERE voter_id = ?1")
-                .bind(voter_id)
-                .fetch_one(&self.pool)
-                .await?;
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM sessions WHERE voter_id = ?1")
+            .bind(voter_id)
+            .fetch_one(&self.pool)
+            .await?;
         Ok(count > 0)
     }
 
