@@ -48,13 +48,6 @@
     ]
   },
   {
-    "selector": ".essay-hero-figure",
-    "props": [
-      {"property": "display", "token": "flex", "desc": "hero-figure — flex"},
-      {"property": "flex-direction", "token": "column", "desc": "hero-figure — колонка"}
-    ]
-  },
-  {
     "selector": ".site-nav-link.is-active",
     "props": [
       {"property": "color", "token": "colors.tertiary", "desc": "активная нав-ссылка — зелёный"}
