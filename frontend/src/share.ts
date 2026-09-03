@@ -53,7 +53,10 @@ export function vkShareUrl(text: string, title = 'pizdato'): string {
 }
 
 export function xShareUrl(text: string): string {
-  const params = new URLSearchParams({ url: SITE_URL, text })
+  const params = new URLSearchParams({
+    url: SITE_URL,
+    text,
+  })
   return `https://x.com/intent/tweet?${params.toString()}`
 }
 
