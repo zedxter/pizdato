@@ -1,4 +1,9 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::{
+    collections::{HashMap, VecDeque},
+    net::SocketAddr,
+    sync::{Arc, Mutex, OnceLock},
+    time::{Duration, Instant},
+};
 
 use axum::{
     Json,
@@ -385,14 +390,177 @@ pub async fn news_feed(
     }))
 }
 
-/// Log a badge download / share event. Rate limiting via Caddy.
-pub async fn event(Query(params): Query<std::collections::HashMap<String, String>>) -> StatusCode {
-    let event_type = params.get("type").map(|s| s.as_str()).unwrap_or("unknown");
-    tracing::info!("badge_event: {event_type}");
+const ALLOWED_EVENT_TYPES: &[&str] = &[
+    "badge_download",
+    "badge_share_stories",
+    "share_result_copy",
+    "share_result_native",
+    "share_result_telegram",
+    "share_result_vk",
+];
+const MAX_EVENT_TYPE_LEN: usize = 64;
+const EVENT_RATE_PER_MINUTE: usize = 10;
+
+struct EventRateLimiter {
+    limit: usize,
+    window: Duration,
+    hits: Mutex<HashMap<String, VecDeque<Instant>>>,
+}
+
+impl EventRateLimiter {
+    fn new(limit: usize, window: Duration) -> Self {
+        Self {
+            limit,
+            window,
+            hits: Mutex::new(HashMap::new()),
+        }
+    }
+
+    /// Returns true when the request is within the per-key budget.
+    fn check(&self, ip: &str) -> bool {
+        let now = Instant::now();
+        let mut hits = self.hits.lock().unwrap_or_else(|e| e.into_inner());
+        let queue = hits.entry(ip.to_string()).or_default();
+        while queue
+            .front()
+            .is_some_and(|t| now.saturating_duration_since(*t) >= self.window)
+        {
+            queue.pop_front();
+        }
+        if queue.len() >= self.limit {
+            return false;
+        }
+        queue.push_back(now);
+        true
+    }
+}
+
+fn sanitize_for_log(value: &str) -> String {
+    value.chars().filter(|c| !c.is_control()).collect()
+}
+
+fn handle_event(event_type: Option<&str>, ip: &str, limiter: &EventRateLimiter) -> StatusCode {
+    if !limiter.check(ip) {
+        return StatusCode::TOO_MANY_REQUESTS;
+    }
+    let Some(event_type) = event_type else {
+        return StatusCode::BAD_REQUEST;
+    };
+    if event_type.len() > MAX_EVENT_TYPE_LEN || !ALLOWED_EVENT_TYPES.contains(&event_type) {
+        return StatusCode::BAD_REQUEST;
+    }
+    tracing::info!("badge_event: {}", sanitize_for_log(event_type));
     StatusCode::OK
+}
+
+static EVENT_LIMITER: OnceLock<EventRateLimiter> = OnceLock::new();
+
+/// Log a badge download / share event. Allowlisted types, per-IP rate limit, sanitized logs.
+pub async fn event(
+    headers: HeaderMap,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    Query(params): Query<HashMap<String, String>>,
+) -> StatusCode {
+    let ip = client_ip(&headers, addr);
+    let limiter = EVENT_LIMITER
+        .get_or_init(|| EventRateLimiter::new(EVENT_RATE_PER_MINUTE, Duration::from_secs(60)));
+    handle_event(params.get("type").map(|s| s.as_str()), &ip, limiter)
 }
 
 /// Health check endpoint for Docker / load balancer.
 pub async fn health() -> Json<serde_json::Value> {
     Json(serde_json::json!({"ok": true}))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    fn unlimited() -> EventRateLimiter {
+        EventRateLimiter::new(100, Duration::from_secs(60))
+    }
+
+    #[test]
+    fn event_rejects_unknown_type() {
+        let status = handle_event(Some("not_a_real_event"), "127.0.0.1", &unlimited());
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn event_rejects_missing_type() {
+        let status = handle_event(None, "127.0.0.1", &unlimited());
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn event_rejects_overlong_type() {
+        let overlong = "a".repeat(MAX_EVENT_TYPE_LEN + 1);
+        let status = handle_event(Some(&overlong), "127.0.0.1", &unlimited());
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn event_rejects_type_with_newlines() {
+        let status = handle_event(Some("badge_download\nINFO fake"), "127.0.0.1", &unlimited());
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn event_accepts_allowed_types() {
+        let limiter = unlimited();
+        for event_type in ALLOWED_EVENT_TYPES {
+            let status = handle_event(Some(event_type), "127.0.0.1", &limiter);
+            assert_eq!(
+                status,
+                StatusCode::OK,
+                "allowed type {event_type} must be accepted"
+            );
+        }
+    }
+
+    #[test]
+    fn event_returns_too_many_requests_when_ip_exceeds_limit() {
+        let limiter = EventRateLimiter::new(2, Duration::from_secs(60));
+        assert_eq!(
+            handle_event(Some("badge_download"), "10.0.0.1", &limiter),
+            StatusCode::OK
+        );
+        assert_eq!(
+            handle_event(Some("badge_share_stories"), "10.0.0.1", &limiter),
+            StatusCode::OK
+        );
+        assert_eq!(
+            handle_event(Some("badge_download"), "10.0.0.1", &limiter),
+            StatusCode::TOO_MANY_REQUESTS
+        );
+        assert_eq!(
+            handle_event(Some("badge_download"), "10.0.0.2", &limiter),
+            StatusCode::OK
+        );
+    }
+
+    #[test]
+    fn event_rate_limiter_rejects_after_limit() {
+        let limiter = EventRateLimiter::new(2, Duration::from_secs(60));
+        assert!(limiter.check("1.2.3.4"));
+        assert!(limiter.check("1.2.3.4"));
+        assert!(!limiter.check("1.2.3.4"));
+    }
+
+    #[test]
+    fn event_rate_limiter_tracks_ips_separately() {
+        let limiter = EventRateLimiter::new(1, Duration::from_secs(60));
+        assert!(limiter.check("1.1.1.1"));
+        assert!(limiter.check("2.2.2.2"));
+        assert!(!limiter.check("1.1.1.1"));
+    }
+
+    #[test]
+    fn sanitize_for_log_strips_control_characters() {
+        assert_eq!(
+            sanitize_for_log("badge_download\nINFO fake\r\t"),
+            "badge_downloadINFO fake"
+        );
+    }
 }
