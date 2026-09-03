@@ -7,6 +7,7 @@ import {
   telegramShareUrl,
   vkShareUrl,
   vkShareUrlForChoice,
+  xShareUrl,
   copyShareText,
   nativeShare,
 } from '../share'
@@ -86,6 +87,19 @@ describe('vkShareUrlForChoice', () => {
     const url = vkShareUrlForChoice('text')
     expect(url).toContain('title=')
     expect(url).toContain(encodeURIComponent('сторону'))
+  })
+})
+
+describe('xShareUrl', () => {
+  it('builds a valid X intent URL', () => {
+    const url = xShareUrl('hello')
+    expect(url).toMatch(/^https:\/\/x\.com\/intent\/tweet\?/)
+  })
+
+  it('contains the site URL and the encoded text', () => {
+    const url = xShareUrl('hello')
+    expect(url).toContain(encodeURIComponent('https://pizdato.net/'))
+    expect(url).toContain(encodeURIComponent('hello'))
   })
 })
 

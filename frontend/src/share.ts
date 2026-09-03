@@ -52,6 +52,11 @@ export function vkShareUrl(text: string, title = 'pizdato'): string {
   return `https://vk.com/share.php?${params.toString()}`
 }
 
+export function xShareUrl(text: string): string {
+  const params = new URLSearchParams({ url: SITE_URL, text })
+  return `https://x.com/intent/tweet?${params.toString()}`
+}
+
 export function vkShareUrlForChoice(text: string, choice?: Choice): string {
   const title =
     choice === 'pizdato'

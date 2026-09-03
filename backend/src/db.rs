@@ -116,6 +116,7 @@ pub async fn migrate_with_retry(pool: &SqlitePool, attempts: u32) -> Result<(), 
                 tracing::warn!(
                     attempt,
                     next_delay_ms = delay.as_millis() as u64,
+                    error = %e,
                     "database locked during migrate; retrying"
                 );
                 tokio::time::sleep(delay).await;
