@@ -47,7 +47,9 @@
       '.cookie-consent-text{flex:1;min-width:200px}' +
       '.cookie-consent-text a{color:#8ab4f8;text-decoration:underline}' +
       '.cookie-consent-btn{background:#4a7c59;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap}' +
-      '.cookie-consent-btn:hover{background:#3d6b4c}'
+      '.cookie-consent-btn:hover{background:#3d6b4c}' +
+      '.cookie-consent-reject{background:#555;color:#ccc}' +
+      '.cookie-consent-reject:hover{background:#666;color:#fff}'
     document.head.appendChild(style)
   }
 
@@ -68,10 +70,10 @@
     text.appendChild(link)
     banner.appendChild(text)
 
-    var btn = document.createElement('button')
-    btn.className = 'cookie-consent-btn'
-    btn.textContent = 'Принять'
-    btn.addEventListener('click', function () {
+    var acceptBtn = document.createElement('button')
+    acceptBtn.className = 'cookie-consent-btn cookie-consent-accept'
+    acceptBtn.textContent = 'Принять'
+    acceptBtn.addEventListener('click', function () {
       try {
         localStorage.setItem(STORAGE_KEY, 'accepted')
       } catch (_) {}
@@ -79,7 +81,18 @@
       loadMetrika()
     })
 
-    banner.appendChild(btn)
+    var rejectBtn = document.createElement('button')
+    rejectBtn.className = 'cookie-consent-btn cookie-consent-reject'
+    rejectBtn.textContent = 'Отказаться'
+    rejectBtn.addEventListener('click', function () {
+      try {
+        localStorage.setItem(STORAGE_KEY, 'rejected')
+      } catch (_) {}
+      if (banner.parentNode) banner.parentNode.removeChild(banner)
+    })
+
+    banner.appendChild(acceptBtn)
+    banner.appendChild(rejectBtn)
     document.body.appendChild(banner)
   }
 
