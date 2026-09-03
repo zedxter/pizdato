@@ -1,21 +1,17 @@
 mod db;
 mod handlers;
-mod mcp;
 mod models;
 
 use axum::{
     Router,
     routing::{get, post},
 };
-use rmcp::transport::streamable_http_server::{
-    StreamableHttpService, session::local::LocalSessionManager,
-};
 use std::{net::SocketAddr, sync::Arc};
 use tower_cookies::CookieManagerLayer;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::EnvFilter;
 
-use crate::{db::AppState, mcp::PizdatoMcp};
+use crate::db::AppState;
 
 fn env_i64(key: &str, default: i64) -> i64 {
     std::env::var(key)
@@ -87,24 +83,16 @@ async fn main() {
         .layer(CookieManagerLayer::new())
         .with_state(state.clone());
 
-    let mcp_state = state.clone();
-    let mcp = StreamableHttpService::new(
-        move || Ok(PizdatoMcp::new(mcp_state.clone())),
-        LocalSessionManager::default().into(),
-        Default::default(),
-    );
-
     let app = Router::new()
         .route("/health", get(handlers::health))
         .merge(api)
-        .nest_service("/mcp", mcp)
         .layer(cors);
 
     let addr: SocketAddr = bind.parse().expect("invalid BIND address");
     let listener = tokio::net::TcpListener::bind(addr)
         .await
         .expect("failed to bind");
-    tracing::info!("listening on {addr} (API + MCP /mcp)");
+    tracing::info!("listening on {addr}");
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
