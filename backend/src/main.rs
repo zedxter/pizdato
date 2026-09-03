@@ -127,15 +127,18 @@ fn test_app(pool: sqlx::SqlitePool) -> Router {
     Router::new()
         .route("/health", get(handlers::health))
         .merge(api)
-        .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any).allow_credentials(false))
+        .layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods(Any)
+                .allow_headers(Any)
+                .allow_credentials(false),
+        )
 }
 
 #[cfg(test)]
 mod integration_tests {
-    use axum::{
-        body::Body,
-        http::Request,
-    };
+    use axum::{body::Body, http::Request};
     use serde_json::Value;
     use sqlx::SqlitePool;
     use tower::ServiceExt;
@@ -151,14 +154,21 @@ mod integration_tests {
         let app = super::test_app(pool);
 
         let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
         assert_eq!(response.status(), 200);
 
         let body: Value = serde_json::from_slice(
-            &axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap(),
+            &axum::body::to_bytes(response.into_body(), usize::MAX)
+                .await
+                .unwrap(),
         )
         .unwrap();
         assert_eq!(body["ok"], true);
@@ -170,11 +180,19 @@ mod integration_tests {
         let app = super::test_app(pool);
 
         let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
-        let ct = response.headers().get("content-type").and_then(|v| v.to_str().ok());
+        let ct = response
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok());
         assert!(ct.unwrap_or("").contains("application/json"));
     }
 }

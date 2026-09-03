@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   buildShareText,
   buildQuoteShareText,
@@ -139,13 +139,13 @@ describe('copyShareText', () => {
   })
 
   it('falls back to textarea method when clipboard API is missing', async () => {
-    delete (navigator as any).clipboard
+    delete (navigator as unknown as Record<string, unknown>).clipboard
     const appendChild = vi.fn()
     const removeChild = vi.fn()
     document.body.appendChild = appendChild
     document.body.removeChild = removeChild
     // jsdom doesn't implement execCommand — mock it
-    document.execCommand = vi.fn() as any
+    document.execCommand = vi.fn() as unknown as typeof document.execCommand
 
     await copyShareText('fallback test')
     expect(appendChild).toHaveBeenCalled()
@@ -155,7 +155,7 @@ describe('copyShareText', () => {
 
 describe('nativeShare', () => {
   beforeEach(() => {
-    ;(navigator as any).share = undefined
+    (navigator as unknown as Record<string, unknown>).share = undefined
   })
 
   it('returns false when navigator.share not available', async () => {
@@ -164,13 +164,13 @@ describe('nativeShare', () => {
   })
 
   it('returns true on successful share', async () => {
-    ;(navigator as any).share = vi.fn().mockResolvedValue(undefined)
+    (navigator as unknown as Record<string, unknown>).share = vi.fn().mockResolvedValue(undefined)
     const result = await nativeShare('text')
     expect(result).toBe(true)
   })
 
   it('returns false on share rejection', async () => {
-    ;(navigator as any).share = vi.fn().mockRejectedValue(new Error('Abort'))
+    (navigator as unknown as Record<string, unknown>).share = vi.fn().mockRejectedValue(new Error('Abort'))
     const result = await nativeShare('text')
     expect(result).toBe(false)
   })

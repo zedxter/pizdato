@@ -561,7 +561,7 @@ mod tests {
         let pool = connect_inmemory();
         // Create tables manually for test isolation (faster than full migrate)
         sqlx::query(
-                r#"
+            r#"
                 CREATE TABLE IF NOT EXISTS votes (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     choice TEXT NOT NULL CHECK (choice IN ('pizdato', 'huyevo')),
@@ -570,25 +570,25 @@ mod tests {
                     created_at TEXT NOT NULL DEFAULT (datetime('now'))
                 )
                 "#,
-            )
+        )
         .execute(&pool)
         .await
         .unwrap();
 
         sqlx::query(
-                r#"
+            r#"
                 CREATE TABLE IF NOT EXISTS sessions (
                     voter_id TEXT PRIMARY KEY,
                     created_at TEXT NOT NULL DEFAULT (datetime('now'))
                 )
                 "#,
-            )
+        )
         .execute(&pool)
         .await
         .unwrap();
 
         sqlx::query(
-                r#"
+            r#"
                 CREATE TABLE IF NOT EXISTS ip_vote_requests (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     ip_hash TEXT NOT NULL,
@@ -596,21 +596,21 @@ mod tests {
                     created_at TEXT NOT NULL DEFAULT (datetime('now'))
                 )
                 "#,
-            )
+        )
         .execute(&pool)
         .await
         .unwrap();
 
         sqlx::query(
-                r#"
+            r#"
                 CREATE TABLE IF NOT EXISTS ip_blacklist (
                     ip_hash TEXT PRIMARY KEY,
                     reason TEXT NOT NULL,
                     created_at TEXT NOT NULL DEFAULT (datetime('now'))
                 )
                 "#,
-            )
-            .execute(&pool)
+        )
+        .execute(&pool)
         .await
         .unwrap();
 
@@ -638,9 +638,18 @@ mod tests {
         let state = test_state().await;
         let ip = state.hash_ip("1.2.3.4");
 
-        state.insert_vote(Choice::Pizdato, "voter-1", &ip).await.unwrap();
-        state.insert_vote(Choice::Huyevo, "voter-2", &ip).await.unwrap();
-        state.insert_vote(Choice::Pizdato, "voter-3", &ip).await.unwrap();
+        state
+            .insert_vote(Choice::Pizdato, "voter-1", &ip)
+            .await
+            .unwrap();
+        state
+            .insert_vote(Choice::Huyevo, "voter-2", &ip)
+            .await
+            .unwrap();
+        state
+            .insert_vote(Choice::Pizdato, "voter-3", &ip)
+            .await
+            .unwrap();
 
         let (pizdato, huyevo) = state.counts().await.unwrap();
         assert_eq!(pizdato, 2);
@@ -652,8 +661,14 @@ mod tests {
         let state = test_state().await;
         let ip = state.hash_ip("1.2.3.4");
 
-        state.insert_vote(Choice::Pizdato, "voter-1", &ip).await.unwrap();
-        state.insert_vote(Choice::Huyevo, "voter-2", &ip).await.unwrap();
+        state
+            .insert_vote(Choice::Pizdato, "voter-1", &ip)
+            .await
+            .unwrap();
+        state
+            .insert_vote(Choice::Huyevo, "voter-2", &ip)
+            .await
+            .unwrap();
 
         // Blacklist the IP
         sqlx::query("INSERT INTO ip_blacklist (ip_hash, reason) VALUES (?1, ?2)")
@@ -689,7 +704,10 @@ mod tests {
         let state = test_state().await;
         let ip = state.hash_ip("5.6.7.8");
 
-        state.insert_vote(Choice::Pizdato, "voter-insert-1", &ip).await.unwrap();
+        state
+            .insert_vote(Choice::Pizdato, "voter-insert-1", &ip)
+            .await
+            .unwrap();
 
         // Verify by reading back
         let choice = state.find_vote("voter-insert-1").await.unwrap();
@@ -701,7 +719,10 @@ mod tests {
         let state = test_state().await;
         let ip = state.hash_ip("5.6.7.8");
 
-        state.insert_vote(Choice::Pizdato, "voter-dup-1", &ip).await.unwrap();
+        state
+            .insert_vote(Choice::Pizdato, "voter-dup-1", &ip)
+            .await
+            .unwrap();
         let result = state.insert_vote(Choice::Huyevo, "voter-dup-1", &ip).await;
         assert!(result.is_err(), "duplicate voter_id should fail");
     }
@@ -711,7 +732,10 @@ mod tests {
         let state = test_state().await;
         let ip = state.hash_ip("9.10.11.12");
 
-        state.insert_vote(Choice::Huyevo, "voter-huyevo-1", &ip).await.unwrap();
+        state
+            .insert_vote(Choice::Huyevo, "voter-huyevo-1", &ip)
+            .await
+            .unwrap();
         let choice = state.find_vote("voter-huyevo-1").await.unwrap();
         assert_eq!(choice, Some(Choice::Huyevo));
     }
@@ -825,7 +849,10 @@ mod tests {
         let state = test_state().await;
         let ip = state.hash_ip("11.11.11.11");
 
-        state.insert_vote(Choice::Pizdato, "voter-sec-1", &ip).await.unwrap();
+        state
+            .insert_vote(Choice::Pizdato, "voter-sec-1", &ip)
+            .await
+            .unwrap();
 
         let secs = state.seconds_since_last_ip_vote(&ip).await.unwrap();
         assert!(secs.is_some(), "should return Some after a vote");
@@ -878,7 +905,10 @@ mod tests {
         let state = test_state().await;
         let ip = state.hash_ip("12.12.12.12");
 
-        state.insert_vote(Choice::Huyevo, "voter-find-1", &ip).await.unwrap();
+        state
+            .insert_vote(Choice::Huyevo, "voter-find-1", &ip)
+            .await
+            .unwrap();
         let choice = state.find_vote("voter-find-1").await.unwrap();
         assert_eq!(choice, Some(Choice::Huyevo));
     }
