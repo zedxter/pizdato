@@ -55,7 +55,7 @@ def find_content_files(file_list: list[str] | None = None) -> list[Path]:
         return sorted(result)
     result = []
     # Walk content-related directories
-    for d in ["posts", "frontend", "media/posts"]:
+    for d in ["posts", "frontend", "media/posts", "published"]:
         target = REPO_ROOT / d
         if target.exists():
             for p in target.rglob("*"):
@@ -150,7 +150,7 @@ def run_length_check(text: str, params: dict) -> bool:
     max_length = params.get("max_length", 4096)
     return len(text) <= max_length
 
-def run_lookup(text: str, params: dict, all_file_texts: dict) -> bool:
+def run_lookup(text: str, params: dict, all_file_texts: dict, current_file: str = "") -> bool:
     """
     Check for content duplicates against other files in the PR / repo.
     Simplified for CI: checks against other changed files in this evaluation.
@@ -162,17 +162,21 @@ def run_lookup(text: str, params: dict, all_file_texts: dict) -> bool:
     if match_mode == "text_similarity":
         # Check if this text is very similar to any other file being evaluated
         for other_path, other_text in all_file_texts.items():
+            if other_path == current_file:
+                continue
             if other_text == text:
                 return False
     elif match_mode == "exact":
         # Check for exact duplicate text in other files
         for other_path, other_text in all_file_texts.items():
+            if other_path == current_file:
+                continue
             if other_text == text:
                 return False
 
     return True
 
-def evaluate_deterministic(assertion: dict, text: str, all_texts: dict) -> bool:
+def evaluate_deterministic(assertion: dict, text: str, all_texts: dict, current_file: str = "") -> bool:
     """Run a deterministic assertion."""
     atype = assertion["type"]
     params = assertion.get("params", {})
@@ -187,7 +191,7 @@ def evaluate_deterministic(assertion: dict, text: str, all_texts: dict) -> bool:
         elif atype == "length_check":
             return run_length_check(text, params)
         elif atype == "lookup":
-            return run_lookup(text, params, all_texts)
+            return run_lookup(text, params, all_texts, current_file=current_file)
         else:
             # Unknown/inapplicable type — skip
             return True
@@ -229,7 +233,7 @@ def evaluate_files(
             all_pass = True
 
             for file_path, text in file_texts.items():
-                result = evaluate_deterministic(assertion, text, file_texts)
+                result = evaluate_deterministic(assertion, text, file_texts, current_file=file_path)
                 results_for_file.append({
                     "file": file_path,
                     "result": result,
