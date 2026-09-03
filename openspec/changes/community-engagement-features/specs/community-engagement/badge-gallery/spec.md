@@ -22,8 +22,23 @@ The system SHALL expose a public page at `/badges` showing recent badge-related 
 - **THEN** it polls for new events every 30 seconds
 - **AND** new entries appear at the top without disrupting scroll position
 
-### Requirement: Badge gallery uses existing event API
-The badge gallery SHALL use the existing `/api/event` endpoint's data (badge_download, badge_share_stories, share_result_telegram, share_result_vk, share_result_copy, share_result_native), extended with a read-back capability.
+#### Scenario: Gallery loading state
+- **WHEN** the badge gallery is fetching events on initial load
+- **THEN** the page shows a loading spinner
+- **AND** pending cards are fixed-height skeleton placeholders
+
+#### Scenario: Gallery load-more loading state
+- **WHEN** the visitor triggers a "load more" action
+- **THEN** a loading spinner is shown for that action
+
+#### Scenario: Gallery fetch error
+- **WHEN** the events fetch fails
+- **THEN** the page shows "Не удалось загрузить события"
+- **AND** a retry button is displayed
+- **AND** activating the retry button re-fetches events
+
+### Requirement: Badge gallery reads from recent-activity API
+The badge gallery SHALL fetch persisted badge events from `/api/recent-activity`. Events are written by `/api/event` into the `events` table. The existing event log is fire-and-forget (`tracing::info!` only) and is not queryable. Event types include `badge_download`, `badge_share_stories`, `share_result_telegram`, `share_result_vk`, `share_result_copy`, `share_result_native`.
 
 #### Scenario: Recent activity API returns badge events
 - **WHEN** the `/api/recent-activity` endpoint receives a request
