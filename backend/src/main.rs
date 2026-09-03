@@ -102,6 +102,7 @@ async fn main() {
 }
 
 /// Build the full Router for testing (avoids starting a real listener).
+#[cfg(test)]
 fn test_app(pool: sqlx::SqlitePool) -> Router {
     use axum::routing::post;
 
@@ -139,6 +140,7 @@ mod integration_tests {
     use sqlx::SqlitePool;
     use tower::ServiceExt;
 
+    #[cfg(test)]
     fn inmemory_pool() -> SqlitePool {
         SqlitePool::connect_lazy(":memory:").expect("in-memory pool")
     }

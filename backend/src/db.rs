@@ -97,6 +97,7 @@ pub async fn connect(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
         .await
 }
 
+#[cfg(test)]
 fn connect_inmemory() -> SqlitePool {
     use sqlx::sqlite::SqlitePoolOptions;
     SqlitePoolOptions::new()
