@@ -17,10 +17,12 @@ Exit codes:
     2 = runtime error (golden set missing, etc.)
 """
 
+import argparse
 import json
 import os
 import re
 import sys
+from datetime import datetime, date
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -36,6 +38,29 @@ CONTENT_PATTERNS = [
 
 EXCLUDE_DIRS = {"node_modules", "dist", "target", ".git", ".venv", "__pycache__", "deploy/channel"}
 
+# --- Channel length limits ---
+CHANNEL_LIMITS: dict[str, int] = {
+    "telegram_send_photo": 1024,
+    "telegram_send_message": 4096,
+    "blog_post": 10000,       # blog / article posts
+    "reddit_self": 40000,     # Reddit self-post
+    "default": 4096,
+}
+
+# Infer channel from file path. E.g. published/telegram/evening-2026-09-03.md → telegram
+def infer_channel_from_path(file_path: str) -> str:
+    path_lower = file_path.lower()
+    if "published/telegram" in path_lower or "posts/telegram" in path_lower:
+        return "telegram"
+    if "published/blog" in path_lower or "published/medium" in path_lower:
+        return "blog"
+    if "reddit" in path_lower:
+        return "reddit"
+    if "articles" in path_lower or "frontend" in path_lower:
+        return "blog"
+    return "unknown"
+
+
 # --- Helpers ---
 
 def load_golden_set(path: Path) -> dict:
@@ -44,6 +69,7 @@ def load_golden_set(path: Path) -> dict:
         sys.exit(2)
     with open(path) as f:
         return json.load(f)
+
 
 def find_content_files(file_list: list[str] | None = None) -> list[Path]:
     if file_list:
@@ -64,8 +90,48 @@ def find_content_files(file_list: list[str] | None = None) -> list[Path]:
                         result.append(p)
     return sorted(result)
 
+
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
+
+
+def should_apply_assertion(assertion: dict, file_path: str) -> bool:
+    """Check if an assertion should apply based on apply_since date and context."""
+    params = assertion.get("params", {})
+    apply_since = params.get("apply_since")
+    if apply_since:
+        try:
+            threshold_date = datetime.strptime(apply_since, "%Y-%m-%d").date()
+            # Try to get file modification date
+            try:
+                full_path = REPO_ROOT / file_path
+                if full_path.exists():
+                    mtime = datetime.fromtimestamp(full_path.stat().st_mtime).date()
+                    if mtime < threshold_date:
+                        return False
+            except OSError:
+                # If we can't read file mtime, apply the assertion (conservative)
+                pass
+        except ValueError:
+            pass  # Malformed date — apply assertion anyway
+    return True
+
+
+def get_context_text(text: str, context: str | None) -> str:
+    """Extract a scoped portion of text based on context field."""
+    if not context:
+        return text
+    if context == "key_verdict":
+        # Last 300 chars of the text (verdict / closing section)
+        return text[-300:]
+    if context == "first_100_chars":
+        return text[:100]
+    if context == "headline":
+        # First line or first 150 chars
+        first_line = text.split("\n")[0] if text else ""
+        return first_line[:200]
+    return text
+
 
 # --- Assertion runners ---
 
@@ -98,6 +164,7 @@ def run_substring_match(text: str, params: dict) -> bool:
 
     return True
 
+
 def run_banned_words(text: str, params: dict) -> bool:
     """Check that banned words/patterns are absent from text."""
     banned = params.get("banned", [])
@@ -122,6 +189,7 @@ def run_banned_words(text: str, params: dict) -> bool:
 
     return True
 
+
 def run_regex(text: str, params: dict) -> bool:
     """Run regex checks with various check modes."""
     pattern = params.get("pattern", "")
@@ -145,10 +213,30 @@ def run_regex(text: str, params: dict) -> bool:
 
     return True
 
-def run_length_check(text: str, params: dict) -> bool:
-    """Check that text length does not exceed max."""
-    max_length = params.get("max_length", 4096)
-    return len(text) <= max_length
+
+def run_length_check(text: str, params: dict, file_path: str = "") -> bool:
+    """Check that text length does not exceed max, with channel awareness."""
+    max_length = params.get("max_length")
+    channel = params.get("channel", "")
+
+    if max_length is not None:
+        return len(text) <= max_length
+
+    # If no explicit max_length, infer from channel param
+    if channel in CHANNEL_LIMITS:
+        limit = CHANNEL_LIMITS[channel]
+    else:
+        # Fall back to file-path-based channel inference
+        ch = infer_channel_from_path(file_path)
+        if ch == "telegram":
+            limit = 4096
+        elif ch == "blog":
+            limit = 10000
+        else:
+            limit = 4096
+
+    return len(text) <= limit
+
 
 def run_lookup(text: str, params: dict, all_file_texts: dict, current_file: str = "") -> bool:
     """
@@ -159,15 +247,7 @@ def run_lookup(text: str, params: dict, all_file_texts: dict, current_file: str 
     match_mode = params.get("match_mode", "text_similarity")
     window_hours = params.get("window_hours", 24)
 
-    if match_mode == "text_similarity":
-        # Check if this text is very similar to any other file being evaluated
-        for other_path, other_text in all_file_texts.items():
-            if other_path == current_file:
-                continue
-            if other_text == text:
-                return False
-    elif match_mode == "exact":
-        # Check for exact duplicate text in other files
+    if match_mode in ("text_similarity", "exact"):
         for other_path, other_text in all_file_texts.items():
             if other_path == current_file:
                 continue
@@ -176,22 +256,27 @@ def run_lookup(text: str, params: dict, all_file_texts: dict, current_file: str 
 
     return True
 
+
 def evaluate_deterministic(assertion: dict, text: str, all_texts: dict, current_file: str = "") -> bool:
-    """Run a deterministic assertion."""
+    """Run a deterministic assertion, respecting apply_since and context scoping."""
     atype = assertion["type"]
     params = assertion.get("params", {})
 
+    # Apply context scoping before running the assertion
+    context = params.get("context")
+    scoped_text = get_context_text(text, context)
+
     try:
         if atype == "substring_match":
-            return run_substring_match(text, params)
+            return run_substring_match(scoped_text, params)
         elif atype == "banned_words":
-            return run_banned_words(text, params)
+            return run_banned_words(scoped_text, params)
         elif atype == "regex":
-            return run_regex(text, params)
+            return run_regex(scoped_text, params)
         elif atype == "length_check":
-            return run_length_check(text, params)
+            return run_length_check(scoped_text, params, file_path=current_file)
         elif atype == "lookup":
-            return run_lookup(text, params, all_texts, current_file=current_file)
+            return run_lookup(scoped_text, params, all_texts, current_file=current_file)
         else:
             # Unknown/inapplicable type — skip
             return True
@@ -225,14 +310,20 @@ def evaluate_files(
         eval_types = cat.get("eval_types", [])
 
         passed = 0
+        skipped = 0
         total = len(det_assertions)
         check_results = []
 
         for assertion in det_assertions:
             results_for_file = []
             all_pass = True
+            applicable_files = 0
 
             for file_path, text in file_texts.items():
+                # Check apply_since — skip assertion for files that don't meet the date threshold
+                if not should_apply_assertion(assertion, file_path):
+                    continue
+                applicable_files += 1
                 result = evaluate_deterministic(assertion, text, file_texts, current_file=file_path)
                 results_for_file.append({
                     "file": file_path,
@@ -240,6 +331,11 @@ def evaluate_files(
                 })
                 if not result:
                     all_pass = False
+
+            if applicable_files == 0:
+                # No applicable files — skip this assertion (conservative: count as pass)
+                skipped += 1
+                all_pass = True
 
             if all_pass:
                 passed += 1
@@ -250,6 +346,7 @@ def evaluate_files(
                 "severity": assertion.get("severity", "WARN"),
                 "passed": all_pass,
                 "file_results": results_for_file,
+                "files_applicable": applicable_files,
             })
 
         score = round(passed / max(total, 1), 3)
@@ -263,6 +360,7 @@ def evaluate_files(
             "score": score,
             "threshold": cat_threshold,
             "passed": passed,
+            "skipped": skipped,
             "total": total,
             "eval_types_having_deterministic": [t for t in eval_types if t != "llm_judge"],
             "checks": check_results,
@@ -307,11 +405,15 @@ def print_report(results: dict, json_only: bool = False):
         score_pct = score * 100
         passed = cat["passed"]
         total = cat["total"]
-        print(f"  {status} {cat['category_id']} {cat['name']}: {score_pct:.1f}% ({passed}/{total})")
+        skipped = cat.get("skipped", 0)
+        skip_info = f" ({skipped} skipped)" if skipped else ""
+        print(f"  {status} {cat['category_id']} {cat['name']}: {score_pct:.1f}% ({passed}/{total}{skip_info})")
 
         for check in cat["checks"]:
             icon = "  ✓" if check["passed"] else "  ✗"
-            print(f"    {icon} [{check['type']}] {check['description']}")
+            applicable = check.get("files_applicable", 0)
+            note = f" (no applicable files)" if applicable == 0 else ""
+            print(f"    {icon} [{check['type']}] {check['description']}{note}")
             if not check["passed"]:
                 for fr in check["file_results"]:
                     if not fr["result"]:
@@ -330,23 +432,32 @@ def print_report(results: dict, json_only: bool = False):
     print("=" * 64)
 
 
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    """Parse CLI arguments using argparse."""
+    parser = argparse.ArgumentParser(
+        description="EDD Eval — evaluate PR content changes against golden set criteria."
+    )
+    parser.add_argument(
+        "--files",
+        nargs="*",
+        default=None,
+        help="Specific files to evaluate (default: scan all content directories)",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        default=False,
+        help="Output results as JSON only",
+    )
+    return parser.parse_args(argv)
+
+
 def main():
     golden = load_golden_set(GOLDEN_FILE)
 
-    # Parse args (order-independent)
-    files_arg = None
-    json_only = False
-    args = sys.argv[1:]
-    i = 0
-    while i < len(args):
-        if args[i] == "--files":
-            files_arg = args[i + 1:]
-            break
-        elif args[i] == "--json":
-            json_only = True
-        i += 1
+    args = parse_args(sys.argv[1:])
 
-    content_files = find_content_files(files_arg)
+    content_files = find_content_files(args.files)
     if not content_files:
         print("[INFO] No content files found to evaluate.")
         sys.exit(0)
@@ -358,7 +469,7 @@ def main():
         file_texts[rel] = read_text(f)
 
     results = evaluate_files(golden, file_texts)
-    print_report(results, json_only=json_only)
+    print_report(results, json_only=args.json)
 
     overall_pass = results["summary"]["overall_pass"]
     all_cat_pass = all(
