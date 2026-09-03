@@ -72,7 +72,32 @@ force-push to feat/a (branch has PR open)
 4. No PR merge without passing CI.
 5. No direct pushes to main.
 
-## 5. Roles
+## 5. Local repos and worktree — canon (03.09, team-wide rule, applies to ALL repos)
+
+**Never clone a team repo. Only the canonical clone in `/home/danil/projects/<repo>/` exists.**
+**Work in git worktrees inside it instead of cloning into /tmp/ or elsewhere.**
+
+1. **The only place for team-repo clones is `/home/danil/projects/<repo>/`.** Never clone
+   into `/tmp/`, `$HOME`, or anywhere else.
+2. **For branch/PR work — use `git worktree` inside the existing clone, not a fresh clone:**
+   - Cursor / coding agents → `projects/<repo>/.worktrees/<branch>`
+   - Vesemir (fixer) → `~/ws/<repo>/<branch>`
+   - Clean up stale worktrees with `git worktree prune`
+3. **Before creating a PR or touching code, check whether the repo already exists in
+   `/home/danil/projects/`.** If yes, work inside it (with a worktree). `git clone` is
+   allowed ONLY when the repo is absent from `projects/` — and it must go into `projects/`.
+4. **Subagents and `delegate_task` MUST be passed the full local path**
+   (`~/projects/<repo>/`) as context — missing path triggers agents to clone on their own.
+5. **On violation:** don't fix silently — comment on the PR/Issue, clean the duplicate
+   (`rm -rf` the clone outside projects/, `git worktree remove`). Record the violation
+   in the offending profile's fact_store.
+6. **Every new repo's AGENTS.md MUST include this section** (or reference the canonical
+   team-vault version at `docs/conventions-core.md`). The `team-project-kickoff` template
+   enforces this for future projects.
+
+See also: `/home/danil/vault/pizdato/docs/conventions-core.md` § "Локальные репозитории и worktree"
+
+## 6. Roles
 
 - **Owner — Danil (zedxter).** Green-lights work, approves spec-PRs.
 - **Geralt** — CTO: architecture, code review, CI/CD.
