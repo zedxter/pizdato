@@ -28,6 +28,13 @@ typography:
     fontWeight: 400
     lineHeight: 1
     letterSpacing: "0.04em"
+  essay-title:
+    description: "Essay page h1 titles — intentionally uses Bebas Neue as a display-level treatment, documented exception to the h1 token"
+    fontFamily: "'Bebas Neue', Impact, sans-serif"
+    fontSize: clamp(2rem, 8.2vw, 3.85rem)
+    fontWeight: 400
+    lineHeight: 0.96
+    letterSpacing: "0.015em"
   h1:
     fontFamily: "'Manrope', system-ui, sans-serif"
     fontSize: 1.55rem
@@ -172,7 +179,7 @@ Pizdato — не коммерческий продукт, а мемо-треке
 
 Два шрифта. Никаких переменных вариаций.
 
-- **Bebas Neue** — только для бренда и hero display. Прописные, широкий
+- **Bebas Neue** — только для бренда и hero display, а также для essay-title (h1 страниц-эссе — документированное исключение). Прописные, широкий
   кернинг, маленький интерлиньяж. Один weight (400).
 - **Manrope** — всё остальное. weight 600–800 для иерархии.
 
