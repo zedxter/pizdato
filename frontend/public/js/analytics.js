@@ -101,7 +101,7 @@
     var consent = localStorage.getItem(STORAGE_KEY)
     if (consent === 'accepted') {
       loadMetrika()
-    } else {
+    } else if (consent !== 'rejected') {
       showBanner()
     }
   } catch (_) {
