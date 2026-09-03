@@ -1,0 +1,98 @@
+name: EDD Evaluation Gate
+
+on:
+  pull_request:
+    paths:
+      - posts/**
+      - frontend/**
+      - published/**
+
+concurrency:
+  group: edd-eval-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  edd-eval:
+    name: EDD Golden Set Evaluation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Get changed content files
+        id: changed-files
+        run: |
+          BASE="origin/${{ github.base_ref }}"
+          CHANGED=$(git diff --name-only --diff-filter=ACMRT "$BASE..HEAD" -- posts/ frontend/ published/ || true)
+          if [ -z "$CHANGED" ]; then
+            echo "has_changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "has_changed=true" >> "$GITHUB_OUTPUT"
+          echo "$CHANGED" > /tmp/changed-content-files.txt
+          echo "Changed files:"
+          echo "$CHANGED"
+
+      - name: Run EDD evaluation
+        if: steps.changed-files.outputs.has_changed == 'true'
+        run: |
+          FILES=$(paste -sd ' ' /tmp/changed-content-files.txt)
+          python3 pizdato/evals/edd-eval.py --json --files $FILES > /tmp/edd-results.json 2>&1
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          cat /tmp/edd-results.json
+
+      - name: Post summary to job
+        if: steps.changed-files.outputs.has_changed == 'true'
+        run: |
+          python3 << 'PYEOF'
+          import json, os
+          with open('/tmp/edd-results.json') as f:
+              data = json.load(f)
+          lines = []
+          lines.append('### EDD Evaluation Results')
+          lines.append('')
+          lines.append('| Category | Score | Threshold | Status |')
+          lines.append('|----------|-------|-----------|--------|')
+          for cat in data.get('categories', []):
+              score = cat['score']
+              threshold = cat['threshold']
+              status = 'PASS' if score >= threshold else 'FAIL'
+              lines.append(f'| {cat["category_id"]} {cat["name"]} | {score:.0%} | {threshold:.0%} | {status} |')
+          lines.append('')
+          overall = data['overall_score']
+          threshold = data['threshold']
+          lines.append(f'**Overall: {overall:.0%} / {threshold:.0%}**')
+          lines.append(f'Files evaluated: {data["summary"]["files_evaluated"]}')
+          lines.append(f'Deterministic assertions: {data["summary"]["passed_deterministic"]}/{data["summary"]["total_deterministic"]} passed')
+          summary = '\n'.join(lines)
+          print(summary)
+          step_summary = os.environ.get('GITHUB_STEP_SUMMARY', '')
+          if step_summary:
+              with open(step_summary, 'a') as f:
+                  f.write(summary + '\n')
+          PYEOF
+
+      - name: Check evaluation result
+        if: steps.changed-files.outputs.has_changed == 'true'
+        run: |
+          python3 << 'PYEOF'
+          import json, sys
+          with open('/tmp/edd-results.json') as f:
+              data = json.load(f)
+          overall_pass = data['summary']['overall_pass']
+          all_cat_pass = all(cat['score'] >= cat['threshold'] for cat in data.get('categories', []))
+          if not overall_pass or not all_cat_pass:
+              print('EDD evaluation failed - one or more categories below threshold.')
+              sys.exit(1)
+          else:
+              print('EDD evaluation passed.')
+          PYEOF

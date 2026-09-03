@@ -9,7 +9,9 @@
      <div class="card card-primary">...</div>
    ==================================================== */
 
-/* ---- Design Tokens (from DESIGN.md) ---- */
+/* ---- Design Tokens (from DESIGN.md) ----
+   NOTE: Single :root block. All CSS custom properties and legacy
+   aliases are defined here — do not add a second :root. */
 :root {
   /* === Colors ===
      DESIGN.md tokens: primary (#0C1210), neutral (#14201A),
