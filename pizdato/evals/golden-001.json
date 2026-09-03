@@ -1,0 +1,510 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "name": "EDD Golden Set 001",
+    "description": "Golden evaluation set for EDD pilot Phase 3 — 13 quality categories derived from 50 production traces",
+    "created": "2026-09-03",
+    "taxonomy_ref": "research/edd-taxonomy-2026-09-03.md",
+    "ci_gate_threshold": 0.80,
+    "total_categories": 13,
+    "source_traces": 50
+  },
+  "categories": [
+    {
+      "category_id": "COR-01",
+      "name": "Factuality Drift",
+      "criticality": "HIGH",
+      "eval_types": ["deterministic", "llm_judge"],
+      "expected_pass_rate": 0.98,
+      "threshold": 0.80,
+      "description": "Facts from source (names, numbers, context) are altered during polishing. Confirmed by TRACE-010: mechanic name 'Jared' mishandled.",
+      "assertions": [
+        {
+          "id": "EVAL-COR-01-D001",
+          "type": "substring_match",
+          "description": "Key facts from source are preserved in output (names, numbers, locations)",
+          "params": {
+            "extract_from": "source",
+            "match_mode": "all"
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-01-D002",
+          "type": "banned_words",
+          "description": "Known misnamed entities from traces are absent from output",
+          "params": {
+            "banned": ["Jared"],
+            "case_sensitive": true
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-01-D003",
+          "type": "regex",
+          "description": "URLs from source are preserved in output",
+          "params": {
+            "pattern": "https?://[^\\s]+",
+            "check": "intersection_nonempty"
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-01-J001",
+          "type": "llm_judge_prompt",
+          "description": "Facts from source are not distorted — checked against source URL",
+          "params": {
+            "prompt": "You are an EDD eval judge. Check facts in OUTPUT against SOURCE. Respond only JSON: {\"factual_errors\": [{\"claim\": string, \"source_fact\": string, \"output_fact\": string}], \"verdict\": \"PASS|FAIL\", \"score\": int (1-5)}"
+          },
+          "threshold": 4,
+          "scale": 5,
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-01-J002",
+          "type": "llm_judge_prompt",
+          "description": "Polishing changed only presentation, not facts",
+          "params": {
+            "prompt": "You are an EDD eval judge. Compare SOURCE (original source) and OUTPUT (post). Verify: (1) all key facts are preserved, (2) no fabrications appeared. Respond JSON: {\"hallucinations\": [], \"verdict\": \"PASS|FAIL\"}"
+          },
+          "threshold": "PASS",
+          "severity": "FAIL"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-02",
+      "name": "Service Leak",
+      "criticality": "HIGH",
+      "eval_types": ["deterministic", "llm_judge"],
+      "expected_pass_rate": 1.0,
+      "threshold": 0.80,
+      "description": "Service phrases, meta-commentary, or AI wrappers leak into the published post. Not confirmed on this sample (0/50), retained from known production bugs.",
+      "assertions": [
+        {
+          "id": "EVAL-COR-02-D001",
+          "type": "banned_words",
+          "description": "No service phrases in output",
+          "params": {
+            "banned": ["прогнал по чек-листу", "проверено", "чисто ✅", "вот пост", "вот готовый пост", "йеннифэр подтвердила", "после аппрува", "что в посте:", "как тебе?"]
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-02-D002",
+          "type": "banned_words",
+          "description": "No AI markers in output",
+          "params": {
+            "banned_regex": ["(редакция|ассистент|я — AI|я — модель|нейросеть написала|сгенерировано|проверь этот текст|чистый пост|без обёрток|готовый пост)"],
+            "case_insensitive": true
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-02-D003",
+          "type": "substring_match",
+          "description": "Post does not start with a service wrapper (first 100 chars)",
+          "params": {
+            "target": "first_100_chars",
+            "banned_prefixes": ["Прогнал", "Вот пост", "Йеннифэр", "Готово"]
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-02-J001",
+          "type": "llm_judge_prompt",
+          "description": "No meta-commentary or service content detected",
+          "params": {
+            "prompt": "You are an EDD eval judge. Read OUTPUT. If the text contains service/meta-commentary (check reports, agent mentions, AI, cron, API, 'here is the post' etc.) — FAIL. Otherwise PASS. Respond JSON: {\"contains_service_content\": bool, \"offending_phrases\": [], \"verdict\": \"PASS|FAIL\"}"
+          },
+          "threshold": "PASS",
+          "severity": "FAIL"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-03",
+      "name": "Tone Drift",
+      "criticality": "MEDIUM",
+      "eval_types": ["deterministic", "llm_judge"],
+      "expected_pass_rate": 0.98,
+      "threshold": 0.80,
+      "description": "Post loses the live Uncle Misha voice — becomes corporate, AI-flavored, or uses wrong lexicon. Confirmed by TRACE-027: 'хреново' instead of 'хуёво'.",
+      "assertions": [
+        {
+          "id": "EVAL-COR-03-D001",
+          "type": "substring_match",
+          "description": "Post contains at least one element of live language (Uncle Misha voice markers)",
+          "params": {
+            "any_of": ["дядя Миша", "залип", "прибалдел", "наткнулся"]
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-03-D002",
+          "type": "banned_words",
+          "description": "No corporate cliches in output",
+          "params": {
+            "banned": ["является", "осуществляет", "в связи с", "в рамках", "представляет собой", "данные показывают"]
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-03-D003",
+          "type": "regex",
+          "description": "No AI-flavored rhythmic repetition patterns",
+          "params": {
+            "pattern": "(не X, а Y|важно отметить|стоит подчеркнуть|необходимо понимать|если мы посмотрим)",
+            "case_insensitive": true,
+            "check": "no_match"
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-03-J001",
+          "type": "llm_judge_prompt",
+          "description": "Tone matches the channel voice (live conversational Russian, not corporate)",
+          "params": {
+            "prompt": "You are an EDD judge. Assess the tone of OUTPUT. Channel @pizdato_net is live conversational Russian, self-irony, slang, emoji, 'Uncle Misha' as persona. Scale: 1 = corporate newsletter/AI-text, 5 = live Uncle Misha voice. Respond JSON: {\"score\": int, \"issues\": [], \"verdict\": \"PASS|FAIL\"}"
+          },
+          "threshold": 3,
+          "scale": 5,
+          "severity": "FAIL"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-04",
+      "name": "Length Overflow",
+      "criticality": "HIGH",
+      "eval_types": ["deterministic"],
+      "expected_pass_rate": 1.0,
+      "threshold": 0.80,
+      "description": "Post exceeds platform character limit (Telegram caption 1024, sendMessage 4096). Not confirmed on this sample (0/50).",
+      "assertions": [
+        {
+          "id": "EVAL-COR-04-D001",
+          "type": "length_check",
+          "description": "Post ≤ 1024 chars for Telegram sendPhoto with caption",
+          "params": {
+            "max_length": 1024,
+            "channel": "telegram_send_photo"
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-04-D002",
+          "type": "length_check",
+          "description": "Post ≤ 4096 chars for Telegram sendMessage (no image)",
+          "params": {
+            "max_length": 4096,
+            "channel": "telegram_send_message"
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-04-D003",
+          "type": "substring_match",
+          "description": "Post does not end mid-sentence (truncation indicator)",
+          "params": {
+            "not_suffix": ["[", "..."]
+          },
+          "severity": "WARN"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-05",
+      "name": "Format Corruption",
+      "criticality": "MEDIUM",
+      "eval_types": ["deterministic"],
+      "expected_pass_rate": 1.0,
+      "threshold": 0.80,
+      "description": "Emoji or typographic elements corrupted to '***' or '[object]'. Not confirmed on this sample (0/50).",
+      "assertions": [
+        {
+          "id": "EVAL-COR-05-D001",
+          "type": "banned_words",
+          "description": "No '***' as emoji corruption artifact",
+          "params": {
+            "banned": ["***"]
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-05-D002",
+          "type": "banned_words",
+          "description": "No '[объект]' or '[object]' placeholder artifacts",
+          "params": {
+            "banned": ["[объект]", "[object]"]
+          },
+          "severity": "FAIL"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-06",
+      "name": "Missing Structure",
+      "criticality": "MEDIUM",
+      "eval_types": ["deterministic"],
+      "expected_pass_rate": 0.94,
+      "threshold": 0.80,
+      "description": "Required structural elements of a rubric are missing. 3 cases found but all are deliberate format experiments, not bugs. Enforce only for stabilized format (evening posts from 24.08, morning posts from 26.08).",
+      "assertions": [
+        {
+          "id": "EVAL-COR-06-D001",
+          "type": "substring_match",
+          "description": "CTA 'Мир ждёт твоего голоса' or pizdato.net link present",
+          "params": {
+            "any_of": ["Мир ждёт твоего голоса", "pizdato.net"]
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-06-D002",
+          "type": "regex",
+          "description": "Both 'пиздато' and 'хуёво' present (for evening stabilized format)",
+          "params": {
+            "pattern": "(хуёво|пиздато|Хуёво|Пиздато)",
+            "check": "both_present",
+            "apply_since": "2026-08-24"
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-06-D003",
+          "type": "substring_match",
+          "description": "'Мудрость дня' present (for evening stabilized format)",
+          "params": {
+            "target": "Мудрость дня",
+            "apply_since": "2026-08-24"
+          },
+          "severity": "WARN"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-07",
+      "name": "Clutter Phrases",
+      "criticality": "MEDIUM",
+      "eval_types": ["deterministic"],
+      "expected_pass_rate": 1.0,
+      "threshold": 0.80,
+      "description": "Post contains empty metaphors, bureaucratese, or cliches. Not confirmed on this sample (0/50), retained as precaution.",
+      "assertions": [
+        {
+          "id": "EVAL-COR-07-D001",
+          "type": "banned_words",
+          "description": "No empty class-A metaphors",
+          "params": {
+            "banned": ["кофе в горле запнулся", "глаза на лоб полезли", "волосы дыбом", "встали дыбом"]
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-07-D002",
+          "type": "regex",
+          "description": "No bureaucratese patterns",
+          "params": {
+            "pattern": "(в связи с|в рамках|является|представляет собой|на сегодняшний день)",
+            "case_insensitive": true,
+            "check": "no_match"
+          },
+          "severity": "WARN"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-08",
+      "name": "Topic Confusion",
+      "criticality": "HIGH",
+      "eval_types": ["llm_judge"],
+      "expected_pass_rate": 1.0,
+      "threshold": 0.80,
+      "description": "Post written on one topic but headline/CTA/link refer to another. Not confirmed on this sample (0/50).",
+      "assertions": [
+        {
+          "id": "EVAL-COR-08-J001",
+          "type": "llm_judge_prompt",
+          "description": "Post topic is consistent and not confused with another",
+          "params": {
+            "prompt": "You are an EDD judge. Read OUTPUT. Is this post about a single consistent topic? Is there mixing of two different topics? Respond JSON: {\"topic\": string, \"is_consistent\": bool, \"mixed_topics\": [], \"verdict\": \"PASS|FAIL\"}"
+          },
+          "threshold": "PASS",
+          "severity": "FAIL"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-09",
+      "name": "Grammar",
+      "criticality": "MEDIUM",
+      "eval_types": ["deterministic", "llm_judge"],
+      "expected_pass_rate": 0.96,
+      "threshold": 0.80,
+      "description": "Orthographic, punctuation, or grammatical errors in text. 2 cases in drafts (TRACE-007, 020), all corrected before publication.",
+      "assertions": [
+        {
+          "id": "EVAL-COR-09-D001",
+          "type": "regex",
+          "description": "No double spaces",
+          "params": {
+            "pattern": "  ",
+            "check": "no_match"
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-09-D002",
+          "type": "regex",
+          "description": "No broken words (space inside a word)",
+          "params": {
+            "pattern": "\\b\\w+\\s+\\w+\\b",
+            "check": "no_match"
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-09-D003",
+          "type": "regex",
+          "description": "Primary quotes are guillemets «» (Russian typographic standard)",
+          "params": {
+            "pattern": "«[^»]*»",
+            "check": "at_least_one"
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-09-J001",
+          "type": "llm_judge_prompt",
+          "description": "No orthographic or grammatical errors in the post",
+          "params": {
+            "prompt": "You are an EDD judge. Check OUTPUT for orthographic and grammatical errors (Russian language). Find all. Respond JSON: {\"errors\": [{\"word\": string, \"correct\": string}], \"verdict\": \"PASS|FAIL\"}"
+          },
+          "threshold": 0,
+          "severity": "WARN"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-10",
+      "name": "Topic & Infrastructure Duplicate (merged COR-10 + COR-12)",
+      "criticality": "HIGH",
+      "eval_types": ["deterministic"],
+      "expected_pass_rate": 0.98,
+      "threshold": 0.80,
+      "description": "Post duplicates a recent publication (same topic or same text). COR-10 (content duplicate) and COR-12 (infrastructure duplicate) merged per taxonomy. Confirmed by TRACE-005/050: duplicate post 'Друзья выгнали костромича' (msg 62, 63).",
+      "assertions": [
+        {
+          "id": "EVAL-COR-10-D001",
+          "type": "lookup",
+          "description": "Post does not duplicate content published in the last 24 hours (content duplicate)",
+          "params": {
+            "lookup_source": "published/telegram/",
+            "window_hours": 24,
+            "match_mode": "text_similarity"
+          },
+          "severity": "FAIL"
+        },
+        {
+          "id": "EVAL-COR-10-D002",
+          "type": "lookup",
+          "description": "Idempotency key is unique (infrastructure duplicate guard)",
+          "params": {
+            "lookup_source": "published/telegram/",
+            "key": "trace_id + date",
+            "match_mode": "exact"
+          },
+          "severity": "FAIL"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-11",
+      "name": "Draft Quality Decay",
+      "criticality": "MEDIUM",
+      "eval_types": ["deterministic", "llm_judge"],
+      "expected_pass_rate": 0.96,
+      "threshold": 0.80,
+      "description": "Draft contains gross errors (spelling, nonsense words, jargon) that should be caught at input. Confirmed by TRACE-007: 'потрацию', 'вдесятером', 'драко'; TRACE-020: 'зачин'.",
+      "assertions": [
+        {
+          "id": "EVAL-COR-11-D001",
+          "type": "banned_words",
+          "description": "No known nonsense/gross error words in draft",
+          "params": {
+            "banned_regex": ["(потрацию|вдесятером|драко|зачин)"],
+            "case_insensitive": true
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-11-D002",
+          "type": "regex",
+          "description": "Draft-to-final diff should not contain spelling corrections of known error patterns",
+          "params": {
+            "pattern": ".+",
+            "check": "diff_spelling_warn",
+            "comparison": "draft_vs_final"
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-11-J001",
+          "type": "llm_judge_prompt",
+          "description": "Draft does not contain obvious errors requiring correction",
+          "params": {
+            "prompt": "You are an EDD judge. Read DRAFT. Are there orthographic errors, nonsense words, or clearly inappropriate jargon? Respond JSON: {\"errors\": [{\"word\": string, \"issue\": string}], \"verdict\": \"PASS|FAIL\"}"
+          },
+          "threshold": "PASS",
+          "severity": "WARN"
+        }
+      ]
+    },
+    {
+      "category_id": "COR-13",
+      "name": "Brand Lexicon Inconsistency",
+      "criticality": "MEDIUM",
+      "eval_types": ["deterministic", "llm_judge"],
+      "expected_pass_rate": 0.98,
+      "threshold": 0.80,
+      "description": "Key channel lexicon ('хуёво', 'пиздато') replaced with synonyms, breaking brand consistency. Confirmed by TRACE-027: 'хреново' instead of 'хуёво'.",
+      "assertions": [
+        {
+          "id": "EVAL-COR-13-D001",
+          "type": "regex",
+          "description": "'Хуёво' not replaced with synonyms in verdict context",
+          "params": {
+            "pattern": "(хреново|херово|отвратительно|ужасно|плохо)",
+            "case_insensitive": true,
+            "check": "no_match",
+            "context": "key_verdict"
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-13-D002",
+          "type": "regex",
+          "description": "'Пиздато' not replaced with synonyms in verdict context",
+          "params": {
+            "pattern": "(отлично|прекрасно|замечательно|круто|классно|топ)",
+            "case_insensitive": true,
+            "check": "no_match",
+            "context": "key_verdict"
+          },
+          "severity": "WARN"
+        },
+        {
+          "id": "EVAL-COR-13-J001",
+          "type": "llm_judge_prompt",
+          "description": "Key channel lexicon is not substituted with synonyms",
+          "params": {
+            "prompt": "You are an EDD judge. Check OUTPUT for use of key channel lexicon: 'пиздато', 'хуёво'. If these words are replaced with synonyms in verdict position (where they should appear) — WARN. If replaced in ordinary text — OK. Respond JSON: {\"verdict_keywords_used\": bool, \"substitutions\": [], \"verdict\": \"PASS|WARN|FAIL\"}"
+          },
+          "threshold": "PASS",
+          "severity": "WARN"
+        }
+      ]
+    }
+  ]
+}
