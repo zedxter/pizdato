@@ -100,3 +100,79 @@ async fn main() {
     .await
     .expect("server error");
 }
+
+/// Build the full Router for testing (avoids starting a real listener).
+fn test_app(pool: sqlx::SqlitePool) -> Router {
+    use axum::routing::post;
+
+    let state = Arc::new(AppState {
+        pool,
+        cookie_secure: false,
+        ip_salt: "test-salt".to_string(),
+        ip_daily_limit: 10,
+        ip_min_interval_secs: 10,
+        session_min_age_secs: 2,
+        ip_403_blacklist_after: 5,
+    });
+
+    let api = Router::new()
+        .route("/api/stats", get(handlers::stats))
+        .route("/api/vote", post(handlers::vote))
+        .route("/api/news", get(handlers::news_feed))
+        .route("/api/event", get(handlers::event).post(handlers::event))
+        .layer(CookieManagerLayer::new())
+        .with_state(state.clone());
+
+    Router::new()
+        .route("/health", get(handlers::health))
+        .merge(api)
+        .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any).allow_credentials(false))
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use axum::{
+        body::Body,
+        http::Request,
+    };
+    use serde_json::Value;
+    use sqlx::SqlitePool;
+    use tower::ServiceExt;
+
+    fn inmemory_pool() -> SqlitePool {
+        SqlitePool::connect_lazy(":memory:").expect("in-memory pool")
+    }
+
+    #[tokio::test]
+    async fn test_health_returns_ok() {
+        let pool = inmemory_pool();
+        let app = super::test_app(pool);
+
+        let response = app
+            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), 200);
+
+        let body: Value = serde_json::from_slice(
+            &axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap(),
+        )
+        .unwrap();
+        assert_eq!(body["ok"], true);
+    }
+
+    #[tokio::test]
+    async fn test_health_content_type() {
+        let pool = inmemory_pool();
+        let app = super::test_app(pool);
+
+        let response = app
+            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+
+        let ct = response.headers().get("content-type").and_then(|v| v.to_str().ok());
+        assert!(ct.unwrap_or("").contains("application/json"));
+    }
+}
