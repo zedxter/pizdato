@@ -11,7 +11,7 @@ pizdato.net {
 	# Security headers
 	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 	header X-Frame-Options "DENY"
-	header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://mc.yandex.ru; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://mc.yandex.ru; connect-src 'self' https://mc.yandex.ru; font-src 'self' https://fonts.gstatic.com; frame-src 'none'; object-src 'none'"
+	header Content-Security-Policy "default-src 'self'; script-src 'self' https://mc.yandex.ru; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://mc.yandex.ru; connect-src 'self' https://mc.yandex.ru; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none'; frame-src 'none'; object-src 'none'"
 
 	# Old «Как это работает» URL — keep both /how and /how.html off the index fallback
 	@legacy_how path /how /how/ /how.html
@@ -32,8 +32,6 @@ pizdato.net {
 	handle /health {
 		reverse_proxy 127.0.0.1:8081
 	}
-
-	# /mcp* removed 2026-08-20 — doesn't need to be public. Falls to 404 via handle_errors.
 
 	handle {
 		root * /var/www/pizdato
