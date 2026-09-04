@@ -6,7 +6,11 @@ Track referral links, attribute referred first-time votes to referrers, and gran
 
 ### Requirement: Voter gets a unique referral code
 
-The system MUST generate a deterministic short referral code for every voter immediately after their first vote. The code SHALL be the first 8 hex characters of SHA256(voter_id + ip_salt). The system MUST expose this code to the frontend via a new `/api/referral/stats` endpoint.
+The system MUST generate a deterministic short referral code for every voter immediately after their first vote. The code SHALL be derived from SHA256(voter_id + ip_salt). The system MUST expose this code to the frontend via a new `/api/referral/stats` endpoint.
+
+**Code format:** The backend SHALL expose both a raw 8-char hex code and a human-readable word-pair label (e.g., `Amber-Falcon`). The word-pair is produced by mapping the first 6 hex chars through two short wordlists (~256 adjectives, ~256 nouns). The `?ref=` URL parameter uses the raw hex code; the frontend displays the word-pair label for readability.
+
+**Collision handling:** If the 8-char hex prefix collides with an existing voter's code, the backend SHALL append characters from the remaining SHA256 digest until the code is unique. The combined hex+word-pair SHALL remain unique across all voters.
 
 #### Scenario: Referral code returned after vote
 
@@ -61,6 +65,14 @@ When a new visitor (no previous vote) casts their first vote while carrying a re
 
 When a voter accumulates 3 unique referred first-time votes (3 rows in referral_redemptions), the system SHALL grant 1 extra vote slot. The extra vote slot MUST be consumed when the referrer casts a second vote. Maximum 2 extra votes per 24 hours per referrer, enforced by the same IP-level rate limiting infrastructure.
 
+**Check logic at vote time:** The backend SHALL evaluate:
+1. Count distinct `referred_voter_id` WHERE `referrer_voter_id = ?` → `total_referrals`
+2. Count extra_votes WHERE `voter_id = ?` AND `consumed_at IS NULL` → `available_slots`
+3. Count extra_votes WHERE `voter_id = ?` AND `consumed_at` within last 24h → `used_recently`
+4. Allow extra vote if `total_referrals >= 3 + available_slots` AND `used_recently < 2`
+
+On consumption, the backend SHALL set `consumed_at = datetime('now')` on the oldest unconsumed `extra_votes` row.
+
 #### Scenario: Extra vote granted
 
 - **WHEN** a voter's `referral_redemptions` count reaches 3
@@ -83,14 +95,37 @@ When a voter accumulates 3 unique referred first-time votes (3 rows in referral_
 - **WHEN** voter has 0-2 referred first-time votes
 - **THEN** `extra_vote_available` is `false`
 
-### Requirement: Referral counter visible in SharePanel
+### Requirement: Referral counter visible in SharePanel with progress indicator
 
-The system MUST expose the number of unique referred voters for the current voter via the `/api/referral/stats` endpoint. The frontend SHALL display "По вашей ссылке проголосовало: N" in the SharePanel.
+The system MUST expose the number of unique referred voters for the current voter via the `/api/referral/stats` endpoint. The response SHALL also include:
+- `ref_code_label` — human-readable word-pair (e.g., `Amber-Falcon`) for display
+- `ref_code_hex` — raw 8-char hex code used in the URL
+- `referred_count` — number of unique referred first-time voters
+- `extra_vote_available` — boolean
+- `extra_votes_used_today` — integer (0-2) for daily ceiling display
 
-#### Scenario: Referral counter displayed
+The frontend SHALL display in the SharePanel:
+- The referral code as a word-pair label (not raw hex) with a copy button
+- "По вашей ссылке проголосовало: N" with a 3-segment progress bar below it
+- When `extra_vote_available: true`, a celebration card with explanation and a "Проголосовать ещё" button
+- When `extra_votes_used_today > 0`, a note "Максимум 2 дополнительных голоса в сутки. Использовано: X/2"
+
+#### Scenario: Referral counter displayed with progress bar
 
 - **WHEN** voter opens SharePanel after voting
 - **THEN** the referral counter shows the correct count of referred first-time voters
+- **AND** a 3-segment progress bar shows progress toward the next reward threshold (N/3 segments filled)
+- **AND** the referral code is displayed as a word-pair label (not raw hex)
+
+#### Scenario: Extra vote celebration card
+
+- **WHEN** `extra_vote_available: true`
+- **THEN** the SharePanel shows a celebration card with "🎉 Ты заработал дополнительный голос!" heading, explanation text, and a "Проголосовать ещё" button
+
+#### Scenario: Daily ceiling indicator
+
+- **WHEN** voter has used 1 or 2 extra votes today
+- **THEN** the SharePanel shows "Максимум 2 дополнительных голоса в сутки. Использовано: X/2"
 
 #### Scenario: No referrals yet
 

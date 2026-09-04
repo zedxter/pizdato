@@ -4,9 +4,9 @@ pizdato.net has no referral or viral loop. Users vote once and leave — no reas
 
 ## What Changes
 
-1. **Referral code per voter** — each voter gets a unique short referral code after voting
-2. **Share panel enhancement** — Telegram share now includes a subscribe-to-channel CTA; referral section shows code + counter
-3. **Referral tracking** — new backend tables `referrals` and `referral_redemptions` track referred votes
+1. **Referral code per voter** — each voter gets a unique short referral code after voting, displayed as a human-readable word pair (e.g., Amber-Falcon) for easy sharing
+2. **Share panel enhancement** — Telegram share now includes a subscribe-to-channel CTA; referral section shows word-pair code, progress counter, and celebration card
+3. **Referral tracking** — new backend tables `referrals` and `referral_redemptions` track referred votes with proper indexes and collision resolution
 4. **Vote-again reward** — referrer earns 1 extra vote when 3 unique referred visitors cast their first vote (max 2 extra votes/24h)
 5. **Referral counter** — "По вашей ссылке проголосовало: N" shown in SharePanel
 
