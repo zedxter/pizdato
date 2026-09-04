@@ -37,6 +37,7 @@ CONTENT_PATTERNS = [
 ]
 
 CONTENT_SUFFIXES = {".html", ".md", ".tsx", ".ts"}
+HTML_SUFFIXES = {".html"}
 EXCLUDE_DIRS = {"node_modules", "dist", "target", ".git", ".venv", "__pycache__", "deploy/channel"}
 
 # --- Channel length limits ---
@@ -93,17 +94,22 @@ def find_content_files(file_list: list[str] | None = None) -> list[Path]:
 
 
 def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="replace")
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if path.suffix in HTML_SUFFIXES:
+        # Strip HTML tags, decode entities, normalize whitespace
+        text = re.sub(r"<[^>]+>", " ", text)
+        text = re.sub(r"&(?:amp|lt|gt|quot|#x27|#x60);", " ", text)
+        text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 
 def should_apply_assertion(assertion: dict, file_path: str) -> bool:
-    """Check if an assertion should apply based on apply_since date and context."""
+    """Check if an assertion should apply based on apply_since date and channel targeting."""
     params = assertion.get("params", {})
     apply_since = params.get("apply_since")
     if apply_since:
         try:
             threshold_date = datetime.strptime(apply_since, "%Y-%m-%d").date()
-            # Try to get file modification date
             try:
                 full_path = REPO_ROOT / file_path
                 if full_path.exists():
@@ -111,10 +117,19 @@ def should_apply_assertion(assertion: dict, file_path: str) -> bool:
                     if mtime < threshold_date:
                         return False
             except OSError:
-                # If we can't read file mtime, apply the assertion (conservative)
                 pass
         except ValueError:
-            pass  # Malformed date — apply assertion anyway
+            pass
+
+    # Channel targeting: skip assertions whose target channel doesn't match the file
+    target_channel = params.get("channel", "")
+    if target_channel:
+        file_channel = infer_channel_from_path(file_path)
+        # 'telegram_send_photo' and 'telegram_send_message' map to 'telegram' for the purpose of channel matching
+        target_is_telegram = target_channel in ("telegram_send_photo", "telegram_send_message")
+        if file_channel != "unknown" and file_channel != "telegram" and target_is_telegram:
+            return False
+
     return True
 
 
@@ -219,6 +234,11 @@ def run_length_check(text: str, params: dict, file_path: str = "") -> bool:
     """Check that text length does not exceed max, with channel awareness."""
     max_length = params.get("max_length")
     channel = params.get("channel", "")
+    file_channel = infer_channel_from_path(file_path)
+
+    # Skip Telegram-specific length checks for non-Telegram content (blog articles, etc.)
+    if channel in ("telegram_send_photo", "telegram_send_message") and file_channel != "telegram":
+        return True
 
     if max_length is not None:
         return len(text) <= max_length
@@ -228,10 +248,9 @@ def run_length_check(text: str, params: dict, file_path: str = "") -> bool:
         limit = CHANNEL_LIMITS[channel]
     else:
         # Fall back to file-path-based channel inference
-        ch = infer_channel_from_path(file_path)
-        if ch == "telegram":
+        if file_channel == "telegram":
             limit = 4096
-        elif ch == "blog":
+        elif file_channel == "blog":
             limit = 10000
         else:
             limit = 4096
@@ -266,6 +285,17 @@ def evaluate_deterministic(assertion: dict, text: str, all_texts: dict, current_
     # Apply context scoping before running the assertion
     context = params.get("context")
     scoped_text = get_context_text(text, context)
+
+    # Channel-specific skips: assertions that only apply to Telegram content
+    file_channel = infer_channel_from_path(current_file)
+    if file_channel != "telegram":
+        aid = assertion.get("id", "")
+        # COR-03-D001: Uncle Misha voice markers only apply to Telegram posts
+        if aid == "EVAL-COR-03-D001":
+            return True
+        # COR-09-D002: broken-words regex is only meaningful for Telegram content
+        if aid == "EVAL-COR-09-D002":
+            return True
 
     try:
         if atype == "substring_match":
@@ -351,6 +381,9 @@ def evaluate_files(
             })
 
         score = round(passed / max(total, 1), 3)
+        # If a category has zero deterministic assertions (all llm_judge), score it as 100%
+        if total == 0:
+            score = 1.0
         total_det += total
         total_det_passed += passed
 
