@@ -309,7 +309,7 @@ export default function App() {
 
       <SiteNav current="home" />
 
-      <main className="hero" data-testid="hero">
+      <main className="hero" id="main-content" data-testid="hero">
         <div className="brand-lockup">
           <img
             className="brand-mark"

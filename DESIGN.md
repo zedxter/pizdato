@@ -244,6 +244,8 @@ Pizdato — не коммерческий продукт, а мемо-треке
 - `brand-mark` — логотип (сейчас фото/изображение) с закруглением.
 - Вердикты в карточках: текст зелёный (tertiary) для «пиздато», красный
   (danger) для «хуёво». Текст — label-small.
+- `focus-ring` — глобальный :focus-visible для всех интерактивных
+  элементов. outline: 2px solid {colors.tertiary}, outline-offset: 2px.
 
 ## Do's and Don'ts
 
