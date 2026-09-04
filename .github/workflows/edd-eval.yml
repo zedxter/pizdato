@@ -37,8 +37,8 @@ jobs:
             echo "has_changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # Filter only content files: match posts, articles, HTML, CSS, markdown
-          # (skip test files, config files, lockfiles, TypeScript source code)
+          # Filter only content files: match posts, articles, HTML, markdown
+          # (skip test files, config files, lockfiles, TypeScript/CSS source code)
           FILTERED=""
           for f in $CHANGED; do
             case "$f" in
@@ -49,7 +49,7 @@ jobs:
                 FILTERED="$FILTERED $f" ;;
               *.md|*.html)
                 FILTERED="$FILTERED $f" ;;
-              frontend/src/*.ts|frontend/src/*.tsx)
+              frontend/src/*.ts|frontend/src/*.tsx|frontend/src/*.css)
                 # Skip source code files in src/ unless they're articles
                 case "$f" in
                   frontend/src/articles/*) FILTERED="$FILTERED $f" ;;
