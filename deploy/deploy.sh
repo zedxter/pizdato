@@ -38,7 +38,22 @@ if [ "$healthy" != "1" ]; then
   exit 1
 fi
 
-# ── Frontend deploy ──────────────────────────────────────────────────────
+# ── SQLite database backup ───────────────────────────────────────────────────
+DB=/var/lib/pizdato/votes.db
+BACKUP_DIR=/srv/pizdato/backups
+if [ -f "$DB" ]; then
+  mkdir -p "$BACKUP_DIR"
+  TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+  BACKUP_PATH="${BACKUP_DIR}/votes-${TIMESTAMP}.db"
+  sqlite3 "$DB" ".backup '${BACKUP_PATH}'"
+  echo "database backed up: ${BACKUP_PATH}" >&2
+  # Rolling retention: keep last 14 days
+  find "$BACKUP_DIR" -maxdepth 1 -name 'votes-*.db' -mtime +14 -delete
+else
+  echo "WARNING: ${DB} not found — skipping backup" >&2
+fi
+
+# ── Frontend deploy ──────────────────────────────────────────────────────────
 # Extract frontend dist from the newly deployed Docker image and rsync to webroot.
 # This runs on every deploy, so frontend changes land atomically with backend.
 echo "Extracting frontend dist from ghcr.io/zedxter/pizdato-backend:${APP_TAG}" >&2
