@@ -1,12 +1,10 @@
 <!--- 
-  IMPORTANT: Every PR MUST reference its Issue.
-  Add one of these lines to the description:
-    Closes #N              — fully resolves the Issue
-    Refs #N                — related to an Issue
-    Partially addresses #N — makes progress but doesn't fully resolve
-
-  Without it, the CI check will fail and the PR cannot merge.
+  IMPORTANT: Every PR MUST reference its Issue with one of the keywords:
+    Closes #N     — fully resolves the Issue
+    Fixes #N      — fully resolves the Issue (alias)
+    Resolves #N   — fully resolves the Issue (alias)
 --->
+<!--- Without it, the CI check will fail and the PR cannot merge. -->
 
 ## Summary
 
@@ -18,7 +16,7 @@
 
 ## Related Issue
 
-<!-- Required: Closes #N / Refs #N / Partially addresses #N -->
+<!-- Required: Closes #N / Fixes #N / Resolves #N -->
 
 ## Testing
 
@@ -26,6 +24,6 @@
 
 ## Checklist
 
-- [ ] PR description links to an Issue (Closes/Refs/Partially addresses #N)
+- [ ] PR description links to an Issue (Closes/Fixes/Resolves #N)
 - [ ] Changes are scoped to the Issue only
 - [ ] CI is green
