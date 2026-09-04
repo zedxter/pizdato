@@ -8,6 +8,7 @@
   "Refs #N" and "Partially addresses #N" are FORBIDDEN.
   Without a Closes/Fixes/Resolves line, CI fails and the PR cannot merge.
 --->
+<!--- Without it, the CI check will fail and the PR cannot merge. -->
 
 ## Related Issue
 
