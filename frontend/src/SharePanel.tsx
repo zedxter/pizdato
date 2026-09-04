@@ -9,6 +9,7 @@ import {
   IconMore,
   IconTelegram,
   IconVk,
+  IconX,
 } from './ShareIcons'
 import {
   buildShareCopyText,
@@ -17,6 +18,7 @@ import {
   nativeShare,
   telegramShareUrl,
   vkShareUrlForChoice,
+  xShareUrl,
 } from './share'
 
 type Props = {
@@ -155,6 +157,17 @@ export function SharePanel({ stats, wisdom }: Props) {
           onClick={() => track('share_result_vk')}
         >
           <IconVk className="share-icon" />
+        </a>
+        <a
+          className="share-icon-btn"
+          href={xShareUrl(shareText)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="X"
+          aria-label="Поделиться результатом в X (Twitter)"
+          onClick={() => track('share_result_x')}
+        >
+          <IconX className="share-icon" />
         </a>
         <button
           type="button"
