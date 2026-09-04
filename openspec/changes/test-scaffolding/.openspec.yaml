@@ -1,0 +1,5 @@
+schema: spec-driven
+created: "2026-09-04"
+author: vesemir
+skip_specs: true
+tags: [testing, infrastructure, tdd, chore]
