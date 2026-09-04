@@ -37,10 +37,34 @@ jobs:
             echo "has_changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          # Filter only content files: match posts, articles, HTML, CSS, markdown
+          # (skip test files, config files, lockfiles, TypeScript source code)
+          FILTERED=""
+          for f in $CHANGED; do
+            case "$f" in
+              posts/*|published/*|frontend/articles/*|frontend/public/*)
+                FILTERED="$FILTERED $f" ;;
+              *.md|*.html|*.css)
+                FILTERED="$FILTERED $f" ;;
+              frontend/src/*.ts|frontend/src/*.tsx)
+                # Skip source code files in src/ unless they're articles
+                case "$f" in
+                  frontend/src/articles/*) FILTERED="$FILTERED $f" ;;
+                esac
+                ;;
+            esac
+          done
+          # Trim leading space
+          FILTERED="${FILTERED# }"
+          if [ -z "$FILTERED" ]; then
+            echo "has_changed=false" >> "$GITHUB_OUTPUT"
+            echo "No content files changed (only test/code/infrastructure changes)."
+            exit 0
+          fi
           echo "has_changed=true" >> "$GITHUB_OUTPUT"
-          echo "$CHANGED" > /tmp/changed-content-files.txt
-          echo "Changed files:"
-          echo "$CHANGED"
+          echo "$FILTERED" > /tmp/changed-content-files.txt
+          echo "Changed content files:"
+          echo "$FILTERED"
 
       - name: Run EDD evaluation
         if: steps.changed-files.outputs.has_changed == 'true'
