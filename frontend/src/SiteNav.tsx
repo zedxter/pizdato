@@ -54,6 +54,7 @@ export function SiteNav({ current }: Props) {
 
   return (
     <>
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <div
         className="site-nav-anchor"
         aria-hidden="true"

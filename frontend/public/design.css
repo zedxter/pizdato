@@ -389,6 +389,31 @@
   transform: translateY(1px) scale(0.98);
 }
 
+/* ---- a11y: focus-visible ring ---- */
+:focus-visible {
+  outline: 2px solid var(--color-tertiary);
+  outline-offset: 2px;
+}
+
+/* ---- a11y: skip-to-content link ---- */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10000;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-body);
+  font-size: var(--font-body-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-on-tertiary);
+  background: var(--color-tertiary);
+  text-decoration: none;
+  transition: left 0.15s ease;
+}
+.skip-link:focus {
+  left: 0;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, var(--color-tertiary), #9dffc8);
   color: var(--color-on-tertiary);
