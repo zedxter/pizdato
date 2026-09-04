@@ -1,31 +1,34 @@
-<!--- 
-  IMPORTANT: Every PR MUST reference its Issue.
-  Add one of these lines to the description:
-    Closes #N              — fully resolves the Issue
-    Refs #N                — related to an Issue
-    Partially addresses #N — makes progress but doesn't fully resolve
+<!---
+  IMPORTANT — Issue reference is MANDATORY.
+  Only these keywords are allowed:
+    Closes #N   — fully resolves the Issue
+    Fixes #N    — fully resolves the Issue (bug fix)
+    Resolves #N — fully resolves the Issue
 
-  Without it, the CI check will fail and the PR cannot merge.
+  "Refs #N" and "Partially addresses #N" are FORBIDDEN.
+  Without a Closes/Fixes/Resolves line, CI fails and the PR cannot merge.
 --->
-
-## Summary
-
-<!-- Describe what this PR does and why -->
-
-## Changes
-
-<!-- List the key changes -->
 
 ## Related Issue
 
-<!-- Required: Closes #N / Refs #N / Partially addresses #N -->
+<!-- REQUIRED: Put Closes #N / Fixes #N / Resolves #N here -->
+Closes #
+
+## Summary
+
+<!-- What this PR does and why -->
+
+## Changes
+
+<!-- Key changes (bullet points) -->
 
 ## Testing
 
-<!-- How was this tested? -->
+<!-- How was this tested? CI, manual, specific test output -->
 
 ## Checklist
 
-- [ ] PR description links to an Issue (Closes/Refs/Partially addresses #N)
-- [ ] Changes are scoped to the Issue only
+- [ ] "Closes #N" / "Fixes #N" / "Resolves #N" in body (Related Issue section)
+- [ ] One PR = one Issue (exception: owner-approved multi-Issue PR)
+- [ ] `git diff main --name-only` shows only files relevant to this Issue
 - [ ] CI is green

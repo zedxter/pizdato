@@ -16,24 +16,27 @@ jobs:
         run: |
           set +e
 
-          # Check body first, then fall back to title
-          if echo "$PR_BODY" | grep -qiE '(Closes|Refs|Partially addresses) #[0-9]+'; then
+          # Check body starts with Closes/Fixes/Resolves for GitHub formal linking
+          if echo "$PR_BODY" | head -1 | grep -qiE '^(Closes|Fixes|Resolves) #[0-9]+'; then
+            echo "✅ PR #$PR_NUMBER has formal Issue reference as body's FIRST line."
+            exit 0
+          fi
+
+          # Also allow Closes/Fixes/Resolves anywhere in body
+          if echo "$PR_BODY" | grep -qiE '^(Closes|Fixes|Resolves) #[0-9]+'; then
             echo "✅ PR #$PR_NUMBER has Issue reference in body."
             exit 0
           fi
 
-          if echo "$PR_TITLE" | grep -qiE '(Closes|Refs|Partially addresses) #[0-9]+'; then
-            echo "⚠️  PR #$PR_NUMBER has Issue reference only in title, not in body."
-            echo "Please move the reference to the PR description body so GitHub can auto-close the Issue on merge."
-            exit 1
-          fi
-
-          echo "❌ PR #$PR_NUMBER is missing an Issue reference."
+          echo "❌ PR #$PR_NUMBER is missing a formal Issue reference."
           echo ""
-          echo "Every PR MUST reference its Issue in the description body:"
-          echo "  Closes #N              — when this PR fully resolves the Issue"
-          echo "  Refs #N                — when this PR is related to an Issue"
-          echo "  Partially addresses #N — when this PR makes progress but doesn't fully resolve"
+          echo "Every PR MUST reference its Issue in the description body with a GitHub-recognized keyword:"
+          echo "  Closes #N    — when this PR fully resolves the Issue (MERGE triggers Issue close)"
+          echo "  Fixes #N    — alias for Closes"
+          echo "  Resolves #N — alias for Closes"
           echo ""
-          echo "Please edit the PR description to add one of these lines."
+          echo "NOTE: 'Refs #N' and 'Partially addresses #N' are NOT recognized by GitHub."
+          echo "The FIRST line of the body MUST be 'Closes #N' for the auto-close to work."
+          echo ""
+          echo "Please edit the PR description to start with 'Closes #N'."
           exit 1
