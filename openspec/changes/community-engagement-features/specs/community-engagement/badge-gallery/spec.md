@@ -38,13 +38,17 @@ The system SHALL expose a public page at `/badges` showing recent badge-related 
 - **AND** activating the retry button re-fetches events
 
 ### Requirement: Badge gallery reads from recent-activity API
-The badge gallery SHALL fetch persisted badge events from `/api/recent-activity`. Events are written by `/api/event` into the `events` table. The existing event log is fire-and-forget (`tracing::info!` only) and is not queryable. Event types include `badge_download`, `badge_share_stories`, `share_result_telegram`, `share_result_vk`, `share_result_copy`, `share_result_native`.
+The badge gallery SHALL fetch persisted badge events from `/api/recent-activity`. The endpoint SHALL accept a `?type=badges` parameter to return only badge events. Events are written by `/api/event` into the `events` table. The existing event log is fire-and-forget (`tracing::info!` only) and is not queryable. Event types include `badge_download`, `badge_share_stories`, `share_result_telegram`, `share_result_vk`, `share_result_copy`, `share_result_native`.
 
-#### Scenario: Recent activity API returns badge events
-- **WHEN** the `/api/recent-activity` endpoint receives a request
-- **THEN** the response includes badge events alongside vote events
-- **AND** badge events have `type: "badge"`, `event_type: "badge_download"|"badge_share_stories"|...`, and `created_at`
+#### Scenario: Gallery fetches badge events
+- **WHEN** the badge gallery GETs `/api/recent-activity?type=badges&limit=20`
+- **THEN** the response contains badge events only, each with `type: "badge"`, `event_type: "badge_download"|"badge_share_stories"|...`, and `created_at`
 - **AND** no voter identity is exposed
+
+#### Scenario: Gallery fetches all activity
+- **WHEN** the badge gallery GETs `/api/recent-activity?type=all&limit=20`
+- **THEN** the response includes both badge events and vote events, ordered by `created_at` descending
+- **AND** badge events have `type: "badge"` while vote events have `type: "vote"`
 
 ### Requirement: Gallery navigation
 The site navigation SHALL include a link to the badge gallery.

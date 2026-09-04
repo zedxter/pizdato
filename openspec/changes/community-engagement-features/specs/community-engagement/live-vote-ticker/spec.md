@@ -5,12 +5,17 @@ Shows recent vote activity as an animated marquee on public pages, creating soci
 ## ADDED Requirements
 
 ### Requirement: Recent votes API endpoint
-The system SHALL expose a public `/api/recent-activity` endpoint returning the N most recent votes with anonymized data (no voter identity).
+The system SHALL expose a public `/api/recent-activity` endpoint returning anonymized recent activity (no voter identity). The endpoint SHALL accept a `?type=votes|badges|all` query parameter to filter results, and `?limit=N` to control page size.
 
-#### Scenario: Fetch recent activity
-- **WHEN** a client GETs `/api/recent-activity?limit=20`
+#### Scenario: Fetch recent vote activity
+- **WHEN** a client GETs `/api/recent-activity?type=votes&limit=20`
 - **THEN** the response contains an array of recent vote entries, each with `type: "vote"`, `choice: "pizdato"|"huyevo"`, and `created_at` timestamp
 - **AND** no voter identity (cookie, IP, hash, or any identifier) is included in the response
+
+#### Scenario: Fetch all recent activity
+- **WHEN** a client GETs `/api/recent-activity?type=all&limit=50`
+- **THEN** the response contains a combined array of recent vote entries and badge events, ordered by `created_at` descending
+- **AND** no voter identity is included
 
 #### Scenario: Empty recent activity
 - **WHEN** no votes have been cast
