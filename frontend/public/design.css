@@ -923,7 +923,7 @@ button {
   flex-wrap: wrap;
   border: 1px solid var(--good);
   border-color: color-mix(in srgb, var(--good) 40%, transparent);
-  border-radius: 0.55rem;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--good) 8%, transparent);
   color: var(--good);
   font-weight: 800;
@@ -949,7 +949,7 @@ button {
   gap: 0.55rem;
   padding: 0.7rem 1rem;
   border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
-  border-radius: 0.55rem;
+  border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.04);
   color: var(--ink);
   font-weight: 800;

@@ -42,6 +42,9 @@ jobs:
           FILTERED=""
           for f in $CHANGED; do
             case "$f" in
+              *.css)
+                # Skip CSS files — design/infrastructure, not content
+                continue ;;
               posts/*|published/*|frontend/articles/*|frontend/public/*)
                 FILTERED="$FILTERED $f" ;;
               *.md|*.html)
