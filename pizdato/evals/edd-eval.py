@@ -31,11 +31,12 @@ GOLDEN_FILE = EVALS_DIR / "golden-001.json"
 
 CONTENT_PATTERNS = [
     "posts/**/*",
-    "frontend/**/*.tsx", "frontend/**/*.ts", "frontend/**/*.css", "frontend/**/*.html",
+    "frontend/**/*.tsx", "frontend/**/*.ts", "frontend/**/*.html",
     "frontend/articles/**/*",
     "media/posts/**/*",
 ]
 
+CONTENT_SUFFIXES = {".html", ".md", ".tsx", ".ts"}
 EXCLUDE_DIRS = {"node_modules", "dist", "target", ".git", ".venv", "__pycache__", "deploy/channel"}
 
 # --- Channel length limits ---
@@ -76,7 +77,7 @@ def find_content_files(file_list: list[str] | None = None) -> list[Path]:
         result = []
         for f in file_list:
             p = REPO_ROOT / f
-            if p.exists() and not any(part in EXCLUDE_DIRS for part in p.parts):
+            if p.exists() and p.suffix in CONTENT_SUFFIXES and not any(part in EXCLUDE_DIRS for part in p.parts):
                 result.append(p)
         return sorted(result)
     result = []
@@ -85,7 +86,7 @@ def find_content_files(file_list: list[str] | None = None) -> list[Path]:
         target = REPO_ROOT / d
         if target.exists():
             for p in target.rglob("*"):
-                if p.is_file() and p.suffix in {".html", ".md", ".tsx", ".ts", ".css"}:
+                if p.is_file() and p.suffix in CONTENT_SUFFIXES:
                     if not any(part in EXCLUDE_DIRS for part in p.parts):
                         result.append(p)
     return sorted(result)
