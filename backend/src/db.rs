@@ -97,6 +97,15 @@ pub async fn connect(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
         .await
 }
 
+#[cfg(test)]
+fn connect_inmemory() -> SqlitePool {
+    use sqlx::sqlite::SqlitePoolOptions;
+    SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect_lazy(":memory:")
+        .expect("failed to create in-memory pool")
+}
+
 pub async fn migrate_with_retry(pool: &SqlitePool, attempts: u32) -> Result<(), sqlx::Error> {
     let attempts = attempts.max(1);
     let mut delay = Duration::from_millis(200);
@@ -539,5 +548,368 @@ impl AppState {
             .fetch_all(&self.pool)
             .await
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::Choice;
+
+    /// Helper: create an in-memory pool with full schema, return an AppState.
+    async fn test_state() -> AppState {
+        let pool = connect_inmemory();
+        // Create tables manually for test isolation (faster than full migrate)
+        sqlx::query(
+            r#"
+                CREATE TABLE IF NOT EXISTS votes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    choice TEXT NOT NULL CHECK (choice IN ('pizdato', 'huyevo')),
+                    voter_id TEXT NOT NULL UNIQUE,
+                    ip_hash TEXT,
+                    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+                )
+                "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            r#"
+                CREATE TABLE IF NOT EXISTS sessions (
+                    voter_id TEXT PRIMARY KEY,
+                    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+                )
+                "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            r#"
+                CREATE TABLE IF NOT EXISTS ip_vote_requests (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ip_hash TEXT NOT NULL,
+                    status INTEGER NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+                )
+                "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        sqlx::query(
+            r#"
+                CREATE TABLE IF NOT EXISTS ip_blacklist (
+                    ip_hash TEXT PRIMARY KEY,
+                    reason TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+                )
+                "#,
+        )
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        AppState {
+            pool,
+            cookie_secure: false,
+            ip_salt: "test-salt".to_string(),
+            ip_daily_limit: 10,
+            ip_min_interval_secs: 10,
+            session_min_age_secs: 2,
+            ip_403_blacklist_after: 5,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_counts_empty() {
+        let state = test_state().await;
+        let (pizdato, huyevo) = state.counts().await.unwrap();
+        assert_eq!(pizdato, 0);
+        assert_eq!(huyevo, 0);
+    }
+
+    #[tokio::test]
+    async fn test_counts_after_votes() {
+        let state = test_state().await;
+        let ip = state.hash_ip("1.2.3.4");
+
+        state
+            .insert_vote(Choice::Pizdato, "voter-1", &ip)
+            .await
+            .unwrap();
+        state
+            .insert_vote(Choice::Huyevo, "voter-2", &ip)
+            .await
+            .unwrap();
+        state
+            .insert_vote(Choice::Pizdato, "voter-3", &ip)
+            .await
+            .unwrap();
+
+        let (pizdato, huyevo) = state.counts().await.unwrap();
+        assert_eq!(pizdato, 2);
+        assert_eq!(huyevo, 1);
+    }
+
+    #[tokio::test]
+    async fn test_counts_excludes_blacklisted() {
+        let state = test_state().await;
+        let ip = state.hash_ip("1.2.3.4");
+
+        state
+            .insert_vote(Choice::Pizdato, "voter-1", &ip)
+            .await
+            .unwrap();
+        state
+            .insert_vote(Choice::Huyevo, "voter-2", &ip)
+            .await
+            .unwrap();
+
+        // Blacklist the IP
+        sqlx::query("INSERT INTO ip_blacklist (ip_hash, reason) VALUES (?1, ?2)")
+            .bind(&ip)
+            .bind("test")
+            .execute(&state.pool)
+            .await
+            .unwrap();
+
+        let (pizdato, huyevo) = state.counts().await.unwrap();
+        assert_eq!(pizdato, 0);
+        assert_eq!(huyevo, 0);
+    }
+
+    #[tokio::test]
+    async fn test_counts_includes_null_ip_votes() {
+        let state = test_state().await;
+        // Votes without ip_hash should always be counted
+        sqlx::query("INSERT INTO votes (choice, voter_id, ip_hash) VALUES (?1, ?2, NULL)")
+            .bind(Choice::Pizdato.as_str())
+            .bind("voter-no-ip")
+            .execute(&state.pool)
+            .await
+            .unwrap();
+
+        let (pizdato, huyevo) = state.counts().await.unwrap();
+        assert_eq!(pizdato, 1);
+        assert_eq!(huyevo, 0);
+    }
+
+    #[tokio::test]
+    async fn test_insert_vote_success() {
+        let state = test_state().await;
+        let ip = state.hash_ip("5.6.7.8");
+
+        state
+            .insert_vote(Choice::Pizdato, "voter-insert-1", &ip)
+            .await
+            .unwrap();
+
+        // Verify by reading back
+        let choice = state.find_vote("voter-insert-1").await.unwrap();
+        assert_eq!(choice, Some(Choice::Pizdato));
+    }
+
+    #[tokio::test]
+    async fn test_insert_vote_duplicate_voter() {
+        let state = test_state().await;
+        let ip = state.hash_ip("5.6.7.8");
+
+        state
+            .insert_vote(Choice::Pizdato, "voter-dup-1", &ip)
+            .await
+            .unwrap();
+        let result = state.insert_vote(Choice::Huyevo, "voter-dup-1", &ip).await;
+        assert!(result.is_err(), "duplicate voter_id should fail");
+    }
+
+    #[tokio::test]
+    async fn test_insert_vote_huyevo() {
+        let state = test_state().await;
+        let ip = state.hash_ip("9.10.11.12");
+
+        state
+            .insert_vote(Choice::Huyevo, "voter-huyevo-1", &ip)
+            .await
+            .unwrap();
+        let choice = state.find_vote("voter-huyevo-1").await.unwrap();
+        assert_eq!(choice, Some(Choice::Huyevo));
+    }
+
+    #[tokio::test]
+    async fn test_vote_requests_from_ip() {
+        let state = test_state().await;
+        let ip = state.hash_ip("1.1.1.1");
+
+        // No requests yet
+        assert_eq!(state.vote_requests_from_ip_last_day(&ip).await.unwrap(), 0);
+
+        // Record some requests
+        state.record_vote_request(&ip, 200).await.unwrap();
+        state.record_vote_request(&ip, 200).await.unwrap();
+        assert_eq!(state.vote_requests_from_ip_last_day(&ip).await.unwrap(), 2);
+
+        // Different IP should have 0 requests
+        let ip2 = state.hash_ip("2.2.2.2");
+        assert_eq!(state.vote_requests_from_ip_last_day(&ip2).await.unwrap(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_forbidden_from_ip() {
+        let state = test_state().await;
+        let ip = state.hash_ip("3.3.3.3");
+
+        // Mixed statuses
+        state.record_vote_request(&ip, 200).await.unwrap();
+        state.record_vote_request(&ip, 403).await.unwrap();
+        state.record_vote_request(&ip, 403).await.unwrap();
+
+        assert_eq!(state.forbidden_from_ip_last_day(&ip).await.unwrap(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_ip_blacklist() {
+        let state = test_state().await;
+        let ip = state.hash_ip("4.4.4.4");
+
+        assert!(!state.is_ip_blacklisted(&ip).await.unwrap());
+
+        // Add to blacklist
+        sqlx::query("INSERT INTO ip_blacklist (ip_hash, reason) VALUES (?1, ?2)")
+            .bind(&ip)
+            .bind("abuse")
+            .execute(&state.pool)
+            .await
+            .unwrap();
+
+        assert!(state.is_ip_blacklisted(&ip).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_blacklist_ip_if_needed_noop_below_threshold() {
+        let state = test_state().await;
+        let ip = state.hash_ip("6.6.6.6");
+
+        // Add some 403s but below threshold
+        state.record_vote_request(&ip, 403).await.unwrap();
+        state.record_vote_request(&ip, 403).await.unwrap();
+        state.record_vote_request(&ip, 403).await.unwrap();
+
+        let blacklisted = state.blacklist_ip_if_needed(&ip, "test").await.unwrap();
+        assert!(!blacklisted, "should not blacklist below threshold (5)");
+    }
+
+    #[tokio::test]
+    async fn test_blacklist_ip_if_needed_at_threshold() {
+        let state = test_state().await;
+        let ip = state.hash_ip("7.7.7.7");
+
+        // Add exactly threshold number of 403s
+        for _ in 0..5 {
+            state.record_vote_request(&ip, 403).await.unwrap();
+        }
+
+        let blacklisted = state.blacklist_ip_if_needed(&ip, "test").await.unwrap();
+        assert!(blacklisted, "should blacklist at threshold");
+        assert!(state.is_ip_blacklisted(&ip).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_blacklist_ip_if_needed_already_blacklisted() {
+        let state = test_state().await;
+        let ip = state.hash_ip("8.8.8.8");
+
+        // Pre-blacklist
+        sqlx::query("INSERT INTO ip_blacklist (ip_hash, reason) VALUES (?1, ?2)")
+            .bind(&ip)
+            .bind("already")
+            .execute(&state.pool)
+            .await
+            .unwrap();
+
+        let blacklisted = state.blacklist_ip_if_needed(&ip, "test").await.unwrap();
+        assert!(!blacklisted, "already blacklisted should return false");
+    }
+
+    #[tokio::test]
+    async fn test_seconds_since_last_ip_vote_no_votes() {
+        let state = test_state().await;
+        let ip = state.hash_ip("10.10.10.10");
+
+        let secs = state.seconds_since_last_ip_vote(&ip).await.unwrap();
+        assert!(secs.is_none(), "no votes should return None");
+    }
+
+    #[tokio::test]
+    async fn test_seconds_since_last_ip_vote_after_vote() {
+        let state = test_state().await;
+        let ip = state.hash_ip("11.11.11.11");
+
+        state
+            .insert_vote(Choice::Pizdato, "voter-sec-1", &ip)
+            .await
+            .unwrap();
+
+        let secs = state.seconds_since_last_ip_vote(&ip).await.unwrap();
+        assert!(secs.is_some(), "should return Some after a vote");
+        assert!(secs.unwrap() >= 0, "seconds should be non-negative");
+    }
+
+    #[tokio::test]
+    async fn test_hash_ip_deterministic() {
+        let state = test_state().await;
+        let h1 = state.hash_ip("192.168.1.1");
+        let h2 = state.hash_ip("192.168.1.1");
+        assert_eq!(h1, h2, "same IP should produce same hash");
+
+        let h3 = state.hash_ip("10.0.0.1");
+        assert_ne!(h1, h3, "different IPs should produce different hashes");
+    }
+
+    #[tokio::test]
+    async fn test_hash_ip_different_salt() {
+        let mut state = test_state().await;
+        state.ip_salt = "different-salt".to_string();
+        let h1 = state.hash_ip("192.168.1.1");
+
+        let mut state2 = test_state().await;
+        state2.ip_salt = "another-salt".to_string();
+        let h2 = state2.hash_ip("192.168.1.1");
+
+        assert_ne!(h1, h2, "different salts should produce different hashes");
+    }
+
+    #[tokio::test]
+    async fn test_session_exists() {
+        let state = test_state().await;
+
+        assert!(!state.session_exists("nonexistent").await.unwrap());
+
+        state.register_session("session-user-1").await.unwrap();
+        assert!(state.session_exists("session-user-1").await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_find_vote_nonexistent() {
+        let state = test_state().await;
+        let choice = state.find_vote("no-such-voter").await.unwrap();
+        assert_eq!(choice, None);
+    }
+
+    #[tokio::test]
+    async fn test_find_vote_exists() {
+        let state = test_state().await;
+        let ip = state.hash_ip("12.12.12.12");
+
+        state
+            .insert_vote(Choice::Huyevo, "voter-find-1", &ip)
+            .await
+            .unwrap();
+        let choice = state.find_vote("voter-find-1").await.unwrap();
+        assert_eq!(choice, Some(Choice::Huyevo));
     }
 }
