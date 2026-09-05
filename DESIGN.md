@@ -166,19 +166,22 @@ Pizdato — не коммерческий продукт, а мемо-треке
   Использовать точечно — как единственный зелёный сигнал на странице.
 - **Danger (#FF4D3D):** «Плохой» акцент. Кнопка «Хуёво», бары негатива,
   сообщения об ошибках. Красный = тревога или отрицание, не декорация.
+- **Confetti-good:** `confetti-good: ["#3dff9a", "#22d97f", "#7dffc8", "#ffffff"]`
+  — comma-separated CSS var array for "good"-vote confetti particles.
+  Derived exclusively from the tertiary spectrum (base green plus darker/
+  lighter tints) with a white highlight — no yellow. Excludes the stale
+  non-palette color `#f2ff57`.
+- **Confetti-bad:** `confetti-bad: ["#ff4d3d", "#ff7a3d", "#ff8a7d", "#ffffff"]`
+  — comma-separated CSS var array for "bad"-vote confetti particles.
+  Derived exclusively from the danger spectrum (base red plus lighter
+  tints) with a white highlight — no yellow. Excludes the stale
+  non-palette color `#ffd23d`.
 - **On-primary (#F2F5F0):** Основной текст. Тёплый белый (с каплей зелёного),
   чтобы не резал глаз на чёрном фоне.
 - **Line (rgba(242,245,240,0.12)):** Тонкий разделитель — бордеры карточек,
   линия в шаринге, нав-бар. Почти невидимый — только намёк на границу.
 - **Line-hover (rgba(242,245,240,0.25)):** Бордер при наведении на
   интерактивную карточку.
-- **Confetti-good:** `#3dff9a`, `#22d97f`, `#7dffc8`, `#ffffff` — палитра
-  конфетти для «пиздато» (голосование). Только градиент tertiary: от
-  базового зелёного через тёмный и светлый оттенки до белого акцента.
-  Никаких дополнительных цветов — только спектр tertiary.
-- **Confetti-bad:** `#ff4d3d`, `#ff7a3d`, `#ff8a7d`, `#ffffff` — палитра
-  конфетти для «хуёво». Только градиент danger: от базового красного
-  через светлые оттенки до белого акцента. Без жёлтого и других цветов.
 - **Surface-good-deep (#0F8F52) / Surface-bad-deep (#A31F14):** Нижние
   слои progress-баров — глубокий фон для анимации заполнения.
 
