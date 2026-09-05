@@ -12,7 +12,7 @@ concurrency:
 jobs:
   backend:
     name: Backend (cargo)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
     steps:
@@ -48,7 +48,7 @@ jobs:
 
   frontend:
     name: Frontend (npm)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
     steps:
@@ -79,7 +79,7 @@ jobs:
 
   design-eval:
     name: Design Eval (css vs spec)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
     steps:
@@ -98,7 +98,7 @@ jobs:
 
   design-md-lint:
     name: DESIGN.md Lint
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
     steps:
