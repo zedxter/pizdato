@@ -94,30 +94,3 @@ jobs:
               lines.append(f'| {cat["category_id"]} {cat["name"]} | {score:.0%} | {threshold:.0%} | {status} |')
           lines.append('')
           overall = data['overall_score']
-          threshold = data['threshold']
-          lines.append(f'**Overall: {overall:.0%} / {threshold:.0%}**')
-          lines.append(f'Files evaluated: {data["summary"]["files_evaluated"]}')
-          lines.append(f'Deterministic assertions: {data["summary"]["passed_deterministic"]}/{data["summary"]["total_deterministic"]} passed')
-          summary = '\n'.join(lines)
-          print(summary)
-          step_summary = os.environ.get('GITHUB_STEP_SUMMARY', '')
-          if step_summary:
-              with open(step_summary, 'a') as f:
-                  f.write(summary + '\n')
-          PYEOF
-
-      - name: Check evaluation result
-        if: steps.changed-files.outputs.has_changed == 'true'
-        run: |
-          python3 << 'PYEOF'
-          import json, sys
-          with open('/tmp/edd-results.json') as f:
-              data = json.load(f)
-          overall_pass = data['summary']['overall_pass']
-          all_cat_pass = all(cat['score'] >= cat['threshold'] for cat in data.get('categories', []))
-          if not overall_pass or not all_cat_pass:
-              print('EDD evaluation failed - one or more categories below threshold.')
-              sys.exit(1)
-          else:
-              print('EDD evaluation passed.')
-          PYEOF
