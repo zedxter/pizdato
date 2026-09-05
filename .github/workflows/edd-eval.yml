@@ -45,6 +45,9 @@ jobs:
               *.css)
                 # Skip CSS files — design/infrastructure, not content
                 continue ;;
+              frontend/public/404.html|frontend/public/imprint.html|frontend/public/privacy.html|frontend/public/yandex_*)
+                # Skip static/infrastructure HTML pages — legal, error, verification pages, not content
+                continue ;;
               posts/*|published/*|frontend/articles/*|frontend/public/*)
                 FILTERED="$FILTERED $f" ;;
               *.md|*.html)
