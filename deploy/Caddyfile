@@ -46,7 +46,7 @@ pizdato.net {
 		# HTML shells must revalidate so nav/label renames are not stuck in browser cache
 		@html path *.html /
 		header @html Cache-Control "no-cache"
-		@html_routes path /lenta /faq /pizdato /issledovanie /articles /articles/*
+		@html_routes path /lenta /faq /pizdato /issledovanie /articles /articles/* /imprint
 		header @html_routes Cache-Control "no-cache"
 	}
 
