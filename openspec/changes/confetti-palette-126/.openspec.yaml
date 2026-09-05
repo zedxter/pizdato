@@ -1,0 +1,7 @@
+schema: spec-driven
+state: proposed
+author: Lutik
+created: "2026-09-04"
+skip_specs: true
+depends: []
+tags: [design, a11y, confetti]
