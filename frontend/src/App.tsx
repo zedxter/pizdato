@@ -15,8 +15,21 @@ function pct(part: number, total: number): number {
 const QUOTE_COUNT = 3
 const QUOTE_ROTATE_MS = 6500
 
-const GOOD_COLORS = ['#3dff9a', '#22d97f', '#f2ff57', '#ffffff', '#7dffc8']
-const BAD_COLORS = ['#ff4d3d', '#ff7a3d', '#ffd23d', '#ffffff', '#ff8a7d']
+// Confetti palettes — sourced from DESIGN.md confetti-good / confetti-bad tokens
+// (defined in design.css as --color-confetti-good / --color-confetti-bad)
+function parseConfettiColors(cssVar: string, fallback: string[]): string[] {
+  if (typeof document === 'undefined') return fallback
+  try {
+    const val = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim()
+    if (!val) return fallback
+    return val.replace(/["\s]/g, '').split(',').filter(Boolean)
+  } catch {
+    return fallback
+  }
+}
+
+const GOOD_COLORS = parseConfettiColors('--color-confetti-good', ['#3dff9a', '#22d97f', '#7dffc8', '#ffffff'])
+const BAD_COLORS = parseConfettiColors('--color-confetti-bad', ['#ff4d3d', '#ff7a3d', '#ff8a7d', '#ffffff'])
 
 function buzz(durationMs: number | number[] = 60) {
   try {
@@ -102,7 +115,7 @@ function celebrate(choice: Choice) {
       gravity: 1.1,
       ticks: 240,
       origin: { x: 0.5, y: -0.08 },
-      colors: good ? ['#3dff9a', '#ffffff'] : ['#ff4d3d', '#ffffff'],
+      colors: good ? [GOOD_COLORS[0], GOOD_COLORS[3]] : [BAD_COLORS[0], BAD_COLORS[3]],
       shapes: ['circle'],
       zIndex: 9999,
       disableForReducedMotion: true,

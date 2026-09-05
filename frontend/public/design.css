@@ -92,6 +92,10 @@
   --shadow-btn-good:      0 12px 30px rgba(61, 255, 154, 0.22);
   --shadow-btn-bad:       0 12px 30px rgba(255, 77, 61, 0.22);
 
+  /* === Confetti (from DESIGN.md confetti-good / confetti-bad) === */
+  --color-confetti-good:  "#3dff9a", "#22d97f", "#7dffc8", "#ffffff";
+  --color-confetti-bad:   "#ff4d3d", "#ff7a3d", "#ff8a7d", "#ffffff";
+
   /* === Animation === */
   --duration-fast:        150ms;
   --duration-normal:      250ms;
