@@ -85,13 +85,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Install dependencies
-        run: pip install pyyaml
+        run: python3 -m pip install --break-system-packages pyyaml -q
 
       - name: Design Eval
         run: python3 design-evals/design-eval.py
@@ -104,13 +99,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Install dependencies
-        run: pip install pyyaml
+        run: python3 -m pip install --break-system-packages pyyaml -q
 
       - name: Lint DESIGN.md
         run: python3 .github/design-md-lint.py
