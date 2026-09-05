@@ -1,4 +1,4 @@
-export type NavId = 'home' | 'brand' | 'lenta' | 'articles' | 'essay' | 'faq' | '404'
+export type NavId = 'home' | 'brand' | 'lenta' | 'articles' | 'essay' | 'faq' | 'imprint' | '404'
 
 export const NAV_LINKS: { id: NavId; href: string; label: string }[] = [
   { id: 'home', href: '/', label: 'Голосование' },
@@ -7,4 +7,5 @@ export const NAV_LINKS: { id: NavId; href: string; label: string }[] = [
   { id: 'brand', href: '/pizdato', label: 'Пиздато' },
   { id: 'essay', href: '/issledovanie', label: 'Эссе' },
   { id: 'faq', href: '/faq', label: 'FAQ' },
+  { id: 'imprint', href: '/imprint', label: 'Импрессум' },
 ]
