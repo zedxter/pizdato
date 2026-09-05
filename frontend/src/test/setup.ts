@@ -3,7 +3,7 @@ import { vi } from 'vitest'
 
 // JSDom doesn't implement ResizeObserver; SiteNav.tsx uses it in useLayoutEffect
 class ResizeObserverMock {
-  constructor(callback: ResizeObserverCallback) {
+  constructor(_callback: ResizeObserverCallback) {
     // no-op
   }
   observe = vi.fn()
