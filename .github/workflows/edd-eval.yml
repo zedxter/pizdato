@@ -23,7 +23,6 @@ jobs:
         with:
           fetch-depth: 0
 
-
       - name: Get changed content files
         id: changed-files
         run: |
