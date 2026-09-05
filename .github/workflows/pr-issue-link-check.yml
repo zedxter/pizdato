@@ -6,7 +6,7 @@ on:
 
 jobs:
   check-issue-link:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Check PR body for Issue reference
         env:
