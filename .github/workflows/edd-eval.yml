@@ -46,6 +46,10 @@ jobs:
               posts/*|published/*|frontend/articles/*|frontend/public/*)
                 FILTERED="$FILTERED $f" ;;
               *.md|*.html)
+                # Skip README files — documentation, not content
+                case "$f" in
+                  */README.md) continue ;;
+                esac
                 FILTERED="$FILTERED $f" ;;
               frontend/src/*.ts|frontend/src/*.tsx|frontend/src/*.css)
                 # Skip source code files in src/ unless they're articles
