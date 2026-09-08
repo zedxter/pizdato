@@ -1,0 +1,15 @@
+name: Add deploy key to VPS
+on: workflow_dispatch
+jobs:
+  add-key:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+      - name: Add public key
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKXpxVnw/HRN8ZEvMpOzXdsvwsV6CfkksNiriiSYstuc marketradar-deploy' >> /home/${{ secrets.VPS_USER }}/.ssh/authorized_keys
