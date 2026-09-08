@@ -33,6 +33,9 @@ jobs:
       - name: Add clippy
         run: rustup component add clippy
 
+      - name: Add rustfmt
+        run: rustup component add rustfmt
+
       - name: Check
         working-directory: backend
         run: cargo check --workspace

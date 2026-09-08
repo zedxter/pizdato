@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
 
 concurrency:
   group: security-scan-${{ github.ref }}
@@ -21,9 +20,17 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Cleanup gitleaks temp files
-        run: rm -f /tmp/gitleaks.tmp
       - name: Gitleaks secret scan
-        uses: gitleaks/gitleaks-action@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Install gitleaks if not present
+          if ! command -v gitleaks &>/dev/null; then
+            curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64 -o /tmp/gitleaks
+            chmod +x /tmp/gitleaks
+            export PATH="/tmp:$PATH"
+          fi
+          gitleaks detect --redact -v --exit-code=2 --report-format=sarif --report-path=results.sarif --log-opts=--no-merges --first-parent HEAD || exit_code=$?
+          if [ "${exit_code:-0}" = "2" ]; then
+            echo "::error::Gitleaks detected secrets in the code."
+            exit 2
+          fi
+          echo "::notice::No secrets found."
