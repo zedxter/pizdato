@@ -1,12 +1,13 @@
-# Spec → Implementation Issues
+# Spec → Implementation Issues (also for design specs)
 #
-# When a spec PR (labelled "spec") is merged to main, automatically creates
-# an Issue with tasks from the openspec change's tasks.md, and comments on
+# When a spec PR (labelled "spec" or "design") is merged to main, automatically
+# creates an Issue with tasks from the spec change's tasks.md, and comments on
 # the merged PR linking the new issue.
 #
-# Branch convention: spec/<change-name> maps to openspec/changes/<change-name>/
+# Branch convention: spec/<change-name> or design/<change-name> maps to
+# openspec/changes/<change-name>/
 #
-# Requires: "spec" label on PRs.
+# Triggers on: spec, design labels.
 # Creates: "implementation" label if missing (auto).
 
 name: Spec → Implementation Issues
@@ -24,7 +25,8 @@ jobs:
   create-implementation-issue:
     if: >
       github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.labels.*.name, 'spec')
+      (contains(github.event.pull_request.labels.*.name, 'spec') ||
+       contains(github.event.pull_request.labels.*.name, 'design'))
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +38,7 @@ jobs:
         run: |
           BRANCH="${{ github.event.pull_request.head.ref }}"
           CHANGE="${BRANCH#spec/}"
+          CHANGE="${CHANGE#design/}"
           if [ "$CHANGE" = "$BRANCH" ]; then
             echo "::error::Branch name does not follow spec/<change> convention: $BRANCH"
             exit 1
