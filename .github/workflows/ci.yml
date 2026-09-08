@@ -30,6 +30,12 @@ jobs:
       - name: Install minimal Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Add clippy
+        run: rustup component add clippy
+
+      - name: Add rustfmt
+        run: rustup component add rustfmt
+
       - name: Check
         working-directory: backend
         run: cargo check --workspace
@@ -86,7 +92,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: python3 -m pip install --break-system-packages pyyaml -q
+        run: python3 -m pip install --user pyyaml -q
 
       - name: Design Eval
         run: python3 design-evals/design-eval.py
@@ -100,7 +106,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: python3 -m pip install --break-system-packages pyyaml -q
+        run: python3 -m pip install --user pyyaml -q
 
       - name: Lint DESIGN.md
         run: python3 .github/design-md-lint.py

@@ -13,7 +13,7 @@ services:
     volumes:
       - "/var/lib/pizdato:/var/lib/pizdato"
     env_file:
-      - "/etc/pizdato.env"
+      - "/srv/pizdato/.env"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8081/health"]
