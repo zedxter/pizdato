@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 # Deploy pizdato backend + frontend image (GHCR:sha) onto this VPS.
-# Assumes: deploy user in docker group, /srv/pizdato has .env + data/,
-# /srv/pizdato/deploy has compose.yaml.
-# Current systemd backend on 127.0.0.1:8080 stays as fallback until Caddy is switched.
-# Frontend dist is extracted from the Docker image and rsynced to webroot.
+# Both backend API and frontend static files are served by the Docker container.
 set -euo pipefail
 
 cd /srv/pizdato/deploy
@@ -28,10 +25,15 @@ else
   echo "WARNING: database not found at $DB — skipping backup" >&2
 fi
 
-PREVIOUS=$(grep '^APP_TAG=' .env.deploy 2>/dev/null | cut -d= -f2)
+PREVIOUS=$(grep '^APP_TAG=' .env.deploy 2>/dev/null | cut -d= -f2) || true
 export APP_TAG="${APP_TAG:-latest}"
 echo "APP_TAG=$APP_TAG" > .env.deploy
 echo "deploying APP_TAG=$APP_TAG (previous=$PREVIOUS)" >&2
+
+# Remove orphan containers from previous deployments (prevents port conflict)
+docker compose down --remove-orphans 2>/dev/null || true
+# Also stop the legacy project (pizdato-api-1 from old deployment location)
+docker compose -p pizdato down --remove-orphans 2>/dev/null || true
 
 docker compose pull api
 docker compose up -d --wait --wait-timeout 120 api
@@ -57,65 +59,6 @@ if [ "$healthy" != "1" ]; then
   fi
   exit 1
 fi
-
-# ── Frontend deploy ──────────────────────────────────────────────────────
-# Extract frontend dist from the newly deployed Docker image and rsync to webroot.
-# This runs on every deploy, so frontend changes land atomically with backend.
-echo "Extracting frontend dist from ghcr.io/zedxter/pizdato-backend:${APP_TAG}" >&2
-WEBROOT=/var/www/pizdato
-INCOMING=/srv/pizdato/incoming
-
-EXTRACT_CONTAINER=$(docker create "ghcr.io/zedxter/pizdato-backend:${APP_TAG}")
-docker cp "${EXTRACT_CONTAINER}:/frontend/dist" "${INCOMING}" 2>/dev/null || {
-  docker rm "${EXTRACT_CONTAINER}" >/dev/null
-  echo "WARNING: /frontend/dist not found in image — skipping frontend deploy" >&2
-}
-docker rm "${EXTRACT_CONTAINER}" >/dev/null
-
-if [ -d "${INCOMING}/dist" ] && [ -f "${INCOMING}/dist/index.html" ]; then
-  rsync -a --delete "${INCOMING}/dist/" "${WEBROOT}/"
-  chmod -R a+rX "${WEBROOT}"
-  echo "frontend deployed: $(ls "${WEBROOT}/index.html")" >&2
-elif [ -d "${INCOMING}" ] && [ -f "${INCOMING}/index.html" ]; then
-  rsync -a --delete "${INCOMING}/" "${WEBROOT}/"
-  chmod -R a+rX "${WEBROOT}"
-  echo "frontend deployed (flat): $(ls "${WEBROOT}/index.html")" >&2
-else
-  echo "WARNING: no index.html found in extracted frontend — webroot unchanged" >&2
-fi
-
-# ── Post-deploy content verification ──────────────────────────────────────
-echo "Verifying deployed content..." >&2
-VERIFY_ERROR=0
-
-# Check that design.css exists in webroot
-if [ ! -f "${WEBROOT}/design.css" ]; then
-  echo "ERROR: design.css missing from webroot" >&2
-  VERIFY_ERROR=1
-fi
-
-# Verify key pages serve correct content by checking their <title> tags
-declare -A TITLE_CHECKS=(
-  ["pizdato.html"]="Пиздато — что это и как работает"
-  ["issledovanie.html"]="Пиздато и хуёво: исследование"
-  ["faq.html"]="FAQ — частые вопросы"
-)
-for FILENAME in "${!TITLE_CHECKS[@]}"; do
-  FILE="${WEBROOT}/${FILENAME}"
-  if [ ! -f "$FILE" ]; then
-    echo "ERROR: ${FILENAME} missing from webroot" >&2
-    VERIFY_ERROR=1
-  elif ! grep -q "<title>${TITLE_CHECKS[$FILENAME]}" "$FILE"; then
-    echo "ERROR: ${FILENAME} has wrong content (title mismatch)" >&2
-    head -20 "$FILE" | grep -i '<title' >&2
-    VERIFY_ERROR=1
-  fi
-done
-
-if [ "$VERIFY_ERROR" != "0" ]; then
-  echo "WARNING: some deployed content checks failed — review above" >&2
-fi
-echo "content verification complete" >&2
 
 echo "HEALTHY $APP_TAG" >&2
 
