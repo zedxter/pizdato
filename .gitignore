@@ -2,10 +2,11 @@
 /node_modules
 frontend/node_modules
 
-# Build
+# Build / dist
 frontend/dist
 backend/target
 /target/
+/build/
 
 # Local data / secrets
 *.db
@@ -13,17 +14,32 @@ backend/target
 .env
 backend/.env
 /etc/
+
+# Logs
+*.log
+
 # Virtual environments
 .venv
 venv
+
+# Python cache
+__pycache__/
+*.pyc
+
 # Accidental relative StoreSession nest from mcp-telegram cwd
 /home/
 
 # Channel poster deps
 deploy/channel/node_modules/
 
+# Worktrees — managed by git, never tracked
+.worktrees/
+
 # OS / IDE
 .DS_Store
 .idea
 .vscode
 *.swp
+
+# Local audit / QA artifacts
+doc-audit-result.json
