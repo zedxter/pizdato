@@ -31,12 +31,12 @@ echo "APP_TAG=$APP_TAG" > .env.deploy
 echo "deploying APP_TAG=$APP_TAG (previous=$PREVIOUS)" >&2
 
 # Remove orphan containers from previous deployments (prevents port conflict)
-docker compose down --remove-orphans 2>/dev/null || true
+docker compose -p pizdato down --remove-orphans 2>/dev/null || true
 # Also stop the legacy project (pizdato-api-1 from old deployment location)
 docker compose -p pizdato down --remove-orphans 2>/dev/null || true
 
-docker compose pull api
-docker compose up -d --wait --wait-timeout 120 api
+docker compose -p pizdato pull api
+docker compose -p pizdato up -d --wait --wait-timeout 120 api
 
 # Health gate
 HEALTH_URL="http://127.0.0.1:8081/health"
@@ -54,7 +54,7 @@ if [ "$healthy" != "1" ]; then
   if [ -n "$PREVIOUS" ] && [ "$PREVIOUS" != "$APP_TAG" ]; then
     export APP_TAG=$PREVIOUS
     echo "APP_TAG=$PREVIOUS" > .env.deploy
-    docker compose up -d --wait --wait-timeout 120 api
+    docker compose -p pizdato up -d --wait --wait-timeout 120 api
     echo "rolled back to $PREVIOUS" >&2
   fi
   exit 1
