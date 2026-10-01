@@ -37,7 +37,7 @@ Navigation: shared top menu + matching footer on every page (Голосован�
 
 ### Feed & news votes
 
-Hourly channel cron picks an absurd/unique story, writes `news_items` + a system vote into the same SQLite DB, and DMs the owner. The public feed is `GET /api/news` (cursor pagination). Thumbnails come from RSS/OG (`image_url`); missing images fall back to the site logo.
+Hourly channel cron picks an absurd/unique story, writes `news_items` + a system vote into the same SQLite DB, without a success Telegram message (failures notify the owner). The public feed is `GET /api/news` (cursor pagination). Thumbnails come from RSS/OG (`image_url`); missing images fall back to the site logo.
 
 ## Development
 
@@ -127,6 +127,12 @@ Telegram channel automation (stats, hourly news votes, evening take):
 ```bash
 ./deploy/install-channel.sh
 ```
+
+News verdicts and evening copy use [OpenRouter](https://openrouter.ai/) with `deepseek/deepseek-v3.2`. Set `OPENROUTER_API_KEY` in `~/.config/pizdato-channel.env` (mode 0600) and add OpenRouter credit. `PIZDATO_LLM_MODEL` overrides the model; `PIZDATO_LLM_TIMEOUT_MS` sets the request deadline (default 60000 ms; invalid values use the default). RSS and article fetching supply source text, so inference does not enable a web-search plugin. API/output failures retain the existing heuristic verdict or evening template.
+
+To migrate an existing deployment, remove obsolete `PIZDATO_USE_CURSOR_AGENT`, `PIZDATO_CURSOR_*`, and `CURSOR_AGENT_BIN` settings. Cursor login and subscription are no longer required. Back up changed deployed files and install the new `lib/openrouter.js` and updated `lib/generate.js` in `/opt/pizdato/channel`. Retain the existing cron file: rerunning `install-channel.sh` rewrites it and can reactivate disabled jobs. No DB migration is needed.
+
+Generation tests run with `cd deploy/channel && npm ci && npm test` (Node 18, matching the current cron). They mock external HTTP, exercise the public generation interfaces, and do not write the production DB or send Telegram messages. For a live smoke check, load the private env file and call `generateVerdict` with supplied fixture article text; confirm a successful DeepSeek response without fallback notes. Avoid calling the cron entrypoints during this check because they can write news/votes or send Telegram messages.
 
 Public surfaces: [pizdato.net](https://pizdato.net), [t.me/pizdato_net](https://t.me/pizdato_net). Operator layout and env samples live under [`deploy/`](deploy/) — not duplicated here.
 

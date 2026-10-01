@@ -3,9 +3,8 @@
  * Evening channel post: pick the most ABSURD / funny news of the day and
  * discuss it as пиздато vs хуёво. Posts to @pizdato_net via StoreSession.
  *
- * Text generation (preferred): cursor-agent --print
- * Fallback: OPENROUTER/GROQ/OPENAI key in ~/.config/pizdato-channel.env
- * Last resort: local template
+ * Text generation: OpenRouter / DeepSeek via ~/.config/pizdato-channel.env
+ * Fallback: local template on missing credentials or generation failure
  */
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
