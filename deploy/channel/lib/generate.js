@@ -1,7 +1,5 @@
-import { spawn } from "node:child_process";
-import { homedir } from "node:os";
+import { openRouterText } from "./openrouter.js";
 import { sourceFooter, telegramForSource, fetchArticleBody } from "./news.js";
-import { sessionConfig } from "./telegram.js";
 
 const CTA = [
   "Мир ждёт твоего голоса. Остальное — уже легенда:",
@@ -140,158 +138,27 @@ export function sanitizePost(raw) {
   };
 }
 
-function runCursorAgent(prompt, { mode = "ask" } = {}) {
-  const { sessionCwd } = sessionConfig();
-  const bin = process.env.CURSOR_AGENT_BIN || `${homedir()}/.local/bin/cursor-agent`;
-  const args = ["-p", "--output-format", "json", "--trust", "--workspace", sessionCwd];
-  // ask-mode sometimes returns empty result for strict JSON tasks; callers can disable it.
-  if (mode) {
-    args.push("--mode", mode);
-  }
-  if (process.env.PIZDATO_CURSOR_MODEL) {
-    args.push("--model", process.env.PIZDATO_CURSOR_MODEL);
-  }
-  args.push(prompt);
-
-  return new Promise((resolvePromise, reject) => {
-    const child = spawn(bin, args, {
-      env: process.env,
-      cwd: sessionCwd,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    let out = "";
-    let err = "";
-    const timer = setTimeout(() => {
-      child.kill("SIGTERM");
-      reject(new Error("cursor-agent timed out"));
-    }, Number(process.env.PIZDATO_CURSOR_TIMEOUT_MS || 180000));
-
-    child.stdout.on("data", (d) => {
-      out += d.toString();
-    });
-    child.stderr.on("data", (d) => {
-      err += d.toString();
-    });
-    child.on("error", (e) => {
-      clearTimeout(timer);
-      reject(e);
-    });
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      const raw = out.trim();
-      let text = raw;
-      // Prefer structured JSON result; fall back to raw stdout.
-      if (raw.startsWith("{")) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (parsed?.is_error) {
-            reject(
-              new Error(
-                `cursor-agent error: ${String(parsed.result || parsed.error || "unknown").slice(0, 400)}`,
-              ),
-            );
-            return;
-          }
-          if (typeof parsed?.result === "string") text = parsed.result.trim();
-        } catch {
-          // keep raw text
-        }
-      }
-      if (code !== 0 || !text) {
-        reject(
-          new Error(
-            `cursor-agent exit ${code}: ${(err || out).slice(0, 400) || "empty output"}`,
-          ),
-        );
-        return;
-      }
-      resolvePromise(text);
-    });
-  });
-}
-
 async function apiLlmPost(item) {
-  const key =
-    process.env.OPENROUTER_API_KEY ||
-    process.env.GROQ_API_KEY ||
-    process.env.OPENAI_API_KEY;
-  if (!key) return null;
-
-  let base = "https://api.openai.com/v1";
-  let model = process.env.PIZDATO_LLM_MODEL || "gpt-4.1-mini";
-  if (process.env.OPENROUTER_API_KEY) {
-    base = "https://openrouter.ai/api/v1";
-    model = process.env.PIZDATO_LLM_MODEL || "openai/gpt-4.1-mini";
-  } else if (process.env.GROQ_API_KEY) {
-    base = "https://api.groq.com/openai/v1";
-    model = process.env.PIZDATO_LLM_MODEL || "llama-3.3-70b-versatile";
-  }
-
-  const res = await fetch(`${base}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      ...(process.env.OPENROUTER_API_KEY
-        ? { "HTTP-Referer": "https://pizdato.net", "X-Title": "pizdato-channel" }
-        : {}),
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.8,
-      messages: [
-        { role: "system", content: "Ты пишешь короткие колонки для канала pizdato.net." },
-        { role: "user", content: buildPrompt(item) },
-      ],
-    }),
-    signal: AbortSignal.timeout(60000),
+  return openRouterText({
+    temperature: 0.8,
+    system: "Ты пишешь короткие колонки для канала pizdato.net.",
+    prompt: buildPrompt(item),
   });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`LLM HTTP ${res.status}: ${body.slice(0, 300)}`);
-  }
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content?.trim();
-  if (!text) throw new Error("empty LLM response");
-  return text;
 }
 
 export async function generatePost(item) {
   const notes = [];
-  const useCursor = process.env.PIZDATO_USE_CURSOR_AGENT !== "0";
-
-  if (useCursor) {
-    try {
-      console.log("generating with cursor-agent...");
-      // ask-mode often returns empty for long creative posts; default agent mode works.
-      const raw = await runCursorAgent(buildPrompt(item), { mode: null });
-      const cleaned = sanitizePost(raw);
-      if (cleaned.junk) {
-        notes.push(`cursor-agent служебный мусор (в канал не ушло):\n${cleaned.junk}`);
-      }
-      if (cleaned.ok) {
-        return { text: cleaned.text, notes };
-      }
-      notes.push(
-        "cursor-agent вернул текст без нужной структуры поста — взял fallback.",
-      );
-    } catch (e) {
-      notes.push(`cursor-agent failed: ${e.message}`);
-      console.warn("cursor-agent failed:", e.message);
-    }
-  }
-
   try {
-    const api = await apiLlmPost(item);
-    if (api) {
-      const cleaned = sanitizePost(api);
-      if (cleaned.junk) notes.push(`API LLM junk:\n${cleaned.junk}`);
-      if (cleaned.ok) return { text: cleaned.text, notes };
-      notes.push("API LLM вернул плохую структуру — шаблон.");
-    }
+    console.log("generating with OpenRouter...");
+    const raw = await apiLlmPost(item);
+    const cleaned = sanitizePost(raw);
+    // Generated junk is not logged because it may echo private request data.
+    if (cleaned.junk) notes.push("OpenRouter service chatter removed");
+    if (cleaned.ok) return { text: cleaned.text, notes };
+    notes.push("OpenRouter returned an invalid post structure");
   } catch (e) {
-    notes.push(`API LLM failed: ${e.message}`);
-    console.warn("API LLM failed:", e.message);
+    notes.push(`OpenRouter failed: ${e.message}`);
+    console.warn("OpenRouter failed:", e.message);
   }
 
   notes.push("использован локальный шаблон поста");
@@ -342,7 +209,8 @@ export function parseVerdict(raw) {
   try {
     const obj = JSON.parse(text.slice(start, end + 1));
     const verdict = obj.verdict === "pizdato" || obj.verdict === "huyevo" ? obj.verdict : null;
-    const reason = String(obj.reason || "").trim().slice(0, 500);
+    if (typeof obj.reason !== "string") return null;
+    const reason = obj.reason.trim().slice(0, 500);
     if (!verdict || !reason) return null;
     return { verdict, reason };
   } catch {
@@ -366,51 +234,11 @@ function heuristicVerdict(item) {
 }
 
 async function apiLlmVerdict(item) {
-  const key =
-    process.env.OPENROUTER_API_KEY ||
-    process.env.GROQ_API_KEY ||
-    process.env.OPENAI_API_KEY;
-  if (!key) return null;
-
-  let base = "https://api.openai.com/v1";
-  let model = process.env.PIZDATO_LLM_MODEL || "gpt-4.1-mini";
-  if (process.env.OPENROUTER_API_KEY) {
-    base = "https://openrouter.ai/api/v1";
-    model = process.env.PIZDATO_LLM_MODEL || "openai/gpt-4.1-mini";
-  } else if (process.env.GROQ_API_KEY) {
-    base = "https://api.groq.com/openai/v1";
-    model = process.env.PIZDATO_LLM_MODEL || "llama-3.3-70b-versatile";
-  }
-
-  const res = await fetch(`${base}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      ...(process.env.OPENROUTER_API_KEY
-        ? { "HTTP-Referer": "https://pizdato.net", "X-Title": "pizdato-channel" }
-        : {}),
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.3,
-      messages: [
-        {
-          role: "system",
-          content:
-            'Отвечай только JSON: {"verdict":"pizdato"|"huyevo","reason":"..."}. Плохие события для людей/стран = huyevo. Reason — короткая ирония по делу, без штампов вроде «без бед и катастроф».',
-        },
-        { role: "user", content: buildVerdictPrompt(item) },
-      ],
-    }),
-    signal: AbortSignal.timeout(60000),
+  return openRouterText({
+    temperature: 0.3,
+    system: 'Отвечай только JSON: {"verdict":"pizdato"|"huyevo","reason":"..."}. Плохие события для людей/стран = huyevo. Reason — короткая ирония по делу, без штампов вроде «без бед и катастроф».',
+    prompt: buildVerdictPrompt(item),
   });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`LLM HTTP ${res.status}: ${body.slice(0, 300)}`);
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || null;
 }
 
 /** Decide пиздато/хуёво for hourly news cron. Fetches article body first. */
@@ -439,30 +267,15 @@ export async function generateVerdict(item) {
     );
   }
 
-  const useCursor = process.env.PIZDATO_USE_CURSOR_AGENT !== "0";
-
-  if (useCursor) {
-    try {
-      console.log("verdict with cursor-agent...");
-      // ask-mode often returns empty for JSON-only verdicts; default agent mode works.
-      const raw = await runCursorAgent(buildVerdictPrompt(enriched), { mode: null });
-      const parsed = parseVerdict(raw);
-      if (parsed) return { ...parsed, notes, item: enriched };
-      notes.push("cursor-agent verdict JSON parse failed");
-    } catch (e) {
-      notes.push(`cursor-agent failed: ${e.message}`);
-      console.warn("cursor-agent verdict failed:", e.message);
-    }
-  }
-
   try {
-    const api = await apiLlmVerdict(enriched);
-    const parsed = parseVerdict(api);
+    console.log("verdict with OpenRouter...");
+    const raw = await apiLlmVerdict(enriched);
+    const parsed = parseVerdict(raw);
     if (parsed) return { ...parsed, notes, item: enriched };
-    if (api) notes.push("API LLM verdict JSON parse failed");
+    notes.push("OpenRouter verdict JSON parse failed");
   } catch (e) {
-    notes.push(`API LLM failed: ${e.message}`);
-    console.warn("API LLM verdict failed:", e.message);
+    notes.push(`OpenRouter failed: ${e.message}`);
+    console.warn("OpenRouter verdict failed:", e.message);
   }
 
   const fallback = heuristicVerdict(enriched);

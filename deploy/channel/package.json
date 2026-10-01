@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Daily stats + wisdom posts to @pizdato_net",
   "scripts": {
-    "post": "node post-daily.mjs"
+    "post": "node post-daily.mjs",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0",

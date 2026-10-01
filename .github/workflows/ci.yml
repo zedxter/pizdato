@@ -83,6 +83,25 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+  channel:
+    name: Channel (Node 18)
+    runs-on: self-hosted
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: deploy/channel/package-lock.json
+      - name: Install
+        working-directory: deploy/channel
+        run: npm ci
+      - name: Test generation
+        working-directory: deploy/channel
+        run: npm test
+
   design-eval:
     name: Design Eval (css vs spec)
     runs-on: self-hosted
