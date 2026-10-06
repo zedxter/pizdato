@@ -58,6 +58,10 @@ jobs:
           rustc --test deploy/evening/test/runner.rs -o /tmp/pizdato-evening-tests
           /tmp/pizdato-evening-tests
           bash -n deploy/evening/run.sh
+          rustfmt --check deploy/morning/test/runner.rs
+          rustc --test deploy/morning/test/runner.rs -o /tmp/pizdato-morning-tests
+          /tmp/pizdato-morning-tests
+          bash -n deploy/morning/run.sh
 
   frontend:
     name: Frontend (npm)
@@ -109,7 +113,7 @@ jobs:
         working-directory: deploy/channel
         run: npm test
       - name: Test evening validation and Composio boundaries
-        run: node --test deploy/evening/test/agent.test.mjs
+        run: node --test deploy/evening/test/agent.test.mjs deploy/morning/test/agent.test.mjs
 
   design-eval:
     name: Design Eval (css vs spec)
