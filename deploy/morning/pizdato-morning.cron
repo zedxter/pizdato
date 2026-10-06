@@ -1,0 +1,2 @@
+# User crontab; server timezone MUST be Europe/Berlin.
+0 10 * * * /bin/bash /home/danil/.local/share/pizdato-morning/run.sh >> /home/danil/.local/state/pizdato-morning/cron.log 2>&1 # pizdato-morning

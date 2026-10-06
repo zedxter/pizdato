@@ -41,7 +41,7 @@ export function parseMcp(text) {
   }
   throw new Error('Empty MCP response');
 }
-async function loadEnv(path) {
+export async function loadEnv(path) {
   let text;
   try { text = await readFile(path, 'utf8'); } catch (e) { if (e.code === 'ENOENT') return; throw e; }
   for (const line of text.split('\n')) {
@@ -49,7 +49,7 @@ async function loadEnv(path) {
     if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].trim().replace(/^(["'])(.*)\1$/, '$2');
   }
 }
-class Composio {
+export class Composio {
   id = 0;
   session;
   async rpc(method, params, notify = false) {
@@ -74,17 +74,17 @@ class Composio {
     return result;
   }
 }
-function unpack(result) {
+export function unpack(result) {
   if (result.structuredContent) return result.structuredContent;
   for (const item of result.content || []) {
     if (item.type === 'text') { try { return JSON.parse(item.text); } catch {} }
   }
   throw new Error('Composio result has no structured payload');
 }
-async function chat(messages, tools) {
+export async function chat(messages, tools, options = {}) {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://pizdato.net', 'X-Title': 'pizdato-evening' },
-    body: JSON.stringify({ model: process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash', messages, ...(tools?.length && { tools, tool_choice: 'auto' }), temperature: 0.7, max_tokens: 5000 }),
+    method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://pizdato.net', 'X-Title': options.title || 'pizdato-evening' },
+    body: JSON.stringify({ model: options.model || process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash', messages, ...(tools?.length && { tools, tool_choice: 'auto' }), temperature: 0.7, max_tokens: options.maxTokens || 5000 }),
     signal: AbortSignal.timeout(180000),
   });
   if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
@@ -100,7 +100,7 @@ async function publicFetch(url, options = {}) {
   if (!res.ok || new URL(res.url).protocol !== 'https:') throw new Error(`Source HTTP ${res.status}`);
   return res;
 }
-async function atomicWrite(path, text) {
+export async function atomicWrite(path, text) {
   await mkdir(dirname(path), { recursive: true });
   const temp = `${path}.${process.pid}.tmp`;
   await writeFile(temp, text, { mode: 0o600 });
