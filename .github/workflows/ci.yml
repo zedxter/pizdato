@@ -52,6 +52,11 @@ jobs:
         working-directory: backend
         run: cargo test --workspace
 
+      - name: Setup Node for cron rendering tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
       - name: Test evening cron runner
         run: |
           rustfmt --check deploy/evening/test/runner.rs

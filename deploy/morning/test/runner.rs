@@ -176,7 +176,11 @@ fn morning_message_has_restrained_decoration_without_promotion() {
     let result = Command::new("node")
         .args(["--input-type=module", "-e", "import {renderWisdom} from './deploy/morning/agent.mjs'; process.stdout.write(renderWisdom('wisdom', 'wish'));"])
         .output().unwrap();
-    assert!(result.status.success());
+    assert!(
+        result.status.success(),
+        "Node rendering failed: {}",
+        String::from_utf8_lossy(&result.stderr)
+    );
     let text = String::from_utf8(result.stdout).unwrap();
     assert!(text.starts_with("☕ "));
     assert!(text.contains("\n\n✨ wish"));
