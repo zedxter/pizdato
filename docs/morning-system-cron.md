@@ -16,7 +16,7 @@ The morning process reads the existing OpenRouter key from `~/.config/pizdato-ch
 
 ## Message contract
 
-Only a fixed attribution to Uncle Misha, one quoted 10–15-word original Russian wisdom, and a separate short witty wish (5–25 words). Both go through post-polish (telegram/warm/ru). No statistics, links, domains, site promotion, voting/subscription CTA, greeting, news, image, first-person narration or reaction prompt. Host validation rejects prohibited copy before sending; recent morning archives provide repetition context. The host rejects exact recent wisdom repetitions ignoring punctuation and case, and the prompt also discourages rephrased punchlines.
+A coffee emoji decorates the fixed attribution to Uncle Misha, followed by one quoted 10–15-word original Russian wisdom, and a separate short witty wish (5–25 words). A sparkle emoji decorates the wish. The prompt requests lively conversational humor, concrete details and varied playful wishes; raw generated fields stay emoji-free. Both go through post-polish (telegram/warm/ru). No statistics, links, domains, site promotion, voting/subscription CTA, greeting, news, image, first-person narration or reaction prompt. Host validation rejects prohibited copy before sending; recent morning archives provide repetition context. The host rejects exact recent wisdom repetitions ignoring punctuation and case, and the prompt also discourages rephrased punchlines.
 
 The model has no external tools. Host code discovers/verifies the Telegram connection and uses TELEGRAM_SEND_MESSAGE with plain text (parse_mode omitted), exact account and exact destination. No live send occurs during check/dry-run.
 
@@ -65,3 +65,7 @@ Rollback removes only the tagged morning crontab line, retaining the evening job
 ## Verification on 2026-10-06
 
 The actual cron environment verified the existing named channel, independent polish resources and an OpenRouter response from deepseek/deepseek-v4.1-flash. A real non-publishing dry-run produced a validated quoted wisdom and witty wish. Eight morning Rust runner tests and five morning Node content tests passed; all fourteen existing evening tests also passed. No test post was sent. The 10:00 user crontab entry was installed and read back; the existing 18:00 line was byte-for-byte preserved and Hermes morning remains paused. First live run is scheduled for 2026-10-07 at 10:00 Europe/Berlin.
+
+## Livelier presentation (#203)
+
+The owner requested restrained emojis and a livelier conversational voice. The host now adds one coffee emoji to the attribution and one sparkle to the wish. Raw generated fields reject extra emojis and explicit first-person wish verbs. The prompt asks for concrete everyday humor and varied playful wishes. A real non-publishing dry-run passed with DeepSeek 4.1 Flash; nine Rust morning runner/rendering tests and seven Node content tests passed. Updated morning runtime files were copied and read back; the cron entry did not change. Rollback restores agent.mjs/prompt.md from ~/.local/state/pizdato-morning/backups/lively-203/.

@@ -170,3 +170,15 @@ fn preflight_is_read_only() {
     assert!(prompt.contains("--check"));
     assert!(!c.marker().exists());
 }
+
+#[test]
+fn morning_message_has_restrained_decoration_without_promotion() {
+    let result = Command::new("node")
+        .args(["--input-type=module", "-e", "import {renderWisdom} from './deploy/morning/agent.mjs'; process.stdout.write(renderWisdom('wisdom', 'wish'));"])
+        .output().unwrap();
+    assert!(result.status.success());
+    let text = String::from_utf8(result.stdout).unwrap();
+    assert!(text.starts_with("☕ "));
+    assert!(text.contains("\n\n✨ wish"));
+    assert!(!text.contains("http"));
+}

@@ -7,23 +7,23 @@ const ROOT=dirname(fileURLToPath(import.meta.url));
 const CHAT=-1004350521393, ACCOUNT='pizdato-net-channel';
 const normalized=s=>s.toLocaleLowerCase('ru').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 export function validateWisdom(wisdom, recent=[]) {
-  if(typeof wisdom!=='string'||/[\r\n«»"]/u.test(wisdom)) throw new Error('Expected a single wisdom sentence without extra sections or quotation marks');
+  if(typeof wisdom!=='string'||/[\r\n«»"]|\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(wisdom)) throw new Error('Expected a single wisdom sentence without extra sections or quotation marks');
   const words=wisdom.match(/[\p{L}\p{N}]+(?:[-’'][\p{L}\p{N}]+)*/gu)||[];
   if(words.length<10||words.length>15) throw new Error('Wisdom must contain 10–15 words');
   if(/https?|www|pizdato|[\p{L}\p{N}]+\.[\p{L}]{2,}|\d|голосов|голосован|проголос|голосуй|статист|подпис|ссылк|доброе утро|мир жд[её]т|🔥|💀/iu.test(wisdom)) throw new Error('Links, promotion, stats, voting, greetings and reaction prompts are prohibited');
-  if(/(?:^|[^\p{L}])(?:я|мы|мой|моя|мои|наш|наша|наши|нам|нас|мне|меня)(?:[^\p{L}]|$)/iu.test(wisdom)) throw new Error('No first-person narration');
+  if(/(?:^|[^\p{L}])(?:я|мы|мой|моя|мои|наш|наша|наши|нам|нас|мне|меня|желаю|хочу|надеюсь|советую|думаю|вижу|считаю|наш[её]л)(?:[^\p{L}]|$)/iu.test(wisdom)) throw new Error('No first-person narration');
   if(recent.some(s=>normalized(s)===normalized(wisdom))) throw new Error('Wisdom was recently published; write a fresh thought');
   return wisdom.trim();
 }
 export function validateWish(wish) {
-  if(typeof wish!=='string'||/[\r\n«»"]/u.test(wish)) throw new Error('Expected one short wish');
+  if(typeof wish!=='string'||/[\r\n«»"]|\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(wish)) throw new Error('Expected one short wish');
   const words=wish.match(/[\p{L}\p{N}]+(?:[-’'][\p{L}\p{N}]+)*/gu)||[];
   if(words.length<5||words.length>25) throw new Error('Wish must contain 5–25 words');
   if(/https?|www|pizdato|[\p{L}\p{N}]+\.[\p{L}]{2,}|\d|голосов|голосован|проголос|голосуй|статист|подпис|ссылк|доброе утро|мир жд[её]т|🔥|💀/iu.test(wish)) throw new Error('No promotion, links, stats or greetings in the wish');
-  if(/(?:^|[^\p{L}])(?:я|мы|мой|моя|мои|наш|наша|наши|нам|нас|мне|меня)(?:[^\p{L}]|$)/iu.test(wish)) throw new Error('No first-person wish');
+  if(/(?:^|[^\p{L}])(?:я|мы|мой|моя|мои|наш|наша|наши|нам|нас|мне|меня|желаю|хочу|надеюсь|советую|думаю|вижу|считаю|наш[её]л)(?:[^\p{L}]|$)/iu.test(wish)) throw new Error('No first-person wish');
   return wish.trim();
 }
-export const renderWisdom=(wisdom,wish='')=>`Мудрость дня от дяди Миши:\n«${wisdom}»${wish ? `\n\n${wish}` : ''}`;
+export const renderWisdom=(wisdom,wish='')=>`☕ Мудрость дня от дяди Миши:\n«${wisdom}»${wish ? `\n\n✨ ${wish}` : ''}`;
 async function run() {
   const mode=process.argv[2]||'publish';
   if(!['publish','--dry-run','--check'].includes(mode)) throw new Error('Unknown mode');
