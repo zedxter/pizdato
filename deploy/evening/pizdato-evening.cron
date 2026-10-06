@@ -1,0 +1,3 @@
+# User crontab entry; the OS cron daemon schedules in the server timezone.
+# Required server timezone: Europe/Berlin. Do not enable legacy 17:00 posting.
+0 18 * * * /bin/bash /home/danil/.local/share/pizdato-evening/run.sh >> /home/danil/.local/state/pizdato-evening/cron.log 2>&1 # pizdato-evening
