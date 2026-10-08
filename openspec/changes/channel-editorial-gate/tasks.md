@@ -16,8 +16,8 @@
 - [x] 3.4 Version and install coherent shared resources; preserve transport and slot contracts.
 
 ## 4. QA and rollout
-- [ ] 4.1 Pass existing and new Node/Rust tests and CI in an implementation PR.
+- [x] 4.1 Pass existing and new Node/Rust tests and CI in an implementation PR.
 - [x] 4.2 Run three non-publishing trials per linguistic fixture; record model/settings/verdicts and investigate every mismatch.
-- [ ] 4.3 Run both real dry-runs and inspect exact final drafts and editorial verdicts.
+- [x] 4.3 Run both real dry-runs and inspect exact final drafts and editorial verdicts.
 - [ ] 4.4 After required review, CI and merge, back up and install under runner locks; verify hashes and unchanged schedules.
 - [ ] 4.5 Verify next scheduled receipts and review the first week's variety; record limitations and rollback procedure.
