@@ -17,7 +17,7 @@ test('installer produces importable coherent bundle and a verifiable manifest',a
  await mkdir(join(root,'vault/posts'),{recursive:true});await writeFile(join(root,'trace'),'');
  for(const slot of ['morning','evening']) {
  const prefix=`PIZDATO_${slot.toUpperCase()}`;
- const dry=spawnSync('bash',[join(root,'share',`pizdato-${slot}/run.sh`),'--dry-run'],{encoding:'utf8',env:{...process.env,NODE_OPTIONS:`--import ${resolve('deploy/editorial/test/fake-network.mjs')}`,OPENROUTER_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),[`${prefix}_VAULT`]:join(root,'vault'),[`${prefix}_STATE`]:join(root,'state',slot),TEST_TRACE:join(root,'trace'),TEST_VERDICT:'approve'}});
+ const dry=spawnSync('bash',[join(root,'share',`pizdato-${slot}/run.sh`),'--dry-run'],{encoding:'utf8',env:{...process.env,NODE_OPTIONS:`--import ${resolve('deploy/editorial/test/fake-network.mjs')}`,OPENROUTER_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),[`${prefix}_NODE`]:process.execPath,[`${prefix}_VAULT`]:join(root,'vault'),[`${prefix}_STATE`]:join(root,'state',slot),TEST_TRACE:join(root,'trace'),TEST_VERDICT:'approve'}});
  assert.equal(dry.status,0,dry.stderr);assert.ok(dry.stdout.includes('DRY_RUN_OK'),dry.stdout);
  }
  assert.ok(manifest.sha256['editorial/editor.md']);
