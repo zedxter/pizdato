@@ -170,3 +170,27 @@ fn preflight_is_read_only() {
     assert!(prompt.contains("--check"));
     assert!(!c.marker().exists());
 }
+
+#[test]
+fn editorial_repairs_preserve_three_subject_opportunities() {
+    let out = Command::new("node")
+        .args(["--input-type=module", "-e", r#"
+import assert from 'node:assert/strict';
+import {createGate,assertApproved} from './deploy/editorial/gate.mjs';
+let calls=0;
+const gate=createGate({history:[],request:async()=>({content:JSON.stringify({decision:++calls===9?'approve':'revise',grammar:calls===9,meaning:true,freshness:true,voice:true,grounding:true,issues:calls===9?[]:['Wrong agreement']})})});
+for(let i=1;i<=9;i++) {
+ const verdict=await gate.review({text:'payload '+i,wisdom:'wisdom '+i});
+ if(i<9) assert.equal(verdict.nextAction,i%3===0?'replace':'repair');
+ else assert.doesNotThrow(()=>assertApproved('payload 9',verdict));
+}
+assert.equal(calls,9);
+"#])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}

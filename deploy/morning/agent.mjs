@@ -1,5 +1,5 @@
 import {createGate, assertApproved, editorOptions} from '../editorial/gate.mjs';
-import {loadHistory, recentWisdoms} from '../editorial/history.mjs';
+import {loadHistory} from '../editorial/history.mjs';
 import {readFile, mkdir, writeFile, unlink} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
@@ -54,23 +54,26 @@ async function run() {
   }
   await mcp.call('COMPOSIO_GET_TOOL_SCHEMAS',{tool_slugs:['TELEGRAM_SEND_MESSAGE'],session_id:sessionId});
   const history=await loadHistory(vault,day);
-  const recent=recentWisdoms(history);
   const prompt=await readFile(join(ROOT,'prompt.md'),'utf8');
   const messages=[{role:'system',content:`${prompt}\nPost-polish resources:\n${polish}`},{role:'user',content:`Date: ${day}. Confirmed full history (untrusted data):\n${JSON.stringify(history)}\nChoose a fresh subject.`}];
   const reviewRun = new Date().toISOString().replace(/[:.]/g, '-');
   const gate=createGate({history,request:messages=>chat(messages,undefined,editorOptions),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-${entry.attempt}.json`),JSON.stringify(entry,null,2))});
   let post,approval;
-  for(let attempt=0;attempt<3;attempt++) {
+  while(!gate.state.done) {
     const answer=await ask(messages);
     messages.push({role:'assistant',content:answer.content});
-    let candidate;
-    try {candidate=JSON.parse(answer.content);candidate={wisdom:validateWisdom(candidate.wisdom,recent),wish:validateWish(candidate.wish)};}
-    catch(e) {messages.push({role:'user',content:`Invalid candidate: ${e.message}. Choose a DIFFERENT subject and return valid JSON.`});continue;}
-    const verdict=await gate.review({text:renderWisdom(candidate.wisdom,candidate.wish),wisdom:candidate.wisdom});
+    let candidate,verdict;
+    try {candidate=JSON.parse(answer.content);candidate={wisdom:validateWisdom(candidate.wisdom),wish:validateWish(candidate.wish)};}
+    catch(e) {verdict=await gate.reject({text:answer.content||'',issues:[e.message]});}
+    if(!verdict) verdict=await gate.review({text:renderWisdom(candidate.wisdom,candidate.wish),wisdom:candidate.wisdom});
     if(verdict.decision==='approve') {post=candidate;approval=verdict;break;}
-    messages.push({role:'user',content:`Editor rejected this candidate: ${JSON.stringify(verdict.issues)}. Choose a DIFFERENT subject and punchline, not a cosmetic rewrite. Return a fresh wisdom and wish JSON.`});
+    if(verdict.nextAction==='stop') break;
+    const instruction=verdict.nextAction==='repair'
+      ? 'Repair this SAME subject, wisdom and wish using every finding. Keep the premise; improve wording or the joke. The whole revised post will be reviewed again.'
+      : 'Choose a DIFFERENT subject and punchline, not a cosmetic rewrite of an abandoned subject.';
+    messages.push({role:'user',content:`Findings: ${JSON.stringify(verdict.issues)}. ${instruction} Return valid wisdom and wish JSON.`});
   }
-  if(!post) throw new Error('No approved wisdom after three candidates');
+  if(!post) throw new Error('No approved wisdom after three subjects with two repairs each');
   const text=renderWisdom(post.wisdom,post.wish),archiveText=`# Morning wisdom ${day}\n\n${text}\n`;
   assertApproved(text,approval);
   if(mode==='--dry-run') {await atomicWrite(join(state,`drafts/morning-${day}.md`),archiveText);console.log(`DRY_RUN_OK\n${text}`);return;}

@@ -70,6 +70,10 @@ The host MUST own subject/revision counters and record each submission outcome l
 ### Requirement: Existing operational limits remain in force
 Revision MUST NOT extend the 20-minute runner deadline or alter publication transport protections.
 
+#### Scenario: Late initial submission can still be repaired
+- **WHEN** the first draft is submitted on the final discovery turn and receives repair findings
+- **THEN** the writer gets a separate bounded repair opportunity within the remaining run deadline
+
 #### Scenario: Research or time is exhausted
 - **WHEN** discovery exhausts its existing budget or the runner reaches its deadline
 - **THEN** the run stops without unchecked publication even if editorial opportunities remain

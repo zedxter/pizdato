@@ -1,3 +1,5 @@
+> Historical specification: the repair/replacement budgets below are superseded by the approved editorial-revision change (#210/#211); other requirements remain in force.
+
 ## ADDED Requirements
 
 ### Requirement: Confirmed shared editorial history
