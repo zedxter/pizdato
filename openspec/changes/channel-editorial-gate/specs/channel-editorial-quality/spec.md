@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Confirmed shared editorial history
-Both scheduled generators and their editors MUST receive complete confirmed morning and evening posts from the preceding 14 Europe/Berlin calendar days.
+Both scheduled generators and their editors MUST receive complete confirmed morning and evening posts from the current Europe/Berlin calendar day and the previous 13 calendar days.
 
 #### Scenario: Evening checks a morning motif
 - **GIVEN** a confirmed morning post with a recurring premise in its wish
@@ -84,3 +84,12 @@ Installed editorial resources MUST match the reviewed repository version used by
 #### Scenario: Deployment verification
 - **WHEN** a reviewed bundle is installed
 - **THEN** file hashes and source revision are recorded and read back before scheduled publishing resumes
+
+### Requirement: Replacement after editorial rejection
+After a valid editorial rejection in round one or two, the host MUST request different content and review the replacement.
+
+#### Scenario: Replacement succeeds
+- **GIVEN** the first candidate is rejected
+- **WHEN** a different morning subject or evening story passes review
+- **THEN** exactly that approved replacement is sent once
+- **AND** the rejected candidate is never sent

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "agreement",
+    "text": "Старый будильник зазвонила раньше обычного, и дядя Миша решил сразу встать.",
+    "expected": "revise",
+    "dimension": "grammar"
+  },
+  {
+    "id": "meaning",
+    "text": "Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это по пустой кружке.",
+    "expected": "revise",
+    "dimension": "meaning"
+  },
+  {
+    "id": "repeated-hook",
+    "text": "Дядя Миша листал ленту за чаем — а там очередная невероятная находка.",
+    "history": [
+      {
+        "text": "Дядя Миша листал ленту за кофе — а там тыква весом в тонну."
+      }
+    ],
+    "expected": "revise",
+    "dimension": "freshness"
+  },
+  {
+    "id": "natural-irony",
+    "text": "Пакет с пакетами — единственный домашний проект, который стабильно растёт без вложений.",
+    "expected": "approve"
+  },
+  {
+    "id": "coherent-exaggeration",
+    "text": "Чтобы найти дома отвёртку, сначала приходится провести раскопки трёх древних ящиков.",
+    "expected": "approve"
+  },
+  {
+    "id": "source-beverage",
+    "text": "В библиотеке открыли кофейню. Дядя Миша одобрил соседство книг и капучино. Мудрость дня: «Книги возвращают в библиотеку, а капучино обратно уже не вернёшь».",
+    "source": {
+      "text": "A coffee shop opened inside the library. Visitors can borrow books and order cappuccino."
+    },
+    "expected": "approve",
+    "wisdom": "Книги возвращают в библиотеку, а капучино обратно уже не вернёшь."
+  },
+  {
+    "id": "circular-platitude",
+    "text": "Дольше всех ждут те, кого уже перестали искать, — и дожидаются.",
+    "expected": "revise",
+    "dimension": "voice"
+  }
+]

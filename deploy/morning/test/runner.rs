@@ -186,3 +186,17 @@ fn morning_message_has_restrained_decoration_without_promotion() {
     assert!(text.contains("\n\n✨ wish"));
     assert!(!text.contains("http"));
 }
+
+#[test]
+fn editorial_rejection_prevents_delivery_authorization() {
+    let out = Command::new("node")
+        .args(["--test", "deploy/editorial/test/hosts.test.mjs"])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
