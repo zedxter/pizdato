@@ -9,3 +9,5 @@ Implementation review identified two defects before deployment: symlinked entryp
 The first real editor probe exhausted its response allowance during model reasoning and returned no verdict. The host rejected it. The editor allowance was increased to 6,000 tokens; six labeled linguistic fixtures then passed three trials each. This is measured fixture performance, not a guarantee of perfect Russian.
 
 Real archive inspection found historical message_id/Markdown markers; history reading now supports those confirmed records while still rejecting corrupt markers and missing archives. No public test message was sent.
+
+A full evening dry-run hit the provider timeout after accumulating discovery context. The writer no longer loads unrelated Composio tool descriptions; all publishing/account checks remain in the host, and local source/cover tools suffice for research. A real-host regression requires the workflow to complete without fetching that unrelated tool catalog. Review records use per-run timestamps so later dry-runs cannot overwrite a scheduled run's editorial findings.

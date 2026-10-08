@@ -29,7 +29,7 @@ globalThis.fetch=async(url,opts={})=>{
  }
  if(String(url).includes('connect.composio.dev')) {
  const req=JSON.parse(opts.body);let result={};
- if(req.method==='tools/list') result={tools:[]};
+ if(req.method==='tools/list') throw new Error('Writer must not load unrelated Composio tool descriptions');
  if(req.method==='tools/call') {
  const {name,arguments:args}=req.params;let data={};
  if(name==='COMPOSIO_SEARCH_TOOLS') data={session:{id:'test'},toolkit_connection_statuses:[{toolkit:'telegram',accounts:[{alias:'pizdato-net-channel',status:'ACTIVE'}]}]};

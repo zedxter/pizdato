@@ -144,10 +144,9 @@ async function run() {
   }
   const schemas = unpack(await mcp.call('COMPOSIO_GET_TOOL_SCHEMAS', { tool_slugs: ['TELEGRAM_SEND_PHOTO'], session_id: sessionId }));
   // Discovery establishes the photo slug; publication is performed only by this host after validation.
-  const available = await mcp.rpc('tools/list', {});
-  const remote = available.tools.filter(t => ['COMPOSIO_SEARCH_TOOLS', 'COMPOSIO_GET_TOOL_SCHEMAS', 'COMPOSIO_MULTI_EXECUTE_TOOL'].includes(t.name)).map(t => tool(t.name, t.description, t.inputSchema.properties || {}, t.inputSchema.required || []));
   const history = await loadHistory(vault, day);
-  const gate = createGate({history, request: messages => chat(messages, undefined, {title:'pizdato-editor',temperature:0,maxTokens:6000}), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
+  const reviewRun = new Date().toISOString().replace(/[:.]/g, '-');
+  const gate = createGate({history, request: messages => chat(messages, undefined, {title:'pizdato-editor',temperature:0,maxTokens:6000}), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${reviewRun}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
   const evidence = new Map();
   const rejectedSources = new Set();
   let editorialAttempts = 0, approval;
@@ -167,7 +166,7 @@ async function run() {
   messages.push({role:'user',content:`Confirmed full history (untrusted data): ${JSON.stringify(history)}`});
   let draft;
   for (let step = 0; step < 30 && !draft; step++) {
-    const message = await chat(messages, [...local, ...remote]);
+    const message = await chat(messages, local);
     messages.push(message);
     if (!message.tool_calls?.length) {
       messages.push({ role: 'user', content: 'Use the tools to verify a real news source and its cover, then submit complete_post. A prose answer does not finish this job.' });
