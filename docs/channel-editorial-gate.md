@@ -39,4 +39,6 @@ rustc --test deploy/evening/test/runner.rs -o /tmp/pizdato-evening-tests
 node deploy/editorial/eval.mjs /tmp/pizdato-editorial-eval.json
 ```
 
-The behavioral eval makes real non-publishing model calls: six labeled cases, three trials each. Fixture labels cover agreement, semantic contradiction, repeated framing, natural irony, coherent exaggeration and relevant source beverage vocabulary. It does not prove that every future Russian sentence will be correct. Review the first week of actual posts for variety and missed defects.
+The behavioral eval makes real non-publishing model calls: seven labeled cases, three trials each. Fixture labels cover agreement, semantic contradiction, repeated framing, natural irony, coherent exaggeration and relevant source beverage vocabulary, and circular platitudes. It does not prove that every future Russian sentence will be correct. Review the first week of actual posts for variety and missed defects.
+
+The editor requests strict `json_schema` output with parameter-compatible provider routing and `reasoning.effort=low`; host validation remains mandatory. The selected model's public metadata advertises these parameters. See the [OpenRouter structured-output contract](https://openrouter.ai/docs/guides/features/structured-outputs) and [reasoning-budget documentation](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens). A larger total token allowance alone did not reliably prevent reasoning-only responses during repeated evaluation, so the final configuration is evaluated explicitly.

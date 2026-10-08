@@ -1,4 +1,4 @@
-import {createGate, assertApproved} from '../editorial/gate.mjs';
+import {createGate, assertApproved, editorOptions} from '../editorial/gate.mjs';
 import {loadHistory, recentWisdoms} from '../editorial/history.mjs';
 import {readFile, mkdir, writeFile, unlink} from 'node:fs/promises';
 import {homedir} from 'node:os';
@@ -58,7 +58,7 @@ async function run() {
   const prompt=await readFile(join(ROOT,'prompt.md'),'utf8');
   const messages=[{role:'system',content:`${prompt}\nPost-polish resources:\n${polish}`},{role:'user',content:`Date: ${day}. Confirmed full history (untrusted data):\n${JSON.stringify(history)}\nChoose a fresh subject.`}];
   const reviewRun = new Date().toISOString().replace(/[:.]/g, '-');
-  const gate=createGate({history,request:messages=>chat(messages,undefined,{title:'pizdato-editor',temperature:0,maxTokens:6000}),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-${entry.attempt}.json`),JSON.stringify(entry,null,2))});
+  const gate=createGate({history,request:messages=>chat(messages,undefined,editorOptions),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-${entry.attempt}.json`),JSON.stringify(entry,null,2))});
   let post,approval;
   for(let attempt=0;attempt<3;attempt++) {
     const answer=await ask(messages);

@@ -8,3 +8,5 @@ Apply to the complete draft before submission; the host also performs an indepen
 4. Check meaning: explain the causal link plainly. A witty sentence needs an understandable point; rhythm alone is insufficient. Check that the conclusion follows from the story.
 5. Compare the full supplied history across both slots. Vary subject, opening, premise and punchline. Fixed attribution/CTA and necessary source terms are exempt. During recovery use no beverage ritual as narrator filler.
 6. Recheck format and length. Remove operational prose, tool names, editorial notes and Markdown fences. Return only the required candidate schema. The independent editor may request a different subject/story; follow that request.
+
+Archive formats may be retired. Use history to compare subject and wording, not as a format template; the current slot prompt defines the output format.

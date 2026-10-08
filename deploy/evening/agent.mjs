@@ -1,4 +1,4 @@
-import {createGate, assertApproved} from '../editorial/gate.mjs';
+import {createGate, assertApproved, editorOptions} from '../editorial/gate.mjs';
 import {loadHistory} from '../editorial/history.mjs';
 import { readFile, writeFile, rename, mkdir, unlink } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -86,7 +86,7 @@ export function unpack(result) {
 export async function chat(messages, tools, options = {}) {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://pizdato.net', 'X-Title': options.title || 'pizdato-evening' },
-    body: JSON.stringify({ model: options.model || process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash', messages, ...(tools?.length && { tools, tool_choice: 'auto' }), temperature: options.temperature ?? 0.7, max_tokens: options.maxTokens || 5000 }),
+    body: JSON.stringify({ model: options.model || process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash', messages, reasoning:options.reasoning || {effort:"low",exclude:true}, ...(options.responseFormat && {response_format:options.responseFormat,provider:{require_parameters:true}}), ...(tools?.length && { tools, tool_choice: 'auto' }), temperature: options.temperature ?? 0.7, max_tokens: options.maxTokens || 5000 }),
     signal: AbortSignal.timeout(180000),
   });
   if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
@@ -146,7 +146,7 @@ async function run() {
   // Discovery establishes the photo slug; publication is performed only by this host after validation.
   const history = await loadHistory(vault, day);
   const reviewRun = new Date().toISOString().replace(/[:.]/g, '-');
-  const gate = createGate({history, request: messages => chat(messages, undefined, {title:'pizdato-editor',temperature:0,maxTokens:6000}), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${reviewRun}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
+  const gate = createGate({history, request: messages => chat(messages, undefined, editorOptions), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${reviewRun}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
   const evidence = new Map();
   const rejectedSources = new Set();
   let editorialAttempts = 0, approval;
@@ -157,7 +157,6 @@ async function run() {
     tool('search_web', 'Search the public web; returns Bing RSS results. Follow original sources and verify facts.', { query: str }, ['query']),
     tool('fetch_url', 'Fetch an HTTPS news article/API. Returns readable text, raw OG meta tags and links.', { url: str }, ['url']),
     tool('validate_cover', 'Validate a public HTTPS source image using HEAD then GET, image MIME and nonempty bytes.', { url: str }, ['url']),
-    tool('read_context', 'Read recent canonical evening posts and live-site context; never invent weekly data.', {}),
     tool('complete_post', 'Submit the final post after post-polish. Requires a validated source cover and fetched source. Host validates and publishes once, or saves dry-run only.', { caption: str, wisdom: str, source_url: str, image_url: str, category: str }, ['caption', 'wisdom', 'source_url', 'image_url', 'category']),
   ];
   const prompt = await readFile(join(ROOT, 'prompt.md'), 'utf8');
@@ -200,8 +199,7 @@ async function run() {
           if (!bytes || bytes > 10 * 1024 * 1024) throw new Error('Cover empty or larger than Telegram 10MB photo limit');
           verifiedImages.add(args.url);
           result = { valid: true, url: res.url, bytes, mime: res.headers.get('content-type') };
-        } else if (name === 'read_context') {
-          result = history;
+
         } else if (name === 'complete_post') {
           validateDraft(args);
           if (!verifiedImages.has(args.image_url) || !verifiedSources.has(args.source_url) || !sourceCovers.get(args.source_url)?.includes(args.image_url)) throw new Error('Fetch the source and validate an OG/Twitter cover from that same source first');

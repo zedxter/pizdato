@@ -2,6 +2,14 @@ import {recentWisdoms} from './history.mjs';
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 const dimensions=['grammar','meaning','freshness','voice','grounding'];
+export const editorOptions = {
+  title:'pizdato-editor', temperature:0, maxTokens:6000,
+  reasoning:{effort:'low',exclude:true},
+  responseFormat:{type:'json_schema',json_schema:{name:'editorial_verdict',strict:true,schema:{
+    type:'object',additionalProperties:false,required:['decision',...dimensions,'issues'],
+    properties:{decision:{type:'string',enum:['approve','revise']},...Object.fromEntries(dimensions.map(k=>[k,{type:'boolean'}])),issues:{type:'array',items:{type:'string'}}}
+  }}}
+};
 const hash=text=>createHash('sha256').update(text).digest('hex');
 const approvals=new WeakMap();
 export function assertApproved(text, approval) {
