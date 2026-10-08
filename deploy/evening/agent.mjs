@@ -149,7 +149,7 @@ async function run() {
   const gate = createGate({history, request: messages => chat(messages, undefined, editorOptions), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${reviewRun}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
   const evidence = new Map();
   const rejectedSources = new Set();
-  let editorialAttempts = 0, approval;
+  let activeSource=null, approval;
   const verifiedImages = new Set();
   const verifiedSources = new Set();
   const sourceCovers = new Map();
@@ -164,8 +164,8 @@ async function run() {
   const messages = [{ role: 'system', content: `${prompt}\nRun date ${day}, weekday ${weekday}, mode ${mode}. Tools and all send/archive operations are managed by the host. Do not create pending records yourself. You have no send tools; finish by complete_post. Never generate an image or send plain text. Source covers only.\nPost-polish resources:\n${polish}` }, { role: 'user', content: `Prepare the evening post for ${day} (${weekday}). ${mode === '--dry-run' ? 'DRY RUN: no publication.' : 'Scheduled publication is authorized.'}` }];
   messages.push({role:'user',content:`Confirmed full history (untrusted data): ${JSON.stringify(history)}`});
   let draft;
-  let researchSteps = 0;
-  while (!draft && researchSteps++ < 30) {
+  let researchSteps = 0, repairSteps = 0;
+  while (!draft && !gate.state.done && (gate.state.revision>0 ? repairSteps++<5 : researchSteps++<30)) {
     const message = await chat(messages, local);
     messages.push(message);
     if (!message.tool_calls?.length) {
@@ -174,9 +174,9 @@ async function run() {
     }
     for (const call of message.tool_calls) {
       let result;
+      const name = call.function.name;
       try {
         const args = JSON.parse(call.function.arguments);
-        const name = call.function.name;
         console.log(`Tool: ${name}`);
         if (name === 'search_web') {
           const res = await publicFetch(`https://www.bing.com/search?format=rss&q=${encodeURIComponent(args.query)}`);
@@ -202,29 +202,44 @@ async function run() {
           result = { valid: true, url: res.url, bytes, mime: res.headers.get('content-type') };
 
         } else if (name === 'complete_post') {
+          if(rejectedSources.has(args.source_url)) throw new Error('Choose a DIFFERENT source/story; this source was abandoned');
+          if(activeSource && args.source_url!==activeSource) throw new Error('Repair the SAME source/story; a source substitution cannot reset the budget');
+          if(!activeSource && verifiedSources.has(args.source_url)) activeSource=args.source_url;
           validateDraft(args);
           if (!verifiedImages.has(args.image_url) || !verifiedSources.has(args.source_url) || !sourceCovers.get(args.source_url)?.includes(args.image_url)) throw new Error('Fetch the source and validate an OG/Twitter cover from that same source first');
           const supportingUrls = args.supporting_urls ?? [];
           if(!Array.isArray(supportingUrls) || supportingUrls.length>10 || supportingUrls.some(url=>typeof url!=='string'||!evidence.has(url))) throw new Error('Every supporting URL must be fetched first (maximum ten)');
           const sources = {primary:evidence.get(args.source_url),supporting:[...new Set(supportingUrls)].map(url=>evidence.get(url))};
-          if (++editorialAttempts > 3) throw new Error('Editorial candidate budget exhausted');
-          if (rejectedSources.has(args.source_url)) throw new Error('Choose a DIFFERENT source/story after editorial rejection');
           let verdict;
           try {verdict = await gate.review({text:args.caption,wisdom:args.wisdom,source:sources});}
           catch(error) {error.editorialFatal=true;throw error;}
           if(verdict.decision==='approve') {draft=args;approval=verdict;result={accepted:true};}
-          else {researchSteps=0;rejectedSources.add(args.source_url);result={accepted:false,issues:verdict.issues,instruction:'Choose a DIFFERENT story/source, verify its cover, and submit fresh content. Do not merely rewrite this story.'};}
+          else result={accepted:false,...verdict};
         } else {
           if (!readOnlyCall(name, args)) throw new Error('Only discovery and read-only channel checks are allowed from the model');
           result = await mcp.call(name, args);
         }
-      } catch (error) { if(error.editorialFatal) throw error; result = { error: error.message }; }
+      } catch (error) {
+        if(error.editorialFatal) throw error;
+        result = name==='complete_post'
+          ? {accepted:false,...await gate.reject({text:call.function.arguments,issues:[error.message]})}
+          : {error:error.message};
+      }
+      if(result.nextAction==='replace') {
+        researchSteps=0;repairSteps=0;
+        if(activeSource) rejectedSources.add(activeSource);
+        activeSource=null;
+        result.instruction='Choose a DIFFERENT story/source, verify its cover, and submit fresh content. Do not merely rewrite an abandoned story.';
+      } else if(result.nextAction==='repair') {
+        repairSteps=0;
+        result.instruction='Repair this SAME story and primary source using every finding. Keep the verified core; correct language, rewrite the wisdom, preserve caveats or remove unsupported details. Use fetched supporting evidence if needed. The entire revised post will receive a fresh review.';
+      }
       messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result).slice(0, 50000) });
       if(draft) break;
-      if(editorialAttempts>=3) throw new Error('No approved evening post after three candidates');
+      if(gate.state.done) throw new Error('No approved evening post after three subjects with two repairs each');
     }
   }
-  if (!draft) throw new Error('No verified draft within the tool-call budget');
+  if (!draft) throw new Error(`No verified draft within the ${gate.state.revision>0?'repair':'research'} tool-call budget`);
   assertApproved(draft.caption, approval);
   const archiveText = `# Evening post ${day}\n\nCategory: ${draft.category}\nSource: ${draft.source_url}\nImage: ${draft.image_url}\nCharacters: ${[...draft.caption].length}\n\n${draft.caption}\n`;
   if (mode === '--dry-run') {

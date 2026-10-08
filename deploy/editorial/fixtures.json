@@ -6,9 +6,9 @@
     "dimension": "grammar"
   },
   {
-    "id": "meaning",
+    "id": "meaning-drink",
     "text": "Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это по пустой кружке.",
-    "expected": "revise",
+    "expected": "reject",
     "dimension": "meaning"
   },
   {
@@ -19,7 +19,7 @@
         "text": "Дядя Миша листал ленту за кофе — а там тыква весом в тонну."
       }
     ],
-    "expected": "revise",
+    "expected": "replace",
     "dimension": "freshness"
   },
   {
@@ -36,7 +36,11 @@
     "id": "source-beverage",
     "text": "В библиотеке открыли кофейню. Дядя Миша одобрил соседство книг и капучино. Мудрость дня: «Книги возвращают в библиотеку, а капучино обратно уже не вернёшь».",
     "source": {
-      "text": "A coffee shop opened inside the library. Visitors can borrow books and order cappuccino."
+      "primary": {
+        "url": "https://library.test/news",
+        "text": "A coffee shop opened inside the library. Visitors can borrow books and order cappuccino."
+      },
+      "supporting": []
     },
     "expected": "approve",
     "wisdom": "Книги возвращают в библиотеку, а капучино обратно уже не вернёшь."
@@ -46,5 +50,45 @@
     "text": "Дольше всех ждут те, кого уже перестали искать, — и дожидаются.",
     "expected": "revise",
     "dimension": "voice"
+  },
+  {
+    "id": "repairable-grounding",
+    "text": "В библиотеке открыли кофейню. Теперь все читатели берут книги только ради капучино. Мудрость дня: «Книги возвращают в библиотеку, а капучино обратно уже не вернёшь».",
+    "wisdom": "Книги возвращают в библиотеку, а капучино обратно уже не вернёшь",
+    "source": {
+      "primary": {
+        "url": "https://library.test/news",
+        "text": "A coffee shop opened inside the library. Visitors can borrow books and order cappuccino. No data on reader motives was collected."
+      },
+      "supporting": []
+    },
+    "expected": "revise",
+    "dimension": "grounding"
+  },
+  {
+    "id": "unusable-source",
+    "text": "В библиотеке открыли кофейню. Дядя Миша одобрил соседство книг и капучино. Мудрость дня: «Книги возвращают в библиотеку, а капучино обратно уже не вернёшь».",
+    "wisdom": "Книги возвращают в библиотеку, а капучино обратно уже не вернёшь",
+    "source": {
+      "primary": {
+        "url": "https://library.test/news",
+        "text": "403 Access denied. No article or factual evidence is available."
+      },
+      "supporting": []
+    },
+    "expected": "replace",
+    "dimension": "grounding"
+  },
+  {
+    "id": "same-story-repair",
+    "text": "Пакет с пакетами — единственный домашний проект, который стабильно растёт без вложений.",
+    "initial": "Пакет с пакетами — единственный домашний проект, который стабильно растут без вложений.",
+    "expected": "approve"
+  },
+  {
+    "id": "meaning",
+    "text": "Лампочка перегорела ровно тогда, когда стало темно, — и дядя Миша заметил это по её яркому свету.",
+    "expected": "revise",
+    "dimension": "meaning"
   }
 ]

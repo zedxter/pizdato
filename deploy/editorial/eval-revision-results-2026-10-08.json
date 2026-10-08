@@ -1,0 +1,648 @@
+{
+  "model": "deepseek/deepseek-v4.1-flash",
+  "temperature": 0,
+  "reasoning": {
+    "effort": "low",
+    "exclude": true
+  },
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "editorial_verdict",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decision",
+          "grammar",
+          "meaning",
+          "freshness",
+          "voice",
+          "grounding",
+          "issues"
+        ],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "revise",
+              "replace"
+            ]
+          },
+          "grammar": {
+            "type": "boolean"
+          },
+          "meaning": {
+            "type": "boolean"
+          },
+          "freshness": {
+            "type": "boolean"
+          },
+          "voice": {
+            "type": "boolean"
+          },
+          "grounding": {
+            "type": "boolean"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "at": "2026-10-08T16:17:20.892Z",
+  "results": [
+    {
+      "id": "agreement",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "voice": false,
+        "meaning": true,
+        "issues": [
+          "Старый будильник зазвонила: нарушено согласование: «будильник» мужского рода, нужно «зазвонил».",
+          "wisdom: дословно повторяет candidate и не добавляет отдельного наблюдения или комического поворота."
+        ],
+        "grounding": true,
+        "grammar": false,
+        "freshness": true,
+        "decision": "revise",
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "agreement",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "freshness": true,
+        "grammar": false,
+        "grounding": true,
+        "issues": [
+          "Старый будильник зазвонила раньше обычного: нарушено согласование: «будильник» мужского рода, требуется «зазвонил».",
+          "wisdom дословно повторяет candidate и не добавляет отдельного наблюдения или комического поворота — это круговое повторение premise вместо самостоятельной мысли."
+        ],
+        "meaning": true,
+        "voice": false,
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "agreement",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "voice": false,
+        "meaning": true,
+        "issues": [
+          "Старый будильник зазвонила: нарушено согласование: «будильник» мужского рода, нужно «зазвонил».",
+          "wisdom: дословно повторяет кандидата и не добавляет конкретного наблюдения или комического поворота; это круговое повторение, а не мудрость."
+        ],
+        "grounding": true,
+        "grammar": false,
+        "freshness": true,
+        "decision": "revise",
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "freshness": false,
+        "grammar": true,
+        "grounding": true,
+        "issues": [
+          "за чаем: beverage-ritual narrator framing is a prohibited freshness defect during the recovery period",
+          "Дядя Миша листал ленту — а там очередная невероятная находка: reuses the earlier “листал ленту за кофе — а там…” template with only cosmetic substitution and a vague punchline",
+          "очередная невероятная находка: generic surprise filler; the wisdom merely restates the premise and lacks a specific observation or comic turn"
+        ],
+        "meaning": false,
+        "voice": false,
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "meaning-drink",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "замечаешь ты это по пустой кружке: пустая кружка не подтверждает, что кофе остыл; если кружка пуста, кофе уже выпит, а не остыл. Наблюдение противоречит самому себе."
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "meaning-drink",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "и замечаешь ты это по пустой кружке: пустая кружка означает, что кофе выпит, а не остыл; отсутствие напитка не подтверждает его температуру, поэтому вывод не следует из наблюдения."
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "meaning-drink",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "замечаешь ты это по пустой кружке: пустая кружка означает, что кофе выпит, а не остыл; отсутствие кофе не подтверждает его температуру, поэтому вывод не следует из посылки."
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "natural-irony",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "freshness": true,
+        "grammar": true,
+        "grounding": true,
+        "issues": [],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "natural-irony",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "freshness": true,
+        "grammar": true,
+        "grounding": true,
+        "issues": [],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "freshness": false,
+        "grammar": true,
+        "grounding": true,
+        "issues": [
+          "за чаем: beverage ritual as narrator framing is a freshness defect during the recovery period; it also cosmetically repeats the earlier coffee framing.",
+          "Дядя Миша листал ленту за чаем — а там очередная невероятная находка. (wisdom): duplicates the setup verbatim, adds no specific observation or comic turn, and has no discernible point beyond generic surprise filler."
+        ],
+        "meaning": false,
+        "voice": false,
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "coherent-exaggeration",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "freshness": true,
+        "grammar": true,
+        "grounding": true,
+        "issues": [],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": false,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "за чаем: beverage ritual as narrator framing is a freshness defect during the recovery period",
+          "Дядя Миша листал ленту за чаем — а там очередная невероятная находка: repeats the earlier coffee/pumpkin premise with only cosmetic substitutions (кофе→чай, конкретная находка→общая формула)",
+          "очередная невероятная находка: generic surprise filler; the wisdom merely repeats the setup and adds no specific observation or comic turn"
+        ],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "natural-irony",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "coherent-exaggeration",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "freshness": true,
+        "grammar": true,
+        "grounding": true,
+        "issues": [],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "source-beverage",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "freshness": true,
+        "grammar": true,
+        "grounding": true,
+        "issues": [],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "source-beverage",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "voice": true,
+        "meaning": true,
+        "issues": [],
+        "grounding": true,
+        "grammar": true,
+        "freshness": true,
+        "decision": "approve",
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "source-beverage",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "voice": true,
+        "meaning": true,
+        "issues": [],
+        "grounding": true,
+        "grammar": true,
+        "freshness": true,
+        "decision": "approve",
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "coherent-exaggeration",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "voice": true,
+        "meaning": true,
+        "issues": [],
+        "grounding": true,
+        "grammar": true,
+        "freshness": true,
+        "decision": "approve",
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "repairable-grounding",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "freshness": true,
+        "grammar": true,
+        "grounding": false,
+        "issues": [
+          "Теперь все читатели берут книги только ради капучино: источник не содержит данных о мотивах читателей и прямо указывает, что такие данные не собирались; обобщение подано как установленный факт."
+        ],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "unusable-source",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "В библиотеке открыли кофейню: source.primary is a 403 Access denied page with no article or factual evidence, and supporting is empty, so the central reported event is unsupported."
+        ],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "unusable-source",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "В библиотеке открыли кофейню: source.primary is a 403 Access denied page with no article or factual evidence, so the central reported event is unsupported."
+        ],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "repairable-grounding",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "freshness": true,
+        "grammar": true,
+        "grounding": false,
+        "issues": [
+          "Теперь все читатели берут книги только ради капучино.: source only says a coffee shop opened and visitors can borrow books and order cappuccino; it explicitly notes no reader-motive data was collected, so this universal motive claim is unsupported.",
+          "Теперь все читатели берут книги только ради капучино.: borrowing books is not a prerequisite for ordering cappuccino, so 'берут книги только ради капучино' creates an accidental physical/causal contradiction."
+        ],
+        "meaning": false,
+        "voice": true,
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "unusable-source",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "В библиотеке открыли кофейню: source.primary is a 403 Access denied page with no article or factual evidence, so the central reported event is unsupported."
+        ],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "same-story-repair",
+      "trial": 2,
+      "pass": true,
+      "initial": {
+        "decision": "revise",
+        "freshness": true,
+        "grammar": false,
+        "grounding": true,
+        "issues": [
+          "который стабильно растут: нарушено согласование — относительное местоимение «который» и определяемое слово «проект» в единственном числе требуют сказуемого «растёт», а не «растут»."
+        ],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "repair"
+      },
+      "verdict": {
+        "decision": "approve",
+        "freshness": true,
+        "grammar": true,
+        "grounding": true,
+        "issues": [],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "same-story-repair",
+      "trial": 1,
+      "pass": true,
+      "initial": {
+        "decision": "revise",
+        "freshness": true,
+        "grammar": false,
+        "grounding": true,
+        "issues": [
+          "который стабильно растут: нарушено согласование — относительное местоимение «который» и определяемое слово «проект» стоят в единственном числе, поэтому требуется «растёт», а не «растут»."
+        ],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "repair"
+      },
+      "verdict": {
+        "voice": true,
+        "meaning": true,
+        "issues": [],
+        "grounding": true,
+        "grammar": true,
+        "freshness": true,
+        "decision": "approve",
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "repairable-grounding",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "voice": true,
+        "meaning": true,
+        "issues": [
+          "Теперь все читатели берут книги только ради капучино: источник не содержит данных о мотивах читателей и прямо указывает, что такие данные не собирались; утверждение обо всех читателях и единственной цели «только ради капучино» не подтверждено."
+        ],
+        "grounding": false,
+        "grammar": true,
+        "freshness": true,
+        "decision": "revise",
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "circular-platitude",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "voice": false,
+        "meaning": false,
+        "issues": [
+          "Дольше всех ждут те, кого уже перестали искать, — и дожидаются.: круговая банальность; «дожидаются» лишь повторяет ожидание и не сообщает, чего именно дожидаются, поэтому у «мудрости» нет различимой мысли или комического поворота."
+        ],
+        "grounding": true,
+        "grammar": true,
+        "freshness": true,
+        "decision": "revise",
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "meaning",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "Лампочка перегорела ровно тогда, когда стало темно, — и дядя Миша заметил это по её яркому свету.: перегоревшая лампочка не может светить ярко, поэтому наблюдение противоречит само себе; вывод не следует из описанной ситуации."
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "circular-platitude",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "voice": false,
+        "meaning": false,
+        "issues": [
+          "и дожидаются: meaning is contradictory or circular — the premise says no one is searching anymore, so the clause implying successful waiting/getting what was awaited has no discernible point.",
+          "Дольше всех ждут те, кого уже перестали искать, — и дожидаются.: voice fails — forced proverbial syntax and hollow aphorism, with no concrete observation or comic turn."
+        ],
+        "grounding": true,
+        "grammar": true,
+        "freshness": true,
+        "decision": "revise",
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "circular-platitude",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "voice": false,
+        "meaning": false,
+        "issues": [
+          "и дожидаются: неясно, что именно дожидаются; если подразумевается «их найдут», это противоречит «перестали искать», а без объекта фраза не даёт вывода",
+          "Дольше всех ждут те, кого уже перестали искать, — и дожидаются.: круговое утверждение: «дожидаются» лишь повторяет «ждут» и не добавляет конкретного наблюдения или комического поворота"
+        ],
+        "grounding": true,
+        "grammar": true,
+        "freshness": true,
+        "decision": "revise",
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "meaning",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "freshness": true,
+        "grammar": true,
+        "grounding": true,
+        "issues": [
+          "заметил это по её яркому свету: перегоревшая лампочка не может светить; наблюдение содержит прямое физическое противоречие",
+          "wisdom повторяет candidate без отдельного вывода или комического поворота: отсутствует самостоятельная мысль"
+        ],
+        "meaning": false,
+        "voice": false,
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "meaning",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "freshness": true,
+        "grammar": true,
+        "grounding": true,
+        "issues": [
+          "заметил это по её яркому свету: перегоревшая лампочка не может светить; наблюдение содержит прямое физическое противоречие",
+          "wisdom повторяет candidate без отдельного вывода или комического поворота: отсутствует самостоятельная мысль"
+        ],
+        "meaning": false,
+        "voice": false,
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "same-story-repair",
+      "trial": 3,
+      "pass": true,
+      "initial": {
+        "decision": "revise",
+        "freshness": true,
+        "grammar": false,
+        "grounding": true,
+        "issues": [
+          "«который стабильно растут»: нарушено согласование — местоимение и определяемое существительное в единственном числе, а глагол стоит во множественном; нужно «который стабильно растёт»."
+        ],
+        "meaning": true,
+        "voice": true,
+        "nextAction": "repair"
+      },
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "nextAction": "publish"
+      }
+    }
+  ]
+}
