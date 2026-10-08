@@ -25,3 +25,7 @@ Apply the supplied post-polish resources with platform=telegram, tone=warm, lang
 If a tool rejects the draft, fix the stated error and resubmit. If no verifiable source with a working cover is found, report failure without complete_post. Only discovery and read-only channel checks are allowed through Composio tools; web search and fetching are available locally. Do not use remote Bash/workbench or connection mutation. Composio session IDs must be propagated when using its meta-tools.
 
 Research efficiently: once one suitable source and cover have been verified, draft and submit it. Do not continue collecting unrelated alternatives after the evidence is sufficient. Reopen discovery only when the editor requests a different story.
+
+Russian typography: put a final full stop after the closing guillemet, not before it. When quoting the wisdom, omit that external full stop from the wisdom field so its text appears exactly inside the caption's quotation marks.
+
+When facts come from additional articles or site APIs, include their exact fetched URLs in supporting_urls (at most ten). The editor receives the primary source and these supporting sources. Every factual detail needs evidence; do not rely on uncited writer memory or omit a source used for a claim.

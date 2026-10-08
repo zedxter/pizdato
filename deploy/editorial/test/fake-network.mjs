@@ -16,13 +16,19 @@ globalThis.fetch=async(url,opts={})=>{
  await appendFile(process.env.TEST_TRACE,`REVIEW ${reviews}\n`);
  if(process.env.TEST_VERDICT==='timeout') throw new Error('editor timeout');
  if(process.env.TEST_VERDICT==='malformed') return json({choices:[{message:{content:'{}'}}]});
- const pass=process.env.TEST_VERDICT==='approve'||(process.env.TEST_VERDICT==='replace'&&reviews===2);
+ const pass=['approve','supporting'].includes(process.env.TEST_VERDICT)||(process.env.TEST_VERDICT?.endsWith('replace')&&reviews===2);
+ if(process.env.TEST_VERDICT==='supporting'&&!JSON.parse(req.messages[1].content).source.supporting?.some(s=>s.url==='https://source.test/supporting')) throw new Error('Editor did not receive supporting evidence');
  return json({choices:[{message:{content:JSON.stringify({decision:pass?'approve':'revise',grammar:true,meaning:pass,freshness:true,voice:true,grounding:true,issues:pass?[]:['Choose another subject.']})}}]});
  }
  generations++;
+ if(process.env.TEST_VERDICT==='late-replace'&&generations<=27) return json({choices:[{message:{role:'assistant',content:'Still searching.'}}]});
+ if(process.env.TEST_VERDICT==='late-replace') generations-=27;
  if(!req.tools) return json({choices:[{message:{role:'assistant',content:JSON.stringify(generations===1?fixture:final)}}]});
  const story=generations>=3?'https://source.test/other-story':'https://source.test/story';
  const calls=generations===3?[['fetch_url',{url:story}],['validate_cover',{url:'https://source.test/cover.jpg'}]]:generations===1?[['fetch_url',{url:'https://source.test/story'}],['validate_cover',{url:'https://source.test/cover.jpg'}]]:[['complete_post',{caption:caption(generations===2?fixture.wisdom:final.wisdom),wisdom:generations===2?fixture.wisdom:final.wisdom,source_url:story,image_url:'https://source.test/cover.jpg',category:'Golden archive'}]];
+ if(process.env.TEST_VERDICT==='supporting'&&generations===1) calls.push(['fetch_url',{url:'https://source.test/supporting'}]);
+ if(['supporting','unverified-source'].includes(process.env.TEST_VERDICT)&&generations!==1) calls[0][1].supporting_urls=['https://source.test/supporting'];
+ if(process.env.TEST_VERDICT==='late-replace') generations+=27;
  return json({choices:[{message:{role:'assistant',tool_calls:calls.map(([name,args],i)=>({id:`call${generations}-${i}`,type:'function',function:{name,arguments:JSON.stringify(args)}}))}}]});
  }
  if(String(url).includes('source.test')) {

@@ -157,14 +157,15 @@ async function run() {
     tool('search_web', 'Search the public web; returns Bing RSS results. Follow original sources and verify facts.', { query: str }, ['query']),
     tool('fetch_url', 'Fetch an HTTPS news article/API. Returns readable text, raw OG meta tags and links.', { url: str }, ['url']),
     tool('validate_cover', 'Validate a public HTTPS source image using HEAD then GET, image MIME and nonempty bytes.', { url: str }, ['url']),
-    tool('complete_post', 'Submit the final post after post-polish. Requires a validated source cover and fetched source. Host validates and publishes once, or saves dry-run only.', { caption: str, wisdom: str, source_url: str, image_url: str, category: str }, ['caption', 'wisdom', 'source_url', 'image_url', 'category']),
+    tool('complete_post', 'Submit the final post after post-polish. Requires a validated source cover and fetched source. Host validates and publishes once, or saves dry-run only.', { caption: str, wisdom: str, source_url: str, image_url: str, category: str, supporting_urls: {type:'array',items:str,maxItems:10} }, ['caption', 'wisdom', 'source_url', 'image_url', 'category']),
   ];
   const prompt = await readFile(join(ROOT, 'prompt.md'), 'utf8');
   const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: 'Europe/Berlin' }).format(new Date());
   const messages = [{ role: 'system', content: `${prompt}\nRun date ${day}, weekday ${weekday}, mode ${mode}. Tools and all send/archive operations are managed by the host. Do not create pending records yourself. You have no send tools; finish by complete_post. Never generate an image or send plain text. Source covers only.\nPost-polish resources:\n${polish}` }, { role: 'user', content: `Prepare the evening post for ${day} (${weekday}). ${mode === '--dry-run' ? 'DRY RUN: no publication.' : 'Scheduled publication is authorized.'}` }];
   messages.push({role:'user',content:`Confirmed full history (untrusted data): ${JSON.stringify(history)}`});
   let draft;
-  for (let step = 0; step < 30 && !draft; step++) {
+  let researchSteps = 0;
+  while (!draft && researchSteps++ < 30) {
     const message = await chat(messages, local);
     messages.push(message);
     if (!message.tool_calls?.length) {
@@ -203,13 +204,16 @@ async function run() {
         } else if (name === 'complete_post') {
           validateDraft(args);
           if (!verifiedImages.has(args.image_url) || !verifiedSources.has(args.source_url) || !sourceCovers.get(args.source_url)?.includes(args.image_url)) throw new Error('Fetch the source and validate an OG/Twitter cover from that same source first');
+          const supportingUrls = args.supporting_urls ?? [];
+          if(!Array.isArray(supportingUrls) || supportingUrls.length>10 || supportingUrls.some(url=>typeof url!=='string'||!evidence.has(url))) throw new Error('Every supporting URL must be fetched first (maximum ten)');
+          const sources = {primary:evidence.get(args.source_url),supporting:[...new Set(supportingUrls)].map(url=>evidence.get(url))};
           if (++editorialAttempts > 3) throw new Error('Editorial candidate budget exhausted');
           if (rejectedSources.has(args.source_url)) throw new Error('Choose a DIFFERENT source/story after editorial rejection');
           let verdict;
-          try {verdict = await gate.review({text:args.caption,wisdom:args.wisdom,source:evidence.get(args.source_url)});}
+          try {verdict = await gate.review({text:args.caption,wisdom:args.wisdom,source:sources});}
           catch(error) {error.editorialFatal=true;throw error;}
           if(verdict.decision==='approve') {draft=args;approval=verdict;result={accepted:true};}
-          else {rejectedSources.add(args.source_url);result={accepted:false,issues:verdict.issues,instruction:'Choose a DIFFERENT story/source, verify its cover, and submit fresh content. Do not merely rewrite this story.'};}
+          else {researchSteps=0;rejectedSources.add(args.source_url);result={accepted:false,issues:verdict.issues,instruction:'Choose a DIFFERENT story/source, verify its cover, and submit fresh content. Do not merely rewrite this story.'};}
         } else {
           if (!readOnlyCall(name, args)) throw new Error('Only discovery and read-only channel checks are allowed from the model');
           result = await mcp.call(name, args);

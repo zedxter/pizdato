@@ -27,3 +27,9 @@ test('rejects first-person wish verbs even without a pronoun',async()=>{
  const {validateWish}=await import('../agent.mjs');
  assert.throws(()=>validateWish('Желаю, чтобы будильник проиграл без боя, а кофе дождался тебя горячим.'));
 });
+
+test('places the final full stop outside Russian quotation marks', () => {
+  const message = renderWisdom('Готовая мысль.', 'Хорошего дня.');
+  assert.ok(message.includes('«Готовая мысль».'));
+  assert.ok(!message.includes('мысль.»'));
+});

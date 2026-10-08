@@ -6,7 +6,8 @@ import {homedir} from 'node:os';
 import {join} from 'node:path';
 await loadEnv(join(homedir(),'.config/pizdato-channel.env'));
 await loadEnv(join(homedir(),'.config/pizdato-evening.env'));
-const fixtures=JSON.parse(await readFile(new URL('./fixtures.json',import.meta.url),'utf8'));
+const fixtures=JSON.parse(await readFile(new URL('./fixtures.json',import.meta.url),'utf8')).filter(f=>!process.argv[3]||f.id===process.argv[3]);
+if(!fixtures.length) throw new Error('Unknown fixture');
 const results=[];
 for(const fixture of fixtures) await Promise.all([1,2,3].map(async trial=>{
  const gate=createGate({request:messages=>chat(messages,undefined,editorOptions),history:fixture.history||[]});

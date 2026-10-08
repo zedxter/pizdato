@@ -25,7 +25,7 @@ export function validateWish(wish) {
   if(/(?:^|[^\p{L}])(?:я|мы|мой|моя|мои|наш|наша|наши|нам|нас|мне|меня|желаю|хочу|надеюсь|советую|думаю|вижу|считаю|наш[её]л)(?:[^\p{L}]|$)/iu.test(wish)) throw new Error('No first-person wish');
   return wish.trim();
 }
-export const renderWisdom=(wisdom,wish='')=>`☕ Мудрость дня от дяди Миши:\n«${wisdom}»${wish ? `\n\n✨ ${wish}` : ''}`;
+export const renderWisdom=(wisdom,wish='')=>`☕ Мудрость дня от дяди Миши:\n${wisdom.endsWith('.') ? `«${wisdom.slice(0,-1)}».` : `«${wisdom}»`}${wish ? `\n\n✨ ${wish}` : ''}`;
 async function run() {
   const mode=process.argv[2]||'publish';
   if(!['publish','--dry-run','--check'].includes(mode)) throw new Error('Unknown mode');

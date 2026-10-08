@@ -1,7 +1,61 @@
 {
   "model": "deepseek/deepseek-v4.1-flash",
   "temperature": 0,
-  "at": "2026-10-08T14:54:57.737Z",
+  "reasoning": {
+    "effort": "low",
+    "exclude": true
+  },
+  "response_format": {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "editorial_verdict",
+      "strict": true,
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decision",
+          "grammar",
+          "meaning",
+          "freshness",
+          "voice",
+          "grounding",
+          "issues"
+        ],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "revise"
+            ]
+          },
+          "grammar": {
+            "type": "boolean"
+          },
+          "meaning": {
+            "type": "boolean"
+          },
+          "freshness": {
+            "type": "boolean"
+          },
+          "voice": {
+            "type": "boolean"
+          },
+          "grounding": {
+            "type": "boolean"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "at": "2026-10-08T15:21:02.967Z",
   "results": [
     {
       "id": "agreement",
@@ -12,26 +66,11 @@
         "grammar": false,
         "meaning": true,
         "freshness": true,
-        "voice": true,
+        "voice": false,
         "grounding": true,
         "issues": [
-          "Старый будильник зазвонила: нарушено согласование по роду — существительное «будильник» мужского рода, поэтому должно быть «зазвонил»."
-        ]
-      }
-    },
-    {
-      "id": "agreement",
-      "trial": 2,
-      "pass": true,
-      "verdict": {
-        "decision": "revise",
-        "grammar": false,
-        "meaning": true,
-        "freshness": true,
-        "voice": true,
-        "grounding": true,
-        "issues": [
-          "Старый будильник зазвонила: нарушено согласование — слово «будильник» мужского рода, требуется «зазвонил»."
+          "Старый будильник зазвонила: нарушено согласование — «будильник» мужского рода, нужно «зазвонил».",
+          "Старый будильник зазвонила раньше обычного, и дядя Миша решил сразу встать.: «wisdom» дословно повторяет кандидата и не добавляет конкретного наблюдения или комического поворота."
         ]
       }
     },
@@ -42,30 +81,48 @@
       "verdict": {
         "decision": "revise",
         "grammar": false,
-        "meaning": true,
+        "meaning": false,
+        "freshness": false,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "Старый будильник зазвонила: grammatical agreement error — «будильник» is masculine, so it must be «зазвонил».",
+          "wisdom: identical to the candidate and adds no separate observation or comic turn, so it has no discernible wisdom point.",
+          "wisdom: repeats the same premise/punchline as the candidate, making the second slot non-fresh rather than a new turn."
+        ]
+      }
+    },
+    {
+      "id": "agreement",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
         "freshness": true,
-        "voice": true,
+        "grammar": false,
         "grounding": true,
         "issues": [
-          "Старый будильник зазвонила: нарушено согласование; существительное «будильник» мужского рода, правильно — «зазвонил»."
-        ]
+          "Старый будильник зазвонила: нарушено согласование — «будильник» мужского рода, требуется «зазвонил».",
+          "wisdom: дословно повторяет завязку и не добавляет отдельного наблюдения или комического поворота."
+        ],
+        "meaning": true,
+        "voice": false
       }
     },
     {
       "id": "meaning",
-      "trial": 1,
+      "trial": 3,
       "pass": true,
       "verdict": {
         "decision": "revise",
         "grammar": true,
         "meaning": false,
         "freshness": false,
-        "voice": false,
+        "voice": true,
         "grounding": true,
         "issues": [
-          "Кофе остывает ... по пустой кружке: пустая кружка означает, что кофе выпит, а не остыл; наблюдение противоречит себе, причинная связь не сходится.",
-          "Кофе остывает ровно тогда, когда работа наконец затягивает: кофейный ритуал/избитая посылка в recovery-период; пустая кружка — лишь косметический поворот.",
-          "замечаешь ты это: вычурная инверсия и псевдопословичная подача вместо разговорной речи."
+          "Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это по пустой кружке: смысловое противоречие — если кружка пустая, кофе уже выпит, а не остыл; пустая кружка не подтверждает, что кофе остыл.",
+          "Кофе остывает ровно тогда, когда работа наконец затягивает: в восстановительный период бытовой кофейный ритуал как основа наблюдения/шутки считается дефектом свежести даже при пустой истории."
         ]
       }
     },
@@ -81,14 +138,14 @@
         "voice": true,
         "grounding": true,
         "issues": [
-          "Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это по пустой кружке.: физическое/причинное противоречие: пустая кружка означает, что кофе выпит, а не что он остыл; если кружка пуста, кофе уже нет.",
-          "Кофе остывает ровно тогда, когда работа наконец затягивает: кофейный/напиточный ритуал как основа шутки — дефект свежести в период восстановления даже при пустой истории."
+          "Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это по пустой кружке.: пустая кружка противоречит остыванию кофе: если кружка пуста, кофе уже выпит, а не остыл; наблюдение должно было бы опираться на холодный кофе в кружке или на забытую полную кружку.",
+          "Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это по пустой кружке.: в восстановительный период напиток-ритуал как рамка для шутки — дефект свежести даже при пустой истории."
         ]
       }
     },
     {
       "id": "meaning",
-      "trial": 3,
+      "trial": 1,
       "pass": true,
       "verdict": {
         "decision": "revise",
@@ -98,8 +155,8 @@
         "voice": true,
         "grounding": true,
         "issues": [
-          "и замечаешь ты это по пустой кружке: пустая кружка означает, что кофе выпит, а не остыл; это причинное противоречие, а не наблюдение.",
-          "Кофе остывает ровно тогда, когда работа наконец затягивает: кофейный ритуал как рамка рассказчика — дефект свежести в период восстановления даже при пустой истории."
+          "Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это по пустой кружке.: physical contradiction — if work absorbed you and coffee cooled, the mug should remain full/cold; an empty mug indicates it was drunk, not that it cooled.",
+          "Кофе остывает ровно тогда, когда работа наконец затягивает...: beverage-ritual framing is a freshness defect during the recovery period even with empty history."
         ]
       }
     },
@@ -109,32 +166,15 @@
       "pass": true,
       "verdict": {
         "decision": "revise",
-        "grammar": true,
-        "meaning": true,
         "freshness": false,
-        "voice": false,
+        "grammar": true,
         "grounding": true,
         "issues": [
-          "за чаем: beverage ritual as narrator framing is a freshness defect, and the setup merely swaps the previous “за кофе” while reusing the same feed-scrolling premise.",
-          "а там очередная невероятная находка: generic surprise filler with no concrete find or punchline, so the humor feels hollow."
-        ]
-      }
-    },
-    {
-      "id": "repeated-hook",
-      "trial": 2,
-      "pass": true,
-      "verdict": {
-        "decision": "revise",
-        "grammar": true,
+          "за чаем — а там очередная невероятная находка: beverage-ritual framing and same scroll-feed premise as history with only coffee→tea substitution; during recovery this is a freshness defect",
+          "Дядя Миша листал ленту за чаем — а там очередная невероятная находка.: wisdom repeats the setup verbatim and adds no specific observation or comic turn; generic \"невероятная находка\" is vague, so voice fails"
+        ],
         "meaning": true,
-        "freshness": false,
-        "voice": false,
-        "grounding": true,
-        "issues": [
-          "за чаем: повторяется тот же каркас, что в истории («за кофе»), а ритуал с напитком как рамка — дефект свежести даже без истории",
-          "очередная невероятная находка: обобщённая замена конкретной находки из прошлого («тыква весом в тонну») не создаёт новую шутку и звучит как generic surprise filler"
-        ]
+        "voice": false
       }
     },
     {
@@ -149,14 +189,32 @@
         "voice": false,
         "grounding": true,
         "issues": [
-          "«Дядя Миша листал ленту за чаем — а там очередная невероятная находка.»: повторяет конструкцию из history с косметической заменой напитка (кофе→чай) и конкретной находки на общую формулировку; beverage-ритуал как рамка рассказчика — дефект свежести.",
-          "«очередная невероятная находка»: пустая обобщённая формулировка вместо конкретной детали, типовой surprise filler без живого юмора."
+          "за чаем: beverage-ritual narrator framing is a freshness defect during the recovery period; it also cosmetically replaces the history’s «за кофе» while keeping the same Uncle Misha scrolling-feed premise.",
+          "Дядя Миша листал ленту за чаем — а там очередная невероятная находка.: the wisdom repeats the candidate premise verbatim and offers no specific observation or comic turn.",
+          "очередная невероятная находка: generic surprise filler; it does not make the recurring setup fresh or give the punchline a discernible point."
         ]
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "freshness": false,
+        "grammar": true,
+        "grounding": true,
+        "issues": [
+          "Дядя Миша листал ленту за чаем — а там очередная невероятная находка.: Same Uncle Misha scrolling-feed premise as history, with only cosmetic substitutions (кофе→чаем, тыква→vague «находка»); beverage-ritual framing is a freshness defect in recovery and the story is not replaced.",
+          "а там очередная невероятная находка: Generic filler with no concrete find or comic turn; the wisdom repeats the candidate instead of adding a specific observation."
+        ],
+        "meaning": true,
+        "voice": false
       }
     },
     {
       "id": "natural-irony",
-      "trial": 1,
+      "trial": 3,
       "pass": true,
       "verdict": {
         "decision": "approve",
@@ -170,6 +228,20 @@
     },
     {
       "id": "natural-irony",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "freshness": true,
+        "grammar": true,
+        "grounding": true,
+        "issues": [],
+        "meaning": true,
+        "voice": true
+      }
+    },
+    {
+      "id": "natural-irony",
       "trial": 2,
       "pass": true,
       "verdict": {
@@ -183,8 +255,8 @@
       }
     },
     {
-      "id": "natural-irony",
-      "trial": 3,
+      "id": "coherent-exaggeration",
+      "trial": 2,
       "pass": true,
       "verdict": {
         "decision": "approve",
@@ -212,7 +284,7 @@
     },
     {
       "id": "coherent-exaggeration",
-      "trial": 2,
+      "trial": 3,
       "pass": true,
       "verdict": {
         "decision": "approve",
@@ -225,17 +297,54 @@
       }
     },
     {
-      "id": "coherent-exaggeration",
+      "id": "circular-platitude",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "и дожидаются: вывод не даёт внятного результата — непонятно, чего именно дожидаются те, кого перестали искать; при этом «перестали искать» противоречит идее успешного дожидания, поэтому возникает не комическая парадоксальность, а смысловая неясность.",
+          "Дольше всех ждут те, кого уже перестали искать, — и дожидаются: сентенция повторяет зачин и не добавляет конкретного наблюдения или шутки, оставаясь круговой формулой о том, что ожидание якобы приводит к результату."
+        ]
+      }
+    },
+    {
+      "id": "circular-platitude",
       "trial": 3,
       "pass": true,
       "verdict": {
-        "decision": "approve",
+        "decision": "revise",
+        "grammar": false,
+        "meaning": false,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "и дожидаются: несовершенный вид и отсутствие объекта делают формулировку грамматически и семантически незавершённой; для результата естественнее «и дождутся» или «дожидаются [чего-то]».",
+          "Дольше всех ждут те, кого уже перестали искать, — и дожидаются.: вторая часть не даёт конкретного наблюдения или комического поворота, а повторяет идею ожидания; если искать перестали, неясно, чего именно они в итоге дожидаются.",
+          "и дожидаются: круговой афоризм/тавтология, а не конкретная разговорная шутка."
+        ]
+      }
+    },
+    {
+      "id": "circular-platitude",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
         "grammar": true,
         "meaning": true,
         "freshness": true,
-        "voice": true,
+        "voice": false,
         "grounding": true,
-        "issues": []
+        "issues": [
+          "Дольше всех ждут те, кого уже перестали искать, — и дожидаются.: forced proverbial syntax and circular platitude; the conclusion merely restates waiting without a specific comic turn or payoff."
+        ]
       }
     },
     {
@@ -272,13 +381,23 @@
       "pass": true,
       "verdict": {
         "decision": "approve",
-        "grammar": true,
-        "meaning": true,
         "freshness": true,
-        "voice": true,
+        "grammar": true,
         "grounding": true,
-        "issues": []
+        "issues": [],
+        "meaning": true,
+        "voice": true
       }
+    }
+  ],
+  "runs": [
+    {
+      "at": "2026-10-08T15:18:01.952Z",
+      "fixtures": "Six unchanged fixtures, three trials each"
+    },
+    {
+      "at": "2026-10-08T15:21:02.967Z",
+      "fixtures": "Corrected source-beverage fixture, three trials"
     }
   ]
 }
