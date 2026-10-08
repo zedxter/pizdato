@@ -104,3 +104,13 @@ test('replace for grammar alone is contradictory and cannot advance the budget',
  await assert.rejects(gate.review({text:'draft',wisdom:'draft'}),/Contradictory/);
  assert.equal(gate.state.done,true);
 });
+
+test('structurally rejected subjects remain visible after replacement',async()=>{
+ let context;
+ const gate=createGate({history:[],request:async m=>{context=JSON.parse(m[1].content);return {content:JSON.stringify(approve)};}});
+ for(let i=0;i<3;i++) await gate.reject({text:'Overlong story about a lost alarm clock',issues:['Too long']});
+ await gate.review({text:'Different verified story',wisdom:'different'});
+ assert.equal(context.current.story,2);
+ assert.equal(context.rejectedCandidates[0]?.story,1);
+ assert.match(context.rejectedCandidates[0]?.text||'',/alarm clock/);
+});

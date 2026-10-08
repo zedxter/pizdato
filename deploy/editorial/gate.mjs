@@ -64,6 +64,7 @@ export function createGate({request, history, record=async()=>{}}) {
       const nextAction=advance(replace?'replace':'revise');
       try {
         await record({...current,kind:'validation',text,sha256:hash(text),issues,nextAction});
+        rejectedCandidates.push({story:current.story,text,issues});
       } catch(error) {done=true;throw error;}
       return {issues,nextAction};
     }
