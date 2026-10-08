@@ -2,7 +2,7 @@
 set -euo pipefail
 umask 077
 export TZ=Europe/Berlin
-RUNNER_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+RUNNER_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 VAULT="${PIZDATO_EVENING_VAULT:-/home/danil/vault/pizdato}"
 STATE="${PIZDATO_EVENING_STATE:-$HOME/.local/state/pizdato-evening}"
 DAY="$(date +%F)"

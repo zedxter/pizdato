@@ -1,0 +1,284 @@
+{
+  "model": "deepseek/deepseek-v4.1-flash",
+  "temperature": 0,
+  "at": "2026-10-08T14:54:57.737Z",
+  "results": [
+    {
+      "id": "agreement",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "Старый будильник зазвонила: нарушено согласование по роду — существительное «будильник» мужского рода, поэтому должно быть «зазвонил»."
+        ]
+      }
+    },
+    {
+      "id": "agreement",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "Старый будильник зазвонила: нарушено согласование — слово «будильник» мужского рода, требуется «зазвонил»."
+        ]
+      }
+    },
+    {
+      "id": "agreement",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "Старый будильник зазвонила: нарушено согласование; существительное «будильник» мужского рода, правильно — «зазвонил»."
+        ]
+      }
+    },
+    {
+      "id": "meaning",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": false,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "Кофе остывает ... по пустой кружке: пустая кружка означает, что кофе выпит, а не остыл; наблюдение противоречит себе, причинная связь не сходится.",
+          "Кофе остывает ровно тогда, когда работа наконец затягивает: кофейный ритуал/избитая посылка в recovery-период; пустая кружка — лишь косметический поворот.",
+          "замечаешь ты это: вычурная инверсия и псевдопословичная подача вместо разговорной речи."
+        ]
+      }
+    },
+    {
+      "id": "meaning",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": false,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это по пустой кружке.: физическое/причинное противоречие: пустая кружка означает, что кофе выпит, а не что он остыл; если кружка пуста, кофе уже нет.",
+          "Кофе остывает ровно тогда, когда работа наконец затягивает: кофейный/напиточный ритуал как основа шутки — дефект свежести в период восстановления даже при пустой истории."
+        ]
+      }
+    },
+    {
+      "id": "meaning",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": false,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "и замечаешь ты это по пустой кружке: пустая кружка означает, что кофе выпит, а не остыл; это причинное противоречие, а не наблюдение.",
+          "Кофе остывает ровно тогда, когда работа наконец затягивает: кофейный ритуал как рамка рассказчика — дефект свежести в период восстановления даже при пустой истории."
+        ]
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": false,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "за чаем: beverage ritual as narrator framing is a freshness defect, and the setup merely swaps the previous “за кофе” while reusing the same feed-scrolling premise.",
+          "а там очередная невероятная находка: generic surprise filler with no concrete find or punchline, so the humor feels hollow."
+        ]
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": false,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "за чаем: повторяется тот же каркас, что в истории («за кофе»), а ритуал с напитком как рамка — дефект свежести даже без истории",
+          "очередная невероятная находка: обобщённая замена конкретной находки из прошлого («тыква весом в тонну») не создаёт новую шутку и звучит как generic surprise filler"
+        ]
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": false,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "«Дядя Миша листал ленту за чаем — а там очередная невероятная находка.»: повторяет конструкцию из history с косметической заменой напитка (кофе→чай) и конкретной находки на общую формулировку; beverage-ритуал как рамка рассказчика — дефект свежести.",
+          "«очередная невероятная находка»: пустая обобщённая формулировка вместо конкретной детали, типовой surprise filler без живого юмора."
+        ]
+      }
+    },
+    {
+      "id": "natural-irony",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "natural-irony",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "natural-irony",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "coherent-exaggeration",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "coherent-exaggeration",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "coherent-exaggeration",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "source-beverage",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "source-beverage",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": []
+      }
+    },
+    {
+      "id": "source-beverage",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": []
+      }
+    }
+  ]
+}

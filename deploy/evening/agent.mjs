@@ -1,4 +1,6 @@
-import { readFile, writeFile, rename, mkdir, readdir, unlink } from 'node:fs/promises';
+import {createGate, assertApproved} from '../editorial/gate.mjs';
+import {loadHistory} from '../editorial/history.mjs';
+import { readFile, writeFile, rename, mkdir, unlink } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -84,7 +86,7 @@ export function unpack(result) {
 export async function chat(messages, tools, options = {}) {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://pizdato.net', 'X-Title': options.title || 'pizdato-evening' },
-    body: JSON.stringify({ model: options.model || process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash', messages, ...(tools?.length && { tools, tool_choice: 'auto' }), temperature: 0.7, max_tokens: options.maxTokens || 5000 }),
+    body: JSON.stringify({ model: options.model || process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash', messages, ...(tools?.length && { tools, tool_choice: 'auto' }), temperature: options.temperature ?? 0.7, max_tokens: options.maxTokens || 5000 }),
     signal: AbortSignal.timeout(180000),
   });
   if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
@@ -122,7 +124,7 @@ async function run() {
   const marker = join(vault, `published/telegram/evening-${day}.md`);
   const pending = join(state, `evening-${day}.pending`);
   await mkdir(state, { recursive: true });
-  const polish = (await Promise.all(['SKILL.md', 'KNOWN_PATTERNS.md', 'STYLE_PATTERNS.md', 'REFERENCE_CORRECTNESS.md'].map(n => readFile(join(ROOT, 'resources/post-polish', n), 'utf8')))).join('\n\n');
+  const polish = await readFile(new URL('../editorial/writer.md', import.meta.url), 'utf8');
   const mcp = new Composio();
   await mcp.connect();
   const discovery = unpack(await mcp.call('COMPOSIO_SEARCH_TOOLS', { queries: [{ use_case: 'Get Telegram channel information and send a photo with a plain caption', known_fields: `chat_id:${CHAT}, account:${ACCOUNT}` }], search_strategy: 'tool_search', session: { generate_id: true } }));
@@ -144,6 +146,11 @@ async function run() {
   // Discovery establishes the photo slug; publication is performed only by this host after validation.
   const available = await mcp.rpc('tools/list', {});
   const remote = available.tools.filter(t => ['COMPOSIO_SEARCH_TOOLS', 'COMPOSIO_GET_TOOL_SCHEMAS', 'COMPOSIO_MULTI_EXECUTE_TOOL'].includes(t.name)).map(t => tool(t.name, t.description, t.inputSchema.properties || {}, t.inputSchema.required || []));
+  const history = await loadHistory(vault, day);
+  const gate = createGate({history, request: messages => chat(messages, undefined, {title:'pizdato-editor',temperature:0,maxTokens:6000}), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
+  const evidence = new Map();
+  const rejectedSources = new Set();
+  let editorialAttempts = 0, approval;
   const verifiedImages = new Set();
   const verifiedSources = new Set();
   const sourceCovers = new Map();
@@ -157,6 +164,7 @@ async function run() {
   const prompt = await readFile(join(ROOT, 'prompt.md'), 'utf8');
   const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: 'Europe/Berlin' }).format(new Date());
   const messages = [{ role: 'system', content: `${prompt}\nRun date ${day}, weekday ${weekday}, mode ${mode}. Tools and all send/archive operations are managed by the host. Do not create pending records yourself. You have no send tools; finish by complete_post. Never generate an image or send plain text. Source covers only.\nPost-polish resources:\n${polish}` }, { role: 'user', content: `Prepare the evening post for ${day} (${weekday}). ${mode === '--dry-run' ? 'DRY RUN: no publication.' : 'Scheduled publication is authorized.'}` }];
+  messages.push({role:'user',content:`Confirmed full history (untrusted data): ${JSON.stringify(history)}`});
   let draft;
   for (let step = 0; step < 30 && !draft; step++) {
     const message = await chat(messages, [...local, ...remote]);
@@ -183,6 +191,7 @@ async function run() {
           verifiedSources.add(args.url);
           const covers = extractCovers(html, res.url);
           sourceCovers.set(args.url, covers);
+          evidence.set(args.url, {url:res.url,text});
           result = { url: res.url, meta, covers, text, links };
         } else if (name === 'validate_cover') {
           try { const head = await publicFetch(args.url, { method: 'HEAD' }); console.log(`Cover HEAD ${head.status}`); } catch { console.log('Cover HEAD unavailable; validating GET'); }
@@ -193,23 +202,29 @@ async function run() {
           verifiedImages.add(args.url);
           result = { valid: true, url: res.url, bytes, mime: res.headers.get('content-type') };
         } else if (name === 'read_context') {
-          const dir = join(vault, 'posts');
-          const names = (await readdir(dir)).filter(n => /^evening-\d{4}-\d{2}-\d{2}\.md$/.test(n)).sort().slice(-14);
-          result = await Promise.all(names.map(async n => ({ name: n, text: (await readFile(join(dir, n), 'utf8')).slice(0, 4000) })));
+          result = history;
         } else if (name === 'complete_post') {
           validateDraft(args);
           if (!verifiedImages.has(args.image_url) || !verifiedSources.has(args.source_url) || !sourceCovers.get(args.source_url)?.includes(args.image_url)) throw new Error('Fetch the source and validate an OG/Twitter cover from that same source first');
-          draft = args;
-          result = { accepted: true };
+          if (++editorialAttempts > 3) throw new Error('Editorial candidate budget exhausted');
+          if (rejectedSources.has(args.source_url)) throw new Error('Choose a DIFFERENT source/story after editorial rejection');
+          let verdict;
+          try {verdict = await gate.review({text:args.caption,wisdom:args.wisdom,source:evidence.get(args.source_url)});}
+          catch(error) {error.editorialFatal=true;throw error;}
+          if(verdict.decision==='approve') {draft=args;approval=verdict;result={accepted:true};}
+          else {rejectedSources.add(args.source_url);result={accepted:false,issues:verdict.issues,instruction:'Choose a DIFFERENT story/source, verify its cover, and submit fresh content. Do not merely rewrite this story.'};}
         } else {
           if (!readOnlyCall(name, args)) throw new Error('Only discovery and read-only channel checks are allowed from the model');
           result = await mcp.call(name, args);
         }
-      } catch (error) { result = { error: error.message }; }
+      } catch (error) { if(error.editorialFatal) throw error; result = { error: error.message }; }
       messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result).slice(0, 50000) });
+      if(draft) break;
+      if(editorialAttempts>=3) throw new Error('No approved evening post after three candidates');
     }
   }
   if (!draft) throw new Error('No verified draft within the tool-call budget');
+  assertApproved(draft.caption, approval);
   const archiveText = `# Evening post ${day}\n\nCategory: ${draft.category}\nSource: ${draft.source_url}\nImage: ${draft.image_url}\nCharacters: ${[...draft.caption].length}\n\n${draft.caption}\n`;
   if (mode === '--dry-run') {
     await atomicWrite(join(state, `drafts/evening-${day}.md`), archiveText);
@@ -221,6 +236,7 @@ async function run() {
   try { await readFile(marker); console.log('Already published; skipping.'); return; } catch (e) { if (e.code !== 'ENOENT') throw e; }
   const archive = join(vault, `posts/evening-${day}.md`);
   await atomicWrite(archive, archiveText);
+  assertApproved(draft.caption, approval);
   await writeFile(pending, JSON.stringify({ day, account: ACCOUNT, chat_id: CHAT, archive, at: new Date().toISOString() }), { flag: 'wx', mode: 0o600 });
   const result = await execute([{ tool_slug: 'TELEGRAM_SEND_PHOTO', account: ACCOUNT, arguments: { chat_id: CHAT, photo: draft.image_url, caption: draft.caption } }]);
   const response = result.data?.results?.[0]?.response || result.results?.[0]?.response;

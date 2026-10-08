@@ -1,5 +1,7 @@
 # Evening OS cron
 
+> Current installation and editorial behavior: [Channel editorial gate](channel-editorial-gate.md). The migration commands/resource-copy instructions below are historical; use the coherent bundle installer for current deployments.
+
 Issue: #199. Installed on 2026-10-06 after the owner approved immediate rollout. Source: `deploy/evening/`. No application changes and no Hermes or Codex runtime dependency.
 
 The OS cron daemon runs the `danil` user crontab entry daily at **18:00 Europe/Berlin** (including local daylight saving transitions):

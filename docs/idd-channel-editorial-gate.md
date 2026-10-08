@@ -1,6 +1,6 @@
 # Intent: varied, readable scheduled channel posts
 
-Issue: #205. Status: proposed; owner approval and five spec reviews are pending.
+Issue: #205. Status: owner approved on 2026-10-08; five independent spec reviews completed. History-window and replacement clarifications are included in implementation.
 
 ## Outcome
 Morning wisdom and evening stories should reward reading: recognizable detail, a coherent observation, an earned joke, and natural Russian. Coffee and Uncle Misha's surprise must stop acting as default filler.
@@ -9,7 +9,7 @@ Morning wisdom and evening stories should reward reading: recognizable detail, a
 The active OS runners in `deploy/morning/` and `deploy/evening/`, their prompts, installed post-polish resources, history input, and the host-controlled step before Telegram delivery. Morning remains wisdom plus wish without promotion; evening retains weekday categories, verified source cover and CTA. Schedules remain 10:00 and 18:00 Europe/Berlin.
 
 ## Acceptance
-- Both jobs consult confirmed morning and evening publications from the preceding 14 local calendar days, including wishes and hooks.
+- Both jobs consult confirmed morning and evening publications from the current local calendar day and previous 13 calendar days, including wishes and hooks.
 - Generation does not use a beverage ritual or a stock surprise reaction as its default framing.
 - A separate editor evaluates the exact final rendered message for Russian correctness, coherent meaning, relevance, and repetition before the host sends it.
 - Failed, missing, malformed or stale review prevents sending. At most three candidates are reviewed per run; exhaustion saves a rejected draft locally and exits unsuccessfully.

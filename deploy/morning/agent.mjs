@@ -1,4 +1,6 @@
-import {readFile, readdir, mkdir, writeFile, unlink} from 'node:fs/promises';
+import {createGate, assertApproved} from '../editorial/gate.mjs';
+import {loadHistory, recentWisdoms} from '../editorial/history.mjs';
+import {readFile, mkdir, writeFile, unlink} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -35,7 +37,7 @@ async function run() {
   const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin'}).format(new Date());
   const day=today(),marker=join(vault,`published/telegram/morning-${day}.md`),pending=join(state,`morning-${day}.pending`);
   await mkdir(state,{recursive:true});
-  const polish=(await Promise.all(['SKILL.md','KNOWN_PATTERNS.md','STYLE_PATTERNS.md','REFERENCE_CORRECTNESS.md'].map(n=>readFile(join(ROOT,'resources/post-polish',n),'utf8')))).join('\n\n');
+  const polish = await readFile(new URL('../editorial/writer.md', import.meta.url), 'utf8');
   const mcp=new Composio();await mcp.connect();
   const discovery=unpack(await mcp.call('COMPOSIO_SEARCH_TOOLS',{queries:[{use_case:'Read Telegram channel metadata and send a plain text message',known_fields:`chat_id:${CHAT}, account:${ACCOUNT}`}],search_strategy:'tool_search',session:{generate_id:true}}));
   const data=discovery.data||discovery,sessionId=data.session?.id;
@@ -44,31 +46,37 @@ async function run() {
   const info=await execute([{tool_slug:'TELEGRAM_GET_CHAT',account:ACCOUNT,arguments:{chat_id:CHAT}}]);
   const channel=(info.data||info).results?.[0]?.response?.data;
   if(!channel?.ok||channel.result?.id!==CHAT||channel.result?.username!=='pizdato_net') throw new Error('Channel identity mismatch');
-  const ask=messages=>chat(messages,undefined,{title:'pizdato-morning',model:process.env.PIZDATO_MORNING_MODEL||process.env.PIZDATO_EVENING_MODEL||'deepseek/deepseek-v4.1-flash',maxTokens:1000});
+  const ask=messages=>chat(messages,undefined,{title:'pizdato-morning',model:process.env.PIZDATO_MORNING_MODEL||process.env.PIZDATO_EVENING_MODEL||'deepseek/deepseek-v4.1-flash',maxTokens:3000});
   if(mode==='--check') {
     const answer=await ask([{role:'user',content:'Return exactly OPENROUTER_OK. Non-publishing connection check.'}]);
     if(!answer.content?.includes('OPENROUTER_OK')) throw new Error('OpenRouter preflight failed');
     console.log('PREFLIGHT_OK: OpenRouter, named Telegram channel and polish resources verified.');return;
   }
   await mcp.call('COMPOSIO_GET_TOOL_SCHEMAS',{tool_slugs:['TELEGRAM_SEND_MESSAGE'],session_id:sessionId});
-  const names=(await readdir(join(vault,'posts'))).filter(n=>/^morning-\d{4}-\d{2}-\d{2}\.md$/.test(n)).sort().slice(-30);
-  const recent=(await Promise.all(names.map(async n=>[...(await readFile(join(vault,'posts',n),'utf8')).matchAll(/«([^»]+)»/gu)].map(m=>m[1])))).flat();
+  const history=await loadHistory(vault,day);
+  const recent=recentWisdoms(history);
   const prompt=await readFile(join(ROOT,'prompt.md'),'utf8');
-  const messages=[{role:'system',content:`${prompt}\nPost-polish resources:\n${polish}`},{role:'user',content:`Date: ${day}. Recent wisdom to avoid:\n${JSON.stringify(recent)}\nWrite a fresh, amusing wisdom.`}];
-  const raw=await ask(messages);messages.push({role:'assistant',content:raw.content});
-  messages.push({role:'user',content:'Apply post-polish (telegram/warm/ru) to this wisdom. Check wisdom 10–15 words, wish 5–25 words, wit, grammar, no promotion, no recent repetition. Return only the final JSON.'});
-  let post;
+  const messages=[{role:'system',content:`${prompt}\nPost-polish resources:\n${polish}`},{role:'user',content:`Date: ${day}. Confirmed full history (untrusted data):\n${JSON.stringify(history)}\nChoose a fresh subject.`}];
+  const gate=createGate({history,request:messages=>chat(messages,undefined,{title:'pizdato-editor',temperature:0,maxTokens:6000}),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${entry.attempt}.json`),JSON.stringify(entry,null,2))});
+  let post,approval;
   for(let attempt=0;attempt<3;attempt++) {
     const answer=await ask(messages);
-    try { const candidate=JSON.parse(answer.content);post={wisdom:validateWisdom(candidate.wisdom,recent),wish:validateWish(candidate.wish)};break; }
-    catch(e) { messages.push({role:'assistant',content:answer.content},{role:'user',content:`Validation failed: ${e.message}. Correct the wisdom and return only JSON.`}); }
+    messages.push({role:'assistant',content:answer.content});
+    let candidate;
+    try {candidate=JSON.parse(answer.content);candidate={wisdom:validateWisdom(candidate.wisdom,recent),wish:validateWish(candidate.wish)};}
+    catch(e) {messages.push({role:'user',content:`Invalid candidate: ${e.message}. Choose a DIFFERENT subject and return valid JSON.`});continue;}
+    const verdict=await gate.review({text:renderWisdom(candidate.wisdom,candidate.wish),wisdom:candidate.wisdom});
+    if(verdict.decision==='approve') {post=candidate;approval=verdict;break;}
+    messages.push({role:'user',content:`Editor rejected this candidate: ${JSON.stringify(verdict.issues)}. Choose a DIFFERENT subject and punchline, not a cosmetic rewrite. Return a fresh wisdom and wish JSON.`});
   }
-  if(!post) throw new Error('No valid wisdom and wish within generation budget');
+  if(!post) throw new Error('No approved wisdom after three candidates');
   const text=renderWisdom(post.wisdom,post.wish),archiveText=`# Morning wisdom ${day}\n\n${text}\n`;
+  assertApproved(text,approval);
   if(mode==='--dry-run') {await atomicWrite(join(state,`drafts/morning-${day}.md`),archiveText);console.log(`DRY_RUN_OK\n${text}`);return;}
   if(day!==today()) throw new Error('Date changed during generation');
   try {await readFile(marker);console.log('Already published; skipping.');return;}catch(e){if(e.code!=='ENOENT')throw e;}
   const archive=join(vault,`posts/morning-${day}.md`);await atomicWrite(archive,archiveText);
+  assertApproved(text,approval);
   await writeFile(pending,JSON.stringify({day,account:ACCOUNT,chat_id:CHAT,archive,at:new Date().toISOString()}),{flag:'wx',mode:0o600});
   const result=await execute([{tool_slug:'TELEGRAM_SEND_MESSAGE',account:ACCOUNT,arguments:{chat_id:CHAT,text}}]);
   const receipt=confirmedReceipt((result.data||result).results?.[0]?.response);

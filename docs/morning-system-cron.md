@@ -1,5 +1,7 @@
 # Morning wisdom and wish OS cron
 
+> Current installation and editorial behavior: [Channel editorial gate](channel-editorial-gate.md). The migration commands/resource-copy instructions below are historical; use the coherent bundle installer for current deployments.
+
 Issue #201; companion to evening migration #199. The owner requested a daily 10:00 Europe/Berlin post consisting of Uncle Misha's witty wisdom and a short witty wish, with no links or site promotion.
 
 ## Schedule and runtime
