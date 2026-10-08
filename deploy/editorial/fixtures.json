@@ -34,11 +34,12 @@
   },
   {
     "id": "source-beverage",
-    "text": "В библиотеке открыли кофейню. Дядя Миша оценил: пиздато, теперь между главами можно заказать капучино.",
+    "text": "В библиотеке открыли кофейню. Дядя Миша одобрил соседство книг и капучино. Мудрость дня: «Книги возвращают в библиотеку, а капучино обратно уже не вернёшь.»",
     "source": {
-      "text": "A coffee shop opened inside the library. Visitors can order cappuccino."
+      "text": "A coffee shop opened inside the library. Visitors can borrow books and order cappuccino."
     },
-    "expected": "approve"
+    "expected": "approve",
+    "wisdom": "Книги возвращают в библиотеку, а капучино обратно уже не вернёшь."
   },
   {
     "id": "circular-platitude",

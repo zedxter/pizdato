@@ -10,7 +10,7 @@ const fixtures=JSON.parse(await readFile(new URL('./fixtures.json',import.meta.u
 const results=[];
 for(const fixture of fixtures) await Promise.all([1,2,3].map(async trial=>{
  const gate=createGate({request:messages=>chat(messages,undefined,editorOptions),history:fixture.history||[]});
- const verdict=await gate.review({text:fixture.text,wisdom:fixture.text,source:fixture.source||null});
+ const verdict=await gate.review({text:fixture.text,wisdom:fixture.wisdom||fixture.text,source:fixture.source||null});
  const pass=verdict.decision===fixture.expected && (!fixture.dimension || verdict[fixture.dimension]===false);
  results.push({id:fixture.id,trial,pass,verdict});
  console.log(`${pass?'PASS':'FAIL'} ${fixture.id} trial=${trial}`);

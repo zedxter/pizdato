@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 const dimensions=['grammar','meaning','freshness','voice','grounding'];
 export const editorOptions = {
-  title:'pizdato-editor', temperature:0, maxTokens:6000,
+  title:'pizdato-editor', temperature:0, maxTokens:12000,
   reasoning:{effort:'low',exclude:true},
   responseFormat:{type:'json_schema',json_schema:{name:'editorial_verdict',strict:true,schema:{
     type:'object',additionalProperties:false,required:['decision',...dimensions,'issues'],

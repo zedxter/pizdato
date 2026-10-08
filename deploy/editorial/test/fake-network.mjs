@@ -9,7 +9,7 @@ const caption=w=>`Дядя Миша оценил находку. Пиздато:
 globalThis.fetch=async(url,opts={})=>{
  if(String(url).includes('openrouter.ai')) {
  const req=JSON.parse(opts.body);
- if(req.reasoning?.effort!=='low'||req.tools?.some(t=>t.function.name==='read_context')) throw new Error('Use bounded reasoning and supply full history exactly once');
+ if((req.reasoning?.effort!=='low'&&req.reasoning?.enabled!==false)||req.tools?.some(t=>t.function.name==='read_context')) throw new Error('Use bounded reasoning and supply full history exactly once');
  if(req.messages[0].content.startsWith('# Public message editorial review')) {
  if(req.reasoning?.effort!=='low'||req.response_format?.json_schema?.strict!==true) throw new Error('Editor needs a bounded reasoning budget and strict output schema');
  reviews++;
