@@ -29,3 +29,13 @@ The live editor also exhausted its optional reasoning allocation and returned nu
 Repeated live repairs exposed generic length findings that did not help the writer converge. Failing validator tests now require measured caption/word counts and concrete revision targets; the writer aims below the hard caption ceiling. The hard validation limits are unchanged.
 
 Final real recovery proof at 2026-10-09 10:08 UTC: the same NASA draft passed the full gate after multiple process resumptions, factual/voice repairs and structural corrections (`DRY_RUN_OK`). Writer context now omits duplicated primary evidence and obsolete raw text while retaining confirmed history, supporting evidence and all latest findings beside the final repair instruction. No public message was sent.
+
+## Production deployment
+
+Implementation PR #217 merged after all seven checks passed. Installed revision `c33c3fc8049e045aaeae46e7101b1f90bf03110f` at 2026-10-09 10:13 UTC from the merged tree. The production installer held both slot locks and created backup `/home/danil/.local/state/pizdato-editorial-backups/20261009T101329788672Z` containing the original cron, evening state and previous bundle links.
+
+All 27 installed file hashes match the release manifest. The morning cron and all unrelated lines are byte-for-byte unchanged; the sole evening entry now runs `tick.sh` every five minutes with the selected Node executable. The activation date is 2026-10-09. Installed dependency preflight returned `PREFLIGHT_OK`; offline status returned an empty edition list and a pre-18:00 tick returned `idle`, with no publication.
+
+The immutable cover directory is writable by the cron user and served by Caddy. A checked JPEG was staged read-only and its public copy at `https://pizdato.net/channel-covers/57976c364dd8072856ebc33940fc1d42c30e45d9133791e595f419477d038091.jpg` matched the validated SHA-256. No Telegram test send was performed.
+
+First real scheduled delivery remains unobserved: the next edition becomes due on 2026-10-09 at 18:00 Europe/Berlin. Task 4.4 deliberately remains open until its confirmed receipt or external blockage is inspected; deployment, preflight and dry-run approval are not evidence of publication.
