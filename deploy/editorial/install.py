@@ -10,11 +10,16 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import shlex
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--share', type=Path, default=Path.home()/'.local/share')
 parser.add_argument('--state', type=Path, default=Path.home()/'.local/state')
+parser.add_argument('--schedule', action='store_true', help='Initialize durable evening editions and replace only the tagged evening cron entry')
 args = parser.parse_args()
+node = os.environ.get('PIZDATO_EVENING_NODE') or shutil.which('node')
+if args.schedule and not node:
+    raise RuntimeError('Node 18+ is required')
 source = Path(__file__).resolve().parents[1]
 revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, text=True).strip()
 stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
@@ -28,11 +33,20 @@ with contextlib.ExitStack() as stack:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     release.mkdir(parents=True)
     backup.mkdir(parents=True)
+    old_cron = None
+    if args.schedule:
+        result = subprocess.run(['crontab', '-l'], text=True, capture_output=True)
+        if result.returncode not in (0, 1):
+            raise RuntimeError('Cannot read crontab')
+        old_cron = result.stdout
+        (backup/'crontab.txt').write_text(old_cron)
+        shutil.copytree(args.state/'pizdato-evening', backup/'evening-state')
     for slot in ('morning', 'evening', 'editorial'):
         shutil.copytree(source/slot, release/slot, ignore=shutil.ignore_patterns('test', '__pycache__', 'resources'))
     shutil.copy2(release/'evening/agent.mjs', release/'morning/transport.mjs')
     for slot in ('morning', 'evening'):
         (release/slot/'run.sh').chmod(0o700)
+    (release/'evening/tick.sh').chmod(0o700)
     hashes = {str(p.relative_to(release)): hashlib.sha256(p.read_bytes()).hexdigest()
               for p in sorted(release.rglob('*')) if p.is_file()}
     manifest = {'revision': revision, 'installed_at': stamp, 'sha256': hashes}
@@ -58,10 +72,21 @@ with contextlib.ExitStack() as stack:
             link = args.share/f'.pizdato-{slot}-{stamp}'
             link.symlink_to(release/slot, target_is_directory=True)
             os.replace(link, dest)
+        if args.schedule:
+            env = dict(os.environ, PIZDATO_EVENING_STATE=str(args.state/'pizdato-evening'))
+            subprocess.run([node, str(release/'evening/cli.mjs'), '--init'], env=env, check=True, capture_output=True)
+            command = 'PIZDATO_EVENING_NODE='+shlex.quote(node)+' /bin/bash '+shlex.quote(str(args.share/'pizdato-evening/tick.sh'))
+            logfile = shlex.quote(str(args.state/'pizdato-evening/cron.log'))
+            cron = '\n'.join(line for line in old_cron.splitlines() if not line.rstrip().endswith('# pizdato-evening'))+'\n'
+            cron += '*/5 * * * * '+command+' >> '+logfile+' 2>&1 # pizdato-evening\n'
+            (backup/'crontab-new.txt').write_text(cron)
+            subprocess.run(['crontab', str(backup/'crontab-new.txt')], check=True)
         for name, digest in hashes.items():
             if hashlib.sha256((release/name).read_bytes()).hexdigest() != digest:
                 raise RuntimeError(f'Installed hash mismatch: {name}')
     except BaseException:
+        if args.schedule and old_cron is not None:
+            subprocess.run(['crontab', str(backup/'crontab.txt')], check=True)
         for slot in changed:
             dest = args.share/f'pizdato-{slot}'
             if dest.is_symlink():

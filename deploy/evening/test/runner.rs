@@ -194,3 +194,111 @@ assert.equal(calls,9);
         String::from_utf8_lossy(&out.stderr)
     );
 }
+
+#[test]
+fn persistent_evening_policy_survives_twelve_repairs_and_restart() {
+    let out = Command::new("node")
+        .args(["--input-type=module", "-e", r#"
+import assert from 'node:assert/strict';
+import {createGate,assertApproved} from './deploy/editorial/gate.mjs';
+let saved;
+for(let i=0;i<=12;i++) {
+ const gate=createGate({policy:'persistent-evening',initial:saved,history:[],request:async()=>({content:JSON.stringify({decision:i===12?'approve':'revise',grammar:i===12,meaning:true,freshness:true,voice:true,grounding:true,issues:i===12?[]:['Fix agreement']})})});
+ const verdict=await gate.review({text:'draft '+i,wisdom:'wisdom '+i});
+ if(i<12) {assert.equal(verdict.nextAction,'repair');assert.equal(gate.state.story,1);}
+ else assertApproved('draft 12',verdict);
+ saved=gate.snapshot();
+}
+"#])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+#[test]
+fn durable_worker_keeps_repairing_across_process_activations() {
+    let out = Command::new("node")
+        .args(["--test", "deploy/editorial/test/delivery.test.mjs"])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+#[test]
+fn durable_cli_initializes_future_schedule_and_does_not_publish_early() {
+    let c = Case::new();
+    for args in [vec!["--init", "2099-01-01"], vec!["tick"], vec!["--status"]] {
+        let out = Command::new("bash")
+            .arg("deploy/evening/tick.sh")
+            .env("PIZDATO_EVENING_NODE", "node")
+            .args(args)
+            .env("PIZDATO_EVENING_VAULT", c.root.join("vault"))
+            .env("PIZDATO_EVENING_STATE", c.root.join("state"))
+            .env("PIZDATO_CHANNEL_ENV", c.root.join("missing"))
+            .env("PIZDATO_EVENING_ENV", c.root.join("missing"))
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    assert!(c.root.join("state/scheduler.json").exists());
+    assert!(!c.marker().exists());
+}
+
+#[test]
+fn durable_cli_refuses_to_use_live_state_as_dry_run_state() {
+    let c = Case::new();
+    fs::write(
+        c.root.join("state/scheduler.json"),
+        "{\"version\":1,\"activationDate\":\"2026-10-09\"}",
+    )
+    .unwrap();
+    let out = Command::new("bash")
+        .arg("deploy/evening/tick.sh")
+        .env("PIZDATO_EVENING_NODE", "node")
+        .arg("--dry-run")
+        .arg(c.root.join("state"))
+        .env("PIZDATO_EVENING_STATE", c.root.join("state"))
+        .output()
+        .unwrap();
+    assert!(!out.status.success());
+    assert!(!c.marker().exists());
+    assert!(!c.root.join("state/run.lock").exists());
+}
+
+#[test]
+fn thirteen_separate_workers_keep_one_draft_and_send_once() {
+    let c = Case::new();
+    for attempt in 0..=12 {
+        let out = Command::new("node")
+            .arg("deploy/editorial/test/durable-process.mjs")
+            .arg(&c.root)
+            .arg(attempt.to_string())
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let expected = if attempt < 12 {
+            "repairing"
+        } else {
+            "published"
+        };
+        assert_eq!(String::from_utf8(out.stdout).unwrap().trim(), expected);
+    }
+    assert_eq!(fs::read_to_string(c.root.join("sends")).unwrap(), "send\n");
+}

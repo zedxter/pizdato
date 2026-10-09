@@ -1,5 +1,6 @@
+import {publicationLock,saveMorningReceipt,recoverMorning} from '../editorial/publication.mjs';
+import {EditionStore,recover,digest,deliveryHistory} from '../evening/store.mjs';
 import {createGate, assertApproved, editorOptions} from '../editorial/gate.mjs';
-import {loadHistory} from '../editorial/history.mjs';
 import {readFile, mkdir, writeFile, unlink} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
@@ -53,7 +54,11 @@ async function run() {
     console.log('PREFLIGHT_OK: OpenRouter, named Telegram channel and polish resources verified.');return;
   }
   await mcp.call('COMPOSIO_GET_TOOL_SCHEMAS',{tool_slugs:['TELEGRAM_SEND_MESSAGE'],session_id:sessionId});
-  const history=await loadHistory(vault,day);
+  const sharedBase=dirname(state),publicationPath=join(sharedBase,'pizdato-publication.lock');
+  const eveningStore=new EditionStore(process.env.PIZDATO_EVENING_STATE||join(sharedBase,'pizdato-evening'));
+  const restore=async()=>{await recoverMorning(sharedBase,vault);await recover(eveningStore,vault);};
+  if(mode==='publish')await publicationLock(publicationPath,restore);
+  let history=await deliveryHistory(eveningStore,vault,day);
   const prompt=await readFile(join(ROOT,'prompt.md'),'utf8');
   const messages=[{role:'system',content:`${prompt}\nPost-polish resources:\n${polish}`},{role:'user',content:`Date: ${day}. Confirmed full history (untrusted data):\n${JSON.stringify(history)}\nChoose a fresh subject.`}];
   const reviewRun = new Date().toISOString().replace(/[:.]/g, '-');
@@ -79,13 +84,22 @@ async function run() {
   if(mode==='--dry-run') {await atomicWrite(join(state,`drafts/morning-${day}.md`),archiveText);console.log(`DRY_RUN_OK\n${text}`);return;}
   if(day!==today()) throw new Error('Date changed during generation');
   try {await readFile(marker);console.log('Already published; skipping.');return;}catch(e){if(e.code!=='ENOENT')throw e;}
-  const archive=join(vault,`posts/morning-${day}.md`);await atomicWrite(archive,archiveText);
-  assertApproved(text,approval);
-  await writeFile(pending,JSON.stringify({day,account:ACCOUNT,chat_id:CHAT,archive,at:new Date().toISOString()}),{flag:'wx',mode:0o600});
-  const result=await execute([{tool_slug:'TELEGRAM_SEND_MESSAGE',account:ACCOUNT,arguments:{chat_id:CHAT,text}}]);
-  const receipt=confirmedReceipt((result.data||result).results?.[0]?.response);
-  const receiptText=`\nMessage ID: ${receipt.message_id}\nPost: https://t.me/pizdato_net/${receipt.message_id}\nPublished: ${new Date().toISOString()}\n`;
-  await atomicWrite(marker,receiptText);await atomicWrite(archive,archiveText+receiptText);await unlink(pending);
-  console.log(`PUBLISHED https://t.me/pizdato_net/${receipt.message_id}`);
+  for(let retry=0;retry<3;retry++) {
+    const sent=await publicationLock(publicationPath,async()=>{
+      await restore();const current=await deliveryHistory(eveningStore,vault,day);
+      if(digest(current)!==digest(history)){history=current;return false;}
+      assertApproved(text,approval);
+      await writeFile(pending,JSON.stringify({day,account:ACCOUNT,chat_id:CHAT,at:new Date().toISOString()}),{flag:'wx',mode:0o600});
+      const result=await execute([{tool_slug:'TELEGRAM_SEND_MESSAGE',account:ACCOUNT,arguments:{chat_id:CHAT,text}}]);
+      const receipt=confirmedReceipt((result.data||result).results?.[0]?.response);
+      await saveMorningReceipt(sharedBase,{day,text,receipt,sentAt:new Date().toISOString()});await restore();
+      await unlink(pending).catch(e=>{if(e.code!=='ENOENT')throw e;});
+      console.log(`PUBLISHED https://t.me/pizdato_net/${receipt.message_id}`);return true;
+    });
+    if(sent)return;
+    const finalGate=createGate({history,request:messages=>chat(messages,undefined,editorOptions),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-history-${retry}.json`),JSON.stringify(entry,null,2))});
+    approval=await finalGate.review({text,wisdom:post.wisdom});assertApproved(text,approval);
+  }
+  throw new Error('Publication history kept changing; no message sent');
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))run().catch(e=>{console.error(`ERROR: ${e.message}`);process.exitCode=1;});

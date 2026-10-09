@@ -10,9 +10,9 @@ const CHAT = -1004350521393;
 const ACCOUNT = 'pizdato-net-channel';
 const CTA = 'Мир ждёт твоего голоса: https://pizdato.net';
 export function validateDraft(d) {
-  if (typeof d.caption !== 'string' || [...d.caption].length > 950 || d.caption.length > 1024 || !d.caption.endsWith(CTA)) throw new Error('Caption must be <=950 characters, <=1024 UTF-16 units and end with the exact CTA');
+  if (typeof d.caption !== 'string' || [...d.caption].length > 950 || d.caption.length > 1024 || !d.caption.endsWith(CTA)) throw new Error(`Caption must be <=950 characters, <=1024 UTF-16 units and end with the exact CTA; received ${typeof d.caption==='string'?[...d.caption].length:'non-text'} characters. Rewrite to 750–850 characters including the unchanged final CTA.`);
   const words = String(d.wisdom || '').match(/[\p{L}\p{N}]+(?:[-’'][\p{L}\p{N}]+)*/gu) || [];
-  if (words.length < 10 || words.length > 15 || !d.caption.includes(d.wisdom)) throw new Error('Wisdom must appear in the caption and contain 10–15 words');
+  if (words.length < 10 || words.length > 15 || !d.caption.includes(d.wisdom)) throw new Error(`Wisdom must appear exactly in the caption and contain 10–15 words; received ${words.length} words. Rewrite it to 12 meaningful words, count them, and update both caption and wisdom.`);
   if (!/дядя Миша/iu.test(d.caption) || !/пиздато/iu.test(d.caption) || !/ху[её]во/iu.test(d.caption) || /\bTODO\b|я (наш[её]л|вижу|думаю)/iu.test(d.caption)) throw new Error('Editorial voice validation failed');
   if (new URL(d.source_url).protocol !== 'https:') throw new Error('Source must use HTTPS');
   return d;
@@ -52,13 +52,14 @@ export async function loadEnv(path) {
   }
 }
 export class Composio {
+  constructor(fetcher=fetch) {this.fetcher=fetcher;}
   id = 0;
   session;
   async rpc(method, params, notify = false) {
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', 'x-consumer-api-key': process.env.COMPOSIO_CONSUMER_KEY, 'MCP-Protocol-Version': '2025-03-26' };
     if (this.session) headers['Mcp-Session-Id'] = this.session;
     const body = { jsonrpc: '2.0', method, params, ...(!notify && { id: ++this.id }) };
-    const res = await fetch('https://connect.composio.dev/mcp', { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(120000) });
+    const res = await this.fetcher('https://connect.composio.dev/mcp', { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(120000) });
     if (!res.ok) throw new Error(`Composio HTTP ${res.status}`);
     this.session = res.headers.get('mcp-session-id') || this.session;
     if (notify || res.status === 202) return;
@@ -84,7 +85,7 @@ export function unpack(result) {
   throw new Error('Composio result has no structured payload');
 }
 export async function chat(messages, tools, options = {}) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  const res = await (options.fetcher||fetch)('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://pizdato.net', 'X-Title': options.title || 'pizdato-evening' },
     body: JSON.stringify({ model: options.model || process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash', messages, reasoning:options.reasoning || {effort:"low",exclude:true}, ...(options.responseFormat && {response_format:options.responseFormat,provider:{require_parameters:true}}), ...(tools?.length && { tools, tool_choice: 'auto' }), temperature: options.temperature ?? 0.7, max_tokens: options.maxTokens || 5000 }),
     signal: AbortSignal.timeout(180000),
