@@ -8,13 +8,21 @@ import {digest,durableWrite,CHAT,localDay,deliveryHistory} from './store.mjs';
 const ACCOUNT='pizdato-net-channel';
 export const yieldWork=()=>Object.assign(new Error('Checkpoint required: activation budget'),{code:'YIELD'});
 export class Budget {
- constructor({fetcher=fetch,clock=Date.now,checkpoint=async()=>{},resolver=lookup}={}){this.fetcher=fetcher;this.resolver=resolver;this.clock=clock;this.end=clock()+300000;this.calls=0;this.models=0;this.checkpoint=checkpoint;}
+ constructor({fetcher=fetch,clock=Date.now,checkpoint=async()=>{},resolver=lookup,networkTimeout=15000,modelTimeout=60000}={}){this.networkTimeout=networkTimeout;this.modelTimeout=modelTimeout;this.fetcher=fetcher;this.resolver=resolver;this.clock=clock;this.end=clock()+300000;this.calls=0;this.models=0;this.checkpoint=checkpoint;}
  reserve(){if(this.calls>35||this.models>18||this.end-this.clock()<90000)throw yieldWork();}
  async operation(model){if(this.calls>=40||(model&&this.models>=20)||this.clock()>=this.end)throw yieldWork();this.calls++;if(model)this.models++;await this.checkpoint();}
  async request(url,options={},model=false){
   for(let redirects=0;redirects<=5;redirects++){
-   await this.operation(model);
-   const res=await this.fetcher(url,{...options,redirect:'manual',signal:AbortSignal.timeout(Math.max(1,Math.min(model?60000:15000,this.end-this.clock())))});
+   try{await this.operation(model);}catch(error){error.definiteNonDelivery=true;throw error;}
+   const controller=new AbortController();let timer;
+   const timeout=Math.max(1,Math.min(model?this.modelTimeout:this.networkTimeout,this.end-this.clock()));
+   const expired=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Object.assign(new Error('External operation deadline exceeded'),{safeMessage:'External operation deadline exceeded'}));},timeout);});
+   let res;
+   try{res=await Promise.race([(async()=>{
+    const response=await this.fetcher(url,{...options,redirect:'manual',signal:controller.signal});
+    const bytes=await boundedBytes(response,12*1024*1024);
+    return new Response([204,205,304].includes(response.status)?null:bytes,{status:response.status,headers:response.headers});
+   })(),expired]);}finally{clearTimeout(timer);}
    if([301,302,303,307,308].includes(res.status)){
     if(options.method&&options.method!=='GET')throw new Error('Redirect of authenticated request refused');
     url=new URL(res.headers.get('location'),url).href;if(!url.startsWith('https:'))throw new Error('Unsafe redirect');
@@ -32,7 +40,8 @@ async function publicAddress(url,resolver=lookup){
  const host=u.hostname.replace(/^\[|\]$/g,'');const ips=isIP(host)?[{address:host}]:await resolver(host,{all:true});
  if(!ips.length||ips.some(({address:a})=>(/^(::|fc|fd|fe[89ab]|ff)/i.test(a))||/^(0|10|127|169\.254|192\.168|172\.(1[6-9]|2\d|3[01])|224|240)\./.test(a)))throw new Error('Non-public source address');
 }
-async function boundedBytes(res,max){const parts=[];let size=0;for await(const chunk of res.body){size+=chunk.length;if(size>max)throw new Error('Response too large');parts.push(chunk);}return Buffer.concat(parts);}
+async function boundedBytes(res,max){const parts=[];let size=0;for await(const chunk of res.body){size+=chunk.length;if(size>max)throw Object.assign(new Error('Response too large'),{unusable:true});parts.push(chunk);}return Buffer.concat(parts);}
+const unusable=error=>error.unusable||[400,401,403,404,410].includes(error.status);
 const decode=s=>s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1');
 export function extractFeedLinks(xml){return [...new Set([...xml.matchAll(/<item\b[\s\S]*?<link[^>]*>([\s\S]*?)<\/link>|<entry\b[\s\S]*?<link[^>]*href=["']([^"']+)/gi)].map(m=>decode(m[1]||m[2]).trim()).filter(u=>u.startsWith('https://')))];}
 const feeds=['https://www.nasa.gov/feed/','https://www.esa.int/rssfeed/Our_Activities/Space_Science','https://www.sciencedaily.com/rss/top/science.xml'];
@@ -43,6 +52,7 @@ export function createServices({store,vault,budget=new Budget(),dryRun=false,cov
  let session,execute;
  const model=(messages,modelTools,options={})=>chat(messages,modelTools,{...options,fetcher:(u,o)=>budget.request(u,o,true)});
  const web=async url=>{await publicAddress(url,budget.resolver);return budget.request(url,{publicSource:true,headers:{'User-Agent':'pizdato-evening/2.0'}});};
+ const primaryArticle=async url=>{try{const a=await article(url);if(a.text.length<150||!a.covers.length)throw Object.assign(new Error('Unusable source'),{unusable:true});return a;}catch(error){if(unusable(error))Object.assign(error,{replace:true,replaceSource:url,safeMessage:'Primary source unusable; choose another story'});throw error;}};
  const article=async url=>{const res=await web(url),html=(await boundedBytes(res,1500000)).toString();return {url,text:decode(html.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi,'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ')).slice(0,24000),covers:extractCovers(html,url),fetchedAt:new Date().toISOString()};};
  async function connect(){
   if(execute)return;
@@ -74,16 +84,16 @@ export function createServices({store,vault,budget=new Budget(),dryRun=false,cov
    const draftFrom=async a=>{
     budget.reserve();
     const schema={type:'object',additionalProperties:false,required:['caption','wisdom','source_url','image_url','category','supporting_urls'],properties:{caption:str,wisdom:str,source_url:{type:'string',enum:[a.url]},image_url:{type:'string',enum:a.covers.slice(0,10)},category:str,supporting_urls:{type:'array',items:str,maxItems:10}}};
-    const response=await model([...messages,{role:'user',content:`Now draft or repair the complete post using this verified primary source. No more discovery. Return the complete post JSON. ${JSON.stringify(a)}`}],undefined,{responseFormat:{type:'json_schema',json_schema:{name:'evening_draft',strict:true,schema}}});
+    const response=await model([...messages.slice(0,2),{role:'user',content:`Now draft or repair the complete post using this verified primary source. No more discovery. Return the complete post JSON. ${JSON.stringify(a)}`}],undefined,{responseFormat:{type:'json_schema',json_schema:{name:'evening_draft',strict:true,schema}}});
     e.rawDraft=response.content||'';await checkpoint();
     let d;try{d=JSON.parse(response.content);}catch{e.findings=['Return a valid complete post JSON object; repair the saved draft'];await checkpoint();throw Object.assign(new Error('Malformed draft'),{safeMessage:'Writer returned invalid JSON; same source retained'});}
     if(d.source_url!==a.url)throw new Error('Primary source changed');return d;
    };
    const cached=Object.values(e.candidates).find(a=>!e.abandoned.includes(a.url)&&!history.some(h=>h.text.includes(a.url)));
-   if(e.draft){const a=await article(e.draft.source_url);e.candidates[e.draft.source_url]=a;await checkpoint();return draftFrom(a);}
-   if(cached)return draftFrom(await article(cached.url));
+   if(e.draft){const a=await primaryArticle(e.draft.source_url);e.candidates[e.draft.source_url]=a;await checkpoint();return draftFrom(a);}
+   if(cached)return draftFrom(await primaryArticle(cached.url));
    if(!e.draft&&e.searches.length>=3){const a=await fallback();return draftFrom(a);}
-   if(e.draft){const a=await article(e.draft.source_url);e.candidates[e.draft.source_url]=a;messages.push({role:'user',content:`Refreshed primary evidence: ${JSON.stringify(a)}. Repair this source only.`});await checkpoint();}
+   if(e.draft){const a=await primaryArticle(e.draft.source_url);e.candidates[e.draft.source_url]=a;messages.push({role:'user',content:`Refreshed primary evidence: ${JSON.stringify(a)}. Repair this source only.`});await checkpoint();}
    for(let step=0;step<5;step++){
     budget.reserve();const answer=await model(messages,tools);messages.push(answer);
     if(!answer.tool_calls?.length){messages.push({role:'user',content:'Call complete_post with the full revised caption; prose alone does not submit it.'});continue;}
@@ -109,12 +119,12 @@ export function createServices({store,vault,budget=new Budget(),dryRun=false,cov
   },
   async verify(d,{edition:e,checkpoint}){
    budget.checkpoint=checkpoint;budget.reserve();
-   const primary=await article(d.source_url);
+   const primary=await primaryArticle(d.source_url);
    if(!primary.covers.includes(d.image_url))throw Object.assign(new Error('Source cover no longer available'),{replace:true,safeMessage:'Source cover unavailable; choose another story'});
-   const supporting=[];for(const url of d.supporting_urls||[])supporting.push(await article(url));
-   const res=await web(d.image_url);const mime=(res.headers.get('content-type')||'').split(';')[0];
+   const supporting=[];for(const url of d.supporting_urls||[]){try{supporting.push(await article(url));}catch(error){if(unusable(error))error.repairIssue='Supporting evidence is no longer usable: '+url+'. Remove unsupported details or use a working verified supporting source.';throw error;}}
+   let res;try{res=await web(d.image_url);}catch(error){if(unusable(error))error.replace=true;throw error;}const mime=(res.headers.get('content-type')||'').split(';')[0];
    if(!['image/jpeg','image/png','image/webp'].includes(mime))throw Object.assign(new Error('Unsupported cover format'),{replace:true});
-   const bytes=await boundedBytes(res,10*1024*1024);if(!bytes.length)throw Object.assign(new Error('Empty cover'),{replace:true});
+   let bytes;try{bytes=await boundedBytes(res,10*1024*1024);}catch(error){error.replace=true;throw error;}if(!bytes.length)throw Object.assign(new Error('Empty cover'),{replace:true});
    const hash=digest(bytes),ext={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[mime];
    const file=join(store.root,'covers',`${hash}.${ext}`);await durableWrite(file,bytes);
    return {sources:{primary,supporting},media:{hash,file,extension:ext}};
@@ -124,7 +134,8 @@ export function createServices({store,vault,budget=new Budget(),dryRun=false,cov
    await connect();budget.reserve();if(dryRun)return;
    const bytes=await readFile(media.file);if(digest(bytes)!==media.hash)throw new Error('Cover content changed');
    await mkdir(coverRoot,{recursive:true,mode:0o755});const path=join(coverRoot,`${media.hash}.${media.extension}`);
-   try{if(digest(await readFile(path))!==media.hash)throw new Error('Immutable cover mismatch');}catch(err){if(err.code!=='ENOENT')throw err;await durableWrite(path,bytes);await chmod(path,0o444);}
+   try{if(digest(await readFile(path))!==media.hash)throw new Error('Immutable cover mismatch');}catch(err){if(err.code!=='ENOENT')throw err;await durableWrite(path,bytes);}
+   await chmod(path,0o444);
    media.url=`${coverBase}/${media.hash}.${media.extension}`;
    if(digest(await boundedBytes(await web(media.url),10*1024*1024))!==media.hash)throw new Error('Published cover verification failed');
   },

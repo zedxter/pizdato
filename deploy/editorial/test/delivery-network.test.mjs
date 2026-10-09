@@ -11,7 +11,7 @@ test('feeds expose article links without scripts or non-HTTPS navigation',()=>{
  assert.deepEqual(extractFeedLinks('<rss><item><link>https://example.test/story?a=1&amp;b=2</link></item><item><link>http://bad.test/</link></item></rss>'),['https://example.test/story?a=1&b=2']);
 });
 import {createServices} from '../../evening/network.mjs';
-import {mkdtemp,rm,readFile} from 'node:fs/promises';
+import {mkdtemp,rm,readFile,chmod,stat} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {EditionStore,digest} from '../../evening/store.mjs';
@@ -46,5 +46,35 @@ test('approved media is staged by content hash and sent by its verified copy URL
  const d={source_url:'https://example.com/story',image_url:'https://example.com/cover.jpg',caption:'approved caption',supporting_urls:[]};
  const v=await deps.verify(d,{edition:{},checkpoint:async()=>{}});await deps.ready(v.media);await deps.send(d,v.media);
  assert.equal(sent.photo,`https://pizdato.net/channel-covers/${digest(bytes)}.jpg`);assert.deepEqual(await readFile(join(root,'public',`${digest(bytes)}.jpg`)),bytes);
+ await chmod(join(root,'public',`${digest(bytes)}.jpg`),0o600);await deps.ready(v.media);assert.equal((await stat(join(root,'public',`${digest(bytes)}.jpg`))).mode&0o777,0o444);
  }finally{for(const [i,k] of ['OPENROUTER_API_KEY','COMPOSIO_CONSUMER_KEY'].entries()){if(previous[i]===undefined)delete process.env[k];else process.env[k]=previous[i];}await rm(root,{recursive:true,force:true});}
+});
+test('network deadline holds even when transport ignores abort signals',async()=>{
+ const b=new Budget({networkTimeout:10,fetcher:async()=>new Promise(()=>{})});
+ await assert.rejects(b.request('https://example.com/'),/deadline/);
+});
+test('removed saved primary source requests replacement rather than infinite unchanged retry',async()=>{
+ const deps=createServices({store:new EditionStore('/tmp/unused-delivery-store'),vault:'/tmp/unused',dryRun:true,budget:new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async()=>new Response('gone',{status:404})})});
+ const url='https://example.com/gone',e={day:'2026-10-09',candidates:{[url]:{url,covers:['https://example.com/cover.jpg']}},searches:[],visited:[],reserve:[],abandoned:[],findings:[]};
+ await assert.rejects(deps.prepare({edition:e,history:[],checkpoint:async()=>{},now:new Date('2026-10-09')}),err=>err.replace&&err.replaceSource===url);
+});
+test('known unused send budget is definite non-delivery',async()=>{
+ let requests=0;const b=new Budget({fetcher:async()=>{requests++;return new Response('ok');}});b.calls=40;
+ await assert.rejects(b.request('https://connect.composio.dev/mcp',{method:'POST'}),e=>e.code==='YIELD'&&e.definiteNonDelivery===true);assert.equal(requests,0);
+});
+test('drafting after a tool result uses a complete model conversation',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'delivery-tool-flow-'));let calls=0;
+ try{
+ const b=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
+  if(u.includes('openrouter')){calls++;const r=JSON.parse(o.body);
+   if(calls===1)return new Response(JSON.stringify({choices:[{message:{role:'assistant',tool_calls:[{id:'fetch1',type:'function',function:{name:'fetch_url',arguments:JSON.stringify({url:'https://example.com/story'})}}]}}]}));
+   assert.ok(!r.messages.some(m=>m.tool_calls),'incomplete tool transcript must not reach structured writer');
+   return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({source_url:'https://example.com/story'})}}]}));
+  }
+  return new Response('<meta property="og:image" content="https://example.com/cover.jpg">'+('evidence '.repeat(50)));
+ }});
+ const e={day:'2026-10-09',searches:[],visited:[],reserve:[],abandoned:[],findings:[]};
+ const d=await createServices({store:new EditionStore(root),vault:root,budget:b,dryRun:true}).prepare({edition:e,history:[],checkpoint:async()=>{},now:new Date('2026-10-09')});
+ assert.equal(d.source_url,'https://example.com/story');assert.equal(calls,2);
+ }finally{await rm(root,{recursive:true,force:true});}
 });

@@ -232,3 +232,46 @@ fn durable_worker_keeps_repairing_across_process_activations() {
         String::from_utf8_lossy(&out.stderr)
     );
 }
+
+#[test]
+fn durable_cli_initializes_future_schedule_and_does_not_publish_early() {
+    let c = Case::new();
+    for args in [vec!["--init", "2099-01-01"], vec!["tick"], vec!["--status"]] {
+        let out = Command::new("bash")
+            .arg("deploy/evening/tick.sh")
+            .args(args)
+            .env("PIZDATO_EVENING_VAULT", c.root.join("vault"))
+            .env("PIZDATO_EVENING_STATE", c.root.join("state"))
+            .env("PIZDATO_CHANNEL_ENV", c.root.join("missing"))
+            .env("PIZDATO_EVENING_ENV", c.root.join("missing"))
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    assert!(c.root.join("state/scheduler.json").exists());
+    assert!(!c.marker().exists());
+}
+
+#[test]
+fn durable_cli_refuses_to_use_live_state_as_dry_run_state() {
+    let c = Case::new();
+    fs::write(
+        c.root.join("state/scheduler.json"),
+        "{\"version\":1,\"activationDate\":\"2026-10-09\"}",
+    )
+    .unwrap();
+    let out = Command::new("bash")
+        .arg("deploy/evening/tick.sh")
+        .arg("--dry-run")
+        .arg(c.root.join("state"))
+        .env("PIZDATO_EVENING_STATE", c.root.join("state"))
+        .output()
+        .unwrap();
+    assert!(!out.status.success());
+    assert!(!c.marker().exists());
+    assert!(!c.root.join("state/run.lock").exists());
+}

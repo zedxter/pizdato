@@ -102,3 +102,7 @@ test('delayed publication stays in recent history by actual send date',async()=>
  const e={version:1,day:'2026-09-01',phase:'sending',findings:[],draft,receipt:{message_id:88,chat:{id:-1004350521393}},sentAt:'2026-10-09T17:00:00Z'};await store.save(e);await recover(store,vault);
  assert.equal((await deliveryHistory(store,vault,'2026-10-09')).some(h=>h.name==='evening-2026-09-01.md'),true);
 }));
+test('offline status exposes corrupt journals as blocked rather than hiding the edition',async()=>fixture(async({store})=>{
+ await durableWrite(store.path('2026-10-09'),'{broken');
+ const entries=await status(store,when);assert.equal(entries[0].phase,'blocked');assert.match(entries[0].error,/journal/i);
+}));

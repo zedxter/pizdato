@@ -34,11 +34,14 @@ export function createGate({request, history, record=async()=>{},policy='bounded
     async review({text,wisdom,source=null}) {
       ensureOpen();
       const current={attempt:++attempts,story,revision};
+      let errorKind='Editor transport failed';
       try {
         const rubric=await readFile(new URL('./editor.md',import.meta.url),'utf8');
         const answer=await request([{role:'system',content:rubric},{role:'user',content:JSON.stringify({contentType:source===null?'everyday-observation':'source-based-post',candidate:text,wisdom,history,source,current,rejectedCandidates})}]);
         if(answer.tool_calls?.length) throw new Error('Editorial review must not call tools');
+        errorKind='Editor returned invalid JSON';
         const verdict=JSON.parse(answer.content);
+        errorKind='Editor returned malformed or contradictory verdict';
         const keys=['decision',...dimensions,'issues'].sort();
         if(!verdict || Object.keys(verdict).sort().join()!==keys.join() || !['approve','revise','replace'].includes(verdict.decision) || dimensions.some(k=>typeof verdict[k]!=='boolean') || !Array.isArray(verdict.issues) || verdict.issues.some(i=>typeof i!=='string'||!i.trim())) throw new Error('Malformed editorial verdict');
         const passed=dimensions.every(k=>verdict[k]) && verdict.issues.length===0;
@@ -56,7 +59,7 @@ export function createGate({request, history, record=async()=>{},policy='bounded
         return result;
       } catch(error) {
         done=true;
-        await record({...current,kind:'editorial',text,sha256:hash(text),error:'Editorial review unavailable or invalid',nextAction:'stop'});
+        await record({...current,kind:'editorial',text,sha256:hash(text),error:'Editorial review unavailable or invalid',errorKind,nextAction:'stop'});
         throw error;
       }
     },

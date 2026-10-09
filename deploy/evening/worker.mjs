@@ -30,7 +30,7 @@ export async function tick({store,vault,now=new Date(),deps,dryRun=false}) {
   const gate=createGate({policy:'persistent-evening',initial:e.gate,history,request:deps.review,record:r=>store.record(e,r)});
   let result;
   try{result=await gate.review({text:e.draft.caption,wisdom:e.draft.wisdom,source:{...verified.sources,editionDate:e.day,currentDate:localDay(now),category:e.draft.category,weekday:new Intl.DateTimeFormat('en-US',{weekday:'long',timeZone:'Europe/Berlin'}).format(new Date(e.day+'T12:00Z'))}});}finally{e.gate=gate.snapshot();await checkpoint();}
-  e.revision=e.gate.revision;e.findings=result.issues;e.failures=0;
+  e.revision=e.gate.revision;e.findings=result.issues;e.failures=0;delete e.lastError;
   if(result.decision!=='approve'){
    if(result.nextAction==='replace'){e.abandoned.push(e.draft.source_url);e.draft=null;e.phase='discovering';}
    else e.phase='repairing';
@@ -52,7 +52,7 @@ export async function tick({store,vault,now=new Date(),deps,dryRun=false}) {
  }catch(error){
   if(e.receipt)throw error;
   if(e.phase==='sending'&&!error.definiteNonDelivery){e.phase='delivery-unknown';e.lastError='Send outcome unknown; reconcile before retry';}
-  else {if(e.phase==='sending')e.phase='ready';if(error.replace){if(e.draft)e.abandoned.push(e.draft.source_url);e.draft=null;e.phase='discovering';e.findings=[error.safeMessage||'Source or cover unusable; replace candidate'];}scheduleRetry(e,now,error);}
+  else {if(e.phase==='sending')e.phase='ready';if(error.repairIssue){e.phase='repairing';e.findings=[error.repairIssue];}if(error.replace){if(error.replaceSource||e.draft)e.abandoned.push(error.replaceSource||e.draft.source_url);e.draft=null;e.phase='discovering';e.findings=[error.safeMessage||'Source or cover unusable; replace candidate'];}scheduleRetry(e,now,error);}
   await checkpoint();
  }
  return e;
