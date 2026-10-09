@@ -1,3 +1,5 @@
+> Partly superseded by `editorial-convergence` (#219): unlimited repairs, recovery of missed editions across midnight and closing only on delivery or operator cancellation no longer apply; see that proposal for the list. Other requirements remain in force.
+
 ## Purpose
 
 Keep every scheduled evening edition recoverable until its independently approved content is confirmed delivered, including after editorial rejection, discovery failure or worker interruption.
