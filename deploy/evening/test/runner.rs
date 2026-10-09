@@ -239,6 +239,7 @@ fn durable_cli_initializes_future_schedule_and_does_not_publish_early() {
     for args in [vec!["--init", "2099-01-01"], vec!["tick"], vec!["--status"]] {
         let out = Command::new("bash")
             .arg("deploy/evening/tick.sh")
+            .env("PIZDATO_EVENING_NODE", "node")
             .args(args)
             .env("PIZDATO_EVENING_VAULT", c.root.join("vault"))
             .env("PIZDATO_EVENING_STATE", c.root.join("state"))
@@ -266,6 +267,7 @@ fn durable_cli_refuses_to_use_live_state_as_dry_run_state() {
     .unwrap();
     let out = Command::new("bash")
         .arg("deploy/evening/tick.sh")
+        .env("PIZDATO_EVENING_NODE", "node")
         .arg("--dry-run")
         .arg(c.root.join("state"))
         .env("PIZDATO_EVENING_STATE", c.root.join("state"))

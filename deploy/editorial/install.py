@@ -17,6 +17,9 @@ parser.add_argument('--share', type=Path, default=Path.home()/'.local/share')
 parser.add_argument('--state', type=Path, default=Path.home()/'.local/state')
 parser.add_argument('--schedule', action='store_true', help='Initialize durable evening editions and replace only the tagged evening cron entry')
 args = parser.parse_args()
+node = os.environ.get('PIZDATO_EVENING_NODE') or shutil.which('node')
+if args.schedule and not node:
+    raise RuntimeError('Node 18+ is required')
 source = Path(__file__).resolve().parents[1]
 revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, text=True).strip()
 stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
@@ -71,8 +74,8 @@ with contextlib.ExitStack() as stack:
             os.replace(link, dest)
         if args.schedule:
             env = dict(os.environ, PIZDATO_EVENING_STATE=str(args.state/'pizdato-evening'))
-            subprocess.run(['/usr/bin/node', str(release/'evening/cli.mjs'), '--init'], env=env, check=True, capture_output=True)
-            command = '/bin/bash '+shlex.quote(str(args.share/'pizdato-evening/tick.sh'))
+            subprocess.run([node, str(release/'evening/cli.mjs'), '--init'], env=env, check=True, capture_output=True)
+            command = 'PIZDATO_EVENING_NODE='+shlex.quote(node)+' /bin/bash '+shlex.quote(str(args.share/'pizdato-evening/tick.sh'))
             logfile = shlex.quote(str(args.state/'pizdato-evening/cron.log'))
             cron = '\n'.join(line for line in old_cron.splitlines() if not line.rstrip().endswith('# pizdato-evening'))+'\n'
             cron += '*/5 * * * * '+command+' >> '+logfile+' 2>&1 # pizdato-evening\n'
