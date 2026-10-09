@@ -81,3 +81,17 @@ test('drafting after a tool result uses a complete model conversation',async()=>
 test('successful no-content dependency responses are valid',async()=>{
  const b=new Budget({fetcher:async()=>new Response(null,{status:204})});assert.equal((await b.request('https://example.com/')).status,204);
 });
+test('three irrelevant searches switch to a feed and produce a verified-source draft',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'delivery-fallback-'));let searches=0,feeds=0;
+ try{
+ const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
+  if(u.includes('openrouter')){const req=JSON.parse(o.body);return new Response(JSON.stringify({choices:[{message:req.tools?{role:'assistant',tool_calls:[{id:`search${searches}`,type:'function',function:{name:'search_web',arguments:'{"query":"irrelevant query"}'}}]}:{content:JSON.stringify({source_url:'https://example.com/story'})}}]}));}
+  if(u.includes('bing.com')){searches++;return new Response('<rss><item><title>Dictionary result, no usable article</title></item></rss>');}
+  if(u.endsWith('/feed/')){feeds++;return new Response('<rss><item><link>https://example.com/story</link></item></rss>');}
+  return new Response('<meta property="og:image" content="https://example.com/cover.jpg">'+('verified source evidence '.repeat(25)));
+ }});
+ const e={day:'2026-10-09',searches:[],visited:[],reserve:[],abandoned:[],findings:[]};
+ const d=await createServices({store:new EditionStore(root),vault:root,budget,dryRun:true}).prepare({edition:e,history:[],checkpoint:async()=>{},now:new Date('2026-10-09')});
+ assert.equal(searches,3);assert.equal(feeds,1);assert.equal(d.source_url,'https://example.com/story');assert.ok(e.candidates[d.source_url]);
+ }finally{await rm(root,{recursive:true,force:true});}
+});
