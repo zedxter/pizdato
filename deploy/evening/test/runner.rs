@@ -275,3 +275,28 @@ fn durable_cli_refuses_to_use_live_state_as_dry_run_state() {
     assert!(!c.marker().exists());
     assert!(!c.root.join("state/run.lock").exists());
 }
+
+#[test]
+fn thirteen_separate_workers_keep_one_draft_and_send_once() {
+    let c = Case::new();
+    for attempt in 0..=12 {
+        let out = Command::new("node")
+            .arg("deploy/editorial/test/durable-process.mjs")
+            .arg(&c.root)
+            .arg(attempt.to_string())
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let expected = if attempt < 12 {
+            "repairing"
+        } else {
+            "published"
+        };
+        assert_eq!(String::from_utf8(out.stdout).unwrap().trim(), expected);
+    }
+    assert_eq!(fs::read_to_string(c.root.join("sends")).unwrap(), "send\n");
+}

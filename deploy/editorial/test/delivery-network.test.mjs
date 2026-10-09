@@ -78,3 +78,6 @@ test('drafting after a tool result uses a complete model conversation',async()=>
  assert.equal(d.source_url,'https://example.com/story');assert.equal(calls,2);
  }finally{await rm(root,{recursive:true,force:true});}
 });
+test('successful no-content dependency responses are valid',async()=>{
+ const b=new Budget({fetcher:async()=>new Response(null,{status:204})});assert.equal((await b.request('https://example.com/')).status,204);
+});

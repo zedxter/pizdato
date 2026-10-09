@@ -40,7 +40,7 @@ async function publicAddress(url,resolver=lookup){
  const host=u.hostname.replace(/^\[|\]$/g,'');const ips=isIP(host)?[{address:host}]:await resolver(host,{all:true});
  if(!ips.length||ips.some(({address:a})=>(/^(::|fc|fd|fe[89ab]|ff)/i.test(a))||/^(0|10|127|169\.254|192\.168|172\.(1[6-9]|2\d|3[01])|224|240)\./.test(a)))throw new Error('Non-public source address');
 }
-async function boundedBytes(res,max){const parts=[];let size=0;for await(const chunk of res.body){size+=chunk.length;if(size>max)throw Object.assign(new Error('Response too large'),{unusable:true});parts.push(chunk);}return Buffer.concat(parts);}
+async function boundedBytes(res,max){if(!res.body)return Buffer.alloc(0);const parts=[];let size=0;for await(const chunk of res.body){size+=chunk.length;if(size>max)throw Object.assign(new Error('Response too large'),{unusable:true});parts.push(chunk);}return Buffer.concat(parts);}
 const unusable=error=>error.unusable||[400,401,403,404,410].includes(error.status);
 const decode=s=>s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1');
 export function extractFeedLinks(xml){return [...new Set([...xml.matchAll(/<item\b[\s\S]*?<link[^>]*>([\s\S]*?)<\/link>|<entry\b[\s\S]*?<link[^>]*href=["']([^"']+)/gi)].map(m=>decode(m[1]||m[2]).trim()).filter(u=>u.startsWith('https://')))];}
