@@ -194,3 +194,41 @@ assert.equal(calls,9);
         String::from_utf8_lossy(&out.stderr)
     );
 }
+
+#[test]
+fn persistent_evening_policy_survives_twelve_repairs_and_restart() {
+    let out = Command::new("node")
+        .args(["--input-type=module", "-e", r#"
+import assert from 'node:assert/strict';
+import {createGate,assertApproved} from './deploy/editorial/gate.mjs';
+let saved;
+for(let i=0;i<=12;i++) {
+ const gate=createGate({policy:'persistent-evening',initial:saved,history:[],request:async()=>({content:JSON.stringify({decision:i===12?'approve':'revise',grammar:i===12,meaning:true,freshness:true,voice:true,grounding:true,issues:i===12?[]:['Fix agreement']})})});
+ const verdict=await gate.review({text:'draft '+i,wisdom:'wisdom '+i});
+ if(i<12) {assert.equal(verdict.nextAction,'repair');assert.equal(gate.state.story,1);}
+ else assertApproved('draft 12',verdict);
+ saved=gate.snapshot();
+}
+"#])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+#[test]
+fn durable_worker_keeps_repairing_across_process_activations() {
+    let out = Command::new("node")
+        .args(["--test", "deploy/editorial/test/delivery.test.mjs"])
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+}

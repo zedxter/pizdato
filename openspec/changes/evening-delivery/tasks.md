@@ -1,7 +1,7 @@
 ## 1. Specification approval
 
 - [x] 1.1 Create issue #214, IDD and consistent OpenSpec artifacts; relate discovery issue #209.
-- [ ] 1.2 Complete five independent specification reviews, resolve findings, pass validation/CI and obtain owner approval before implementation.
+- [x] 1.2 Complete five independent specification reviews, resolve findings, pass validation/CI and obtain owner approval before implementation.
 
 ## 2. Durable preparation through TDD
 

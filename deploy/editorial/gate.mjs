@@ -15,20 +15,22 @@ const approvals=new WeakMap();
 export function assertApproved(text, approval) {
   if(!approval || approvals.get(approval)!==hash(text)) throw new Error('Valid approval for this exact payload required');
 }
-export function createGate({request, history, record=async()=>{}}) {
-  let attempts=0, story=1, revision=0, done=false;
-  const rejectedCandidates=[];
+export function createGate({request, history, record=async()=>{},policy='bounded',initial=null}) {
+  const persistent=policy==='persistent-evening';
+  let attempts=initial?.attempts||0, story=initial?.story||1, revision=initial?.revision||0, done=false;
+  const rejectedCandidates=initial?.rejectedCandidates?.slice(-6)||[];
   const ensureOpen=()=>{if(done) throw new Error('Editorial budget is terminal');};
   const advance=decision=>{
     if(decision==='approve') {done=true;return 'publish';}
-    if(decision==='replace'||revision===2) {
-      if(story===3) {done=true;return 'stop';}
+    if(decision==='replace'||(!persistent&&revision===2)) {
+      if(!persistent&&story===3) {done=true;return 'stop';}
       story++;revision=0;return 'replace';
     }
     revision++;return 'repair';
   };
   return {
     get state() {return {story,revision,done};},
+    snapshot() {return {attempts,story,revision,rejectedCandidates:rejectedCandidates.slice(-6)};},
     async review({text,wisdom,source=null}) {
       ensureOpen();
       const current={attempt:++attempts,story,revision};
