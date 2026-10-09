@@ -20,10 +20,10 @@ test('discovered source goes straight to a draft and malformed writer output rem
  try{
  const url='https://www.nasa.gov/test-source';let saved=0,models=0;
  const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async u=>u.includes('openrouter')?(models++,new Response(JSON.stringify({choices:[{message:{content:'invalid draft JSON'}}]}),{headers:{'content-type':'application/json'}})):new Response('<meta property="og:image" content="https://www.nasa.gov/cover.jpg">'+('Evidence '.repeat(30)))});
- const e={day:'2026-10-09',candidates:{[url]:{url,covers:['https://www.nasa.gov/cover.jpg']}},searches:[],visited:[],reserve:[],abandoned:[],findings:[]};
+ const e={day:'2026-10-09',candidates:{[url]:{url,covers:['https://www.nasa.gov/cover.jpg']}},searches:[],visited:[],reserve:[],abandoned:[],findings:['Remove unsupported first-observation claim']};
  const deps=createServices({store:new EditionStore(root),vault:root,budget,dryRun:true});
  await assert.rejects(deps.prepare({edition:e,history:[],checkpoint:async()=>{saved++;},now:new Date('2026-10-09T18:00Z')}));
- assert.equal(models,1);assert.equal(e.rawDraft,'invalid draft JSON');assert.ok(saved>0);
+ assert.equal(models,1);assert.equal(e.rawDraft,'invalid draft JSON');assert.ok(saved>0);assert.ok(e.findings.includes('Remove unsupported first-observation claim'));
  }finally{await rm(root,{recursive:true,force:true});}
 });
 test('approved media is staged by content hash and sent by its verified copy URL',async()=>{
@@ -71,6 +71,7 @@ test('drafting after a tool result uses a complete model conversation',async()=>
    assert.ok(!r.messages.some(m=>m.tool_calls),'incomplete tool transcript must not reach structured writer');
    assert.doesNotMatch(r.messages[0].content,/MUST finish by calling complete_post/);
    assert.match(r.messages[0].content,/Return exactly one JSON object/);
+   assert.equal(r.reasoning.enabled,false,'structured drafting must allocate output to the caption');
    return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({source_url:'https://example.com/story'})}}]}));
   }
   return new Response('<meta property="og:image" content="https://example.com/cover.jpg">'+('evidence '.repeat(50)));
