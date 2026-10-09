@@ -13,7 +13,7 @@
 
 ## 3. QA and deployment
 
-- [ ] 3.1 Real-model evaluation of all fixtures (three trials) with the configuration to be released, meeting the release bar (no clean trial blocked, at least 90% of objective-defect trials rejected with the defect named, every miss listed, borderline fixtures reported separately); isolated end-to-end dry runs; record settings, results and limitations.
+- [ ] 3.1 Real-model evaluation of all fixtures (three trials) with the configuration to be released, meeting the release bar (no clean trial blocked, at least 90% of objective-defect trials rejected with the defect named, every miss listed, borderline fixtures reported separately); isolated end-to-end dry runs; record settings, results and limitations. Not met on 0f8fdbe (47/54 objective, 21/21 clean); launch accepted by the owner (IDD decision 8), gap tracked in #222.
 - [x] 3.0 Address the five spec reviews and the code reviews (review.md).
 - [ ] 3.2 Implementation review and green CI; merge through PR.
 - [ ] 3.3 Install under both slot locks, verify manifest, `--status` and `--check`; confirm the 2026-10-09 edition expired.
