@@ -10,9 +10,9 @@ const CHAT = -1004350521393;
 const ACCOUNT = 'pizdato-net-channel';
 const CTA = 'Мир ждёт твоего голоса: https://pizdato.net';
 export function validateDraft(d) {
-  if (typeof d.caption !== 'string' || [...d.caption].length > 950 || d.caption.length > 1024 || !d.caption.endsWith(CTA)) throw new Error('Caption must be <=950 characters, <=1024 UTF-16 units and end with the exact CTA');
+  if (typeof d.caption !== 'string' || [...d.caption].length > 950 || d.caption.length > 1024 || !d.caption.endsWith(CTA)) throw new Error(`Caption must be <=950 characters, <=1024 UTF-16 units and end with the exact CTA; received ${typeof d.caption==='string'?[...d.caption].length:'non-text'} characters. Rewrite to 750–850 characters including the unchanged final CTA.`);
   const words = String(d.wisdom || '').match(/[\p{L}\p{N}]+(?:[-’'][\p{L}\p{N}]+)*/gu) || [];
-  if (words.length < 10 || words.length > 15 || !d.caption.includes(d.wisdom)) throw new Error('Wisdom must appear in the caption and contain 10–15 words');
+  if (words.length < 10 || words.length > 15 || !d.caption.includes(d.wisdom)) throw new Error(`Wisdom must appear exactly in the caption and contain 10–15 words; received ${words.length} words. Rewrite it to 12 meaningful words, count them, and update both caption and wisdom.`);
   if (!/дядя Миша/iu.test(d.caption) || !/пиздато/iu.test(d.caption) || !/ху[её]во/iu.test(d.caption) || /\bTODO\b|я (наш[её]л|вижу|думаю)/iu.test(d.caption)) throw new Error('Editorial voice validation failed');
   if (new URL(d.source_url).protocol !== 'https:') throw new Error('Source must use HTTPS');
   return d;

@@ -29,3 +29,9 @@ test('extracts source cover URLs with attribute reordering and HTML entities', a
  const { extractCovers } = await import('../agent.mjs');
  assert.deepEqual(extractCovers('<meta content="/photo.jpg?a=1&amp;b=2" property="og:image"><meta name="twitter:image" content="https://cdn.example.com/cover.png">','https://example.com/story'), ['https://example.com/photo.jpg?a=1&b=2','https://cdn.example.com/cover.png']);
 });
+test('word-count rejection tells the reviser the measured count',()=>{
+ assert.throws(()=>validateDraft({caption,wisdom:'Всего два',source_url:'https://example.com'}),/received 2 words/);
+});
+test('caption rejection reports length and gives the reviser a safe target',()=>{
+ assert.throws(()=>validateDraft({caption:'x'.repeat(951),wisdom,source_url:'https://example.com'}),/received 951 characters.*750–850/);
+});

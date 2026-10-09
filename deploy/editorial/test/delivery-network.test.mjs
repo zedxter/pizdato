@@ -73,11 +73,12 @@ test('drafting after a tool result uses a complete model conversation',async()=>
    assert.doesNotMatch(r.messages[0].content,/MUST finish by calling complete_post/);
    assert.match(r.messages[0].content,/Return exactly one JSON object/);
    assert.equal(r.reasoning.enabled,false,'structured drafting must allocate output to the caption');
+   assert.match(r.messages.at(-1).content,/Rewrite caption to 750 characters/);
    return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({source_url:'https://example.com/story'})}}]}));
   }
   return new Response('<meta property="og:image" content="https://example.com/cover.jpg">'+('evidence '.repeat(50)));
  }});
- const e={day:'2026-10-09',searches:[],visited:[],reserve:[],abandoned:[],findings:[]};
+ const e={day:'2026-10-09',searches:[],visited:[],reserve:[],abandoned:[],findings:['Rewrite caption to 750 characters']};
  const d=await createServices({store:new EditionStore(root),vault:root,budget:b,dryRun:true}).prepare({edition:e,history:[],checkpoint:async()=>{},now:new Date('2026-10-09')});
  assert.equal(d.source_url,'https://example.com/story');assert.equal(calls,2);
  }finally{await rm(root,{recursive:true,force:true});}
@@ -98,4 +99,15 @@ test('three irrelevant searches switch to a feed and produce a verified-source d
  const d=await createServices({store:new EditionStore(root),vault:root,budget,dryRun:true}).prepare({edition:e,history:[],checkpoint:async()=>{},now:new Date('2026-10-09')});
  assert.equal(searches,3);assert.equal(feeds,1);assert.equal(d.source_url,'https://example.com/story');assert.ok(e.candidates[d.source_url]);
  }finally{await rm(root,{recursive:true,force:true});}
+});
+test('evening reviewer returns a full structured verdict without spending output on optional reasoning',async()=>{
+ const messages=[{role:'system',content:'Independently review all five editorial dimensions'},{role:'user',content:'Full candidate and original evidence'}];
+ const expected={decision:'revise',grammar:true,meaning:true,freshness:true,voice:false,grounding:true,issues:['Wisdom repeats the premise']};
+ const budget=new Budget({fetcher:async(u,o)=>{
+  const req=JSON.parse(o.body);assert.deepEqual(req.messages,messages);assert.equal(req.reasoning.enabled,false);
+  assert.deepEqual(req.response_format.json_schema.schema.required,['decision','grammar','meaning','freshness','voice','grounding','issues']);
+  return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify(expected)}}]}));
+ }});
+ const deps=createServices({store:new EditionStore('/tmp/unused-review-store'),vault:'/tmp/unused',budget,dryRun:true});
+ assert.deepEqual(JSON.parse((await deps.review(messages)).content),expected);
 });

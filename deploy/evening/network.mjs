@@ -86,7 +86,7 @@ export function createServices({store,vault,budget=new Budget(),dryRun=false,cov
     const schema={type:'object',additionalProperties:false,required:['caption','wisdom','source_url','image_url','category','supporting_urls'],properties:{caption:str,wisdom:str,source_url:{type:'string',enum:[a.url]},image_url:{type:'string',enum:a.covers.slice(0,10)},category:str,supporting_urls:{type:'array',items:str,maxItems:10}}};
     const structuredPrompt=await readFile(new URL('./draft.md',import.meta.url),'utf8');
     const structuredSystem={role:'system',content:`${structuredPrompt}\n${polish}\nEdition ${e.day}; actual date ${localDay(now)}; edition weekday ${new Intl.DateTimeFormat('en-US',{weekday:'long',timeZone:'Europe/Berlin'}).format(new Date(e.day+'T12:00Z'))}.`};
-    const response=await model([structuredSystem,messages[1],{role:'user',content:`Now draft or repair the complete post using this verified primary source. No more discovery. Return the complete post JSON. ${JSON.stringify(a)}`}],undefined,{reasoning:{enabled:false,exclude:true},responseFormat:{type:'json_schema',json_schema:{name:'evening_draft',strict:true,schema}}});
+    const response=await model([structuredSystem,{role:'user',content:JSON.stringify({history,abandoned:e.abandoned,draft:e.draft,supportingEvidence:e.evidence?.supporting,rawDraft:e.draft?undefined:e.rawDraft})},{role:'user',content:`Verified primary source: ${JSON.stringify(a)}\nNow draft or repair the complete post using this evidence. No more discovery. Return the complete post JSON. Address every latest finding: ${JSON.stringify(e.findings)}. Recheck the caption and wisdom lengths before returning.`}],undefined,{reasoning:{enabled:false,exclude:true},responseFormat:{type:'json_schema',json_schema:{name:'evening_draft',strict:true,schema}}});
     if(typeof response.content!=='string'||!response.content.trim())throw Object.assign(new Error('Writer produced no text'),{safeMessage:'Writer did not finish a JSON draft; saved draft retained'});
     e.rawDraft=response.content;await checkpoint();
     let d;try{d=JSON.parse(response.content);if(!d||Array.isArray(d)||typeof d!=='object')throw new Error('Expected draft object');}catch{e.findings=[...new Set([...(e.findings||[]),'Return a valid complete post JSON object; repair the saved draft'])];await checkpoint();throw Object.assign(new Error('Malformed draft'),{safeMessage:'Writer returned invalid JSON; same source retained'});}
@@ -132,7 +132,7 @@ export function createServices({store,vault,budget=new Budget(),dryRun=false,cov
    const file=join(store.root,'covers',`${hash}.${ext}`);await durableWrite(file,bytes);
    return {sources:{primary,supporting},media:{hash,file,extension:ext}};
   },
-  review:messages=>{budget.reserve();return model(messages,undefined,editorOptions);},
+  review:messages=>{budget.reserve();return model(messages,undefined,{...editorOptions,reasoning:{enabled:false,exclude:true}});},
   async ready(media){
    await connect();budget.reserve({delivery:true});if(dryRun)return;
    const bytes=await readFile(media.file);if(digest(bytes)!==media.hash)throw new Error('Cover content changed');
