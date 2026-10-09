@@ -20,6 +20,6 @@
 ## 4. QA and deployment
 
 - [x] 4.1 Run focused Node/Rust process tests and unchanged morning regression checks; validate multi-activation recovery without real public sends.
-- [ ] 4.2 Run finite non-publishing checks against installed dependencies and verify independent source feeds; record evidence and unresolved limitations.
-- [ ] 4.3 Complete implementation PR review and green CI, merge through PR, install under locks and verify manifest/cron/state/rollback backup.
+- [x] 4.2 Run finite non-publishing checks against installed dependencies and verify independent source feeds; record evidence and unresolved limitations.
+- [x] 4.3 Complete implementation PR review and green CI, merge through PR, install under locks and verify manifest/cron/state/rollback backup.
 - [ ] 4.4 Observe the first real scheduled edition through confirmed delivery or explicitly documented external blockage; never call a dry run a publication.
