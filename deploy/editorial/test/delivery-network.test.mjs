@@ -69,6 +69,8 @@ test('drafting after a tool result uses a complete model conversation',async()=>
   if(u.includes('openrouter')){calls++;const r=JSON.parse(o.body);
    if(calls===1)return new Response(JSON.stringify({choices:[{message:{role:'assistant',tool_calls:[{id:'fetch1',type:'function',function:{name:'fetch_url',arguments:JSON.stringify({url:'https://example.com/story'})}}]}}]}));
    assert.ok(!r.messages.some(m=>m.tool_calls),'incomplete tool transcript must not reach structured writer');
+   assert.doesNotMatch(r.messages[0].content,/MUST finish by calling complete_post/);
+   assert.match(r.messages[0].content,/Return exactly one JSON object/);
    return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({source_url:'https://example.com/story'})}}]}));
   }
   return new Response('<meta property="og:image" content="https://example.com/cover.jpg">'+('evidence '.repeat(50)));
