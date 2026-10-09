@@ -5,6 +5,7 @@ let generations=0,reviews=0,submissions=0,storyNumber=1;
 const scenario=process.env.TEST_VERDICT;
 const advanced=['budget-success','budget-exhaust','structural','invalid-first','source-swap','invalid-caption-swap','retired-source'].includes(scenario);
 const json=data=>new Response(JSON.stringify(data),{headers:{'content-type':'application/json'}});
+const verdict=(pass,replace,problem)=>JSON.stringify({issues:pass?[]:[{category:replace?'repetition':'grammar',quote:'',problem,fix:'Repair the defect or choose another subject'}]});
 const fixture={wisdom:'Если долго искать свободное время, его обязательно займут поиски свободного времени.',wish:'Дня, в котором найдётся место для маленькой приятной глупости.'};
 const final={wisdom:'Самый короткий список покупок обычно получается сразу после возвращения из магазина.',wish:'Пусть сегодня всё нужное обнаружится в ближайшем ящике.'};
 const caption=w=>`Дядя Миша оценил находку. Пиздато: вещь пригодилась. Хуёво: пришлось искать.\nМудрость дня: «${w}»\nМир ждёт твоего голоса: https://pizdato.net`;
@@ -12,8 +13,10 @@ globalThis.fetch=async(url,opts={})=>{
  if(String(url).includes('openrouter.ai')) {
  const req=JSON.parse(opts.body);
  if((req.reasoning?.effort!=='low'&&req.reasoning?.enabled!==false)||req.tools?.some(t=>t.function.name==='read_context')) throw new Error('Use bounded reasoning and supply full history exactly once');
+ if(req.messages[0].content.startsWith('# Russian proofreading')) return json({choices:[{message:{content:JSON.stringify({issues:[]})}}]});
+ if(req.messages[0].content.startsWith('# Defect verification')) return json({choices:[{message:{content:JSON.stringify({verdicts:JSON.parse(req.messages[1].content).claims.map(c=>({id:c.id,real:true,category:c.category,ground:'confirmed',reason:'confirmed'}))})}}]});
  if(req.messages[0].content.startsWith('# Public message editorial review')) {
- if(req.reasoning?.effort!=='low'||req.response_format?.json_schema?.strict!==true) throw new Error('Editor needs a bounded reasoning budget and strict output schema');
+ if(req.reasoning?.enabled!==false||req.response_format?.json_schema?.strict!==true) throw new Error('Editor must not spend tokens on optional reasoning and needs a strict output schema');
  reviews++;
  await appendFile(process.env.TEST_TRACE,`REVIEW ${reviews}\n`);
  if(process.env.TEST_VERDICT==='timeout') throw new Error('editor timeout');
@@ -23,11 +26,11 @@ globalThis.fetch=async(url,opts={})=>{
    const replace=scenario==='retired-source';
    const reviewData=JSON.parse(req.messages[1].content);
    await appendFile(process.env.TEST_TRACE,`EVIDENCE ${JSON.stringify({source:reviewData.source,current:reviewData.current})}\n`);
-   return json({choices:[{message:{content:JSON.stringify({decision:pass?'approve':replace?'replace':'revise',grammar:pass||replace,meaning:true,freshness:!replace,voice:true,grounding:true,issues:pass?[]:[replace?'Already published subject':'Agreement needs repair']})}}]});
+   return json({choices:[{message:{content:verdict(pass,replace,replace?'Already published subject':'Agreement needs repair')}}]});
  }
  const pass=['approve','supporting'].includes(process.env.TEST_VERDICT)||(['repair','repair-twice','late-repair','stalled-repair'].includes(process.env.TEST_VERDICT)&&reviews===(process.env.TEST_VERDICT==='repair-twice'?3:2))||(process.env.TEST_VERDICT?.endsWith('replace')&&reviews===2);
  if(process.env.TEST_VERDICT==='supporting'&&!JSON.parse(req.messages[1].content).source.supporting?.some(s=>s.url==='https://source.test/supporting')) throw new Error('Editor did not receive supporting evidence');
- return json({choices:[{message:{content:JSON.stringify({decision:pass?'approve':process.env.TEST_VERDICT?.endsWith('replace')?'replace':'revise',grammar:pass,meaning:true,freshness:!(!pass&&process.env.TEST_VERDICT?.endsWith('replace')),voice:true,grounding:true,issues:pass?[]:['Choose another subject.']})}}]});
+ return json({choices:[{message:{content:verdict(pass,process.env.TEST_VERDICT?.endsWith('replace'),'Choose another subject.')}}]});
  }
  generations++;
  if(advanced) {

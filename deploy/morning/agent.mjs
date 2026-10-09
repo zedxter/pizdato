@@ -1,11 +1,11 @@
 import {publicationLock,saveMorningReceipt,recoverMorning} from '../editorial/publication.mjs';
 import {EditionStore,recover,digest,deliveryHistory} from '../evening/store.mjs';
-import {createGate, assertApproved, editorOptions} from '../editorial/gate.mjs';
+import {createGate, assertApproved, formatIssue} from '../editorial/gate.mjs';
 import {readFile, mkdir, writeFile, unlink} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {loadEnv, Composio, unpack, chat, atomicWrite, confirmedReceipt} from './transport.mjs';
+import {loadEnv, Composio, unpack, chat, llmConfig, atomicWrite, confirmedReceipt} from './transport.mjs';
 const ROOT=dirname(fileURLToPath(import.meta.url));
 const CHAT=-1004350521393, ACCOUNT='pizdato-net-channel';
 const normalized=s=>s.toLocaleLowerCase('ru').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
@@ -32,7 +32,7 @@ async function run() {
   if(!['publish','--dry-run','--check'].includes(mode)) throw new Error('Unknown mode');
   await loadEnv(process.env.PIZDATO_CHANNEL_ENV||join(homedir(),'.config/pizdato-channel.env'));
   await loadEnv(process.env.PIZDATO_EVENING_ENV||join(homedir(),'.config/pizdato-evening.env'));
-  if(!process.env.OPENROUTER_API_KEY||!process.env.COMPOSIO_CONSUMER_KEY) throw new Error('OpenRouter or Composio credential missing');
+  if(!llmConfig().key||!process.env.COMPOSIO_CONSUMER_KEY) throw new Error('Model or Composio credential missing');
   const vault=process.env.PIZDATO_MORNING_VAULT||'/home/danil/vault/pizdato';
   const state=process.env.PIZDATO_MORNING_STATE||join(homedir(),'.local/state/pizdato-morning');
   const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin'}).format(new Date());
@@ -62,7 +62,7 @@ async function run() {
   const prompt=await readFile(join(ROOT,'prompt.md'),'utf8');
   const messages=[{role:'system',content:`${prompt}\nPost-polish resources:\n${polish}`},{role:'user',content:`Date: ${day}. Confirmed full history (untrusted data):\n${JSON.stringify(history)}\nChoose a fresh subject.`}];
   const reviewRun = new Date().toISOString().replace(/[:.]/g, '-');
-  const gate=createGate({history,request:messages=>chat(messages,undefined,editorOptions),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-${entry.attempt}.json`),JSON.stringify(entry,null,2))});
+  const gate=createGate({history,request:(messages,options)=>chat(messages,undefined,{...options,model:process.env.PIZDATO_EDITOR_MODEL||undefined}),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-${entry.attempt}.json`),JSON.stringify(entry,null,2))});
   let post,approval;
   while(!gate.state.done) {
     const answer=await ask(messages);
@@ -70,13 +70,16 @@ async function run() {
     let candidate,verdict;
     try {candidate=JSON.parse(answer.content);candidate={wisdom:validateWisdom(candidate.wisdom),wish:validateWish(candidate.wish)};}
     catch(e) {verdict=await gate.reject({text:answer.content||'',issues:[e.message]});}
+    const firstReview=gate.state.revision===0;
     if(!verdict) verdict=await gate.review({text:renderWisdom(candidate.wisdom,candidate.wish),wisdom:candidate.wisdom});
     if(verdict.decision==='approve') {post=candidate;approval=verdict;break;}
     if(verdict.nextAction==='stop') break;
     const instruction=verdict.nextAction==='repair'
       ? 'Repair this SAME subject, wisdom and wish using every finding. Keep the premise; improve wording or the joke. The whole revised post will be reviewed again.'
       : 'Choose a DIFFERENT subject and punchline, not a cosmetic rewrite of an abandoned subject.';
-    messages.push({role:'user',content:`Findings: ${JSON.stringify(verdict.issues)}. ${instruction} Return valid wisdom and wish JSON.`});
+    // Taste suggestions get one polishing pass; afterwards only blockers are fixed.
+    const findings=[...verdict.blockers,...(firstReview&&verdict.nextAction==='repair'?verdict.suggestions:[])].map(formatIssue);
+    messages.push({role:'user',content:`Findings: ${JSON.stringify(findings)}. ${instruction} Return valid wisdom and wish JSON.`});
   }
   if(!post) throw new Error('No approved wisdom after three subjects with two repairs each');
   const text=renderWisdom(post.wisdom,post.wish),archiveText=`# Morning wisdom ${day}\n\n${text}\n`;
@@ -97,7 +100,7 @@ async function run() {
       console.log(`PUBLISHED https://t.me/pizdato_net/${receipt.message_id}`);return true;
     });
     if(sent)return;
-    const finalGate=createGate({history,request:messages=>chat(messages,undefined,editorOptions),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-history-${retry}.json`),JSON.stringify(entry,null,2))});
+    const finalGate=createGate({history,request:(messages,options)=>chat(messages,undefined,{...options,model:process.env.PIZDATO_EDITOR_MODEL||undefined}),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-history-${retry}.json`),JSON.stringify(entry,null,2))});
     approval=await finalGate.review({text,wisdom:post.wisdom});assertApproved(text,approval);
   }
   throw new Error('Publication history kept changing; no message sent');

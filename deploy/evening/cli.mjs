@@ -30,8 +30,9 @@ export async function main(args=process.argv.slice(2)){
   const e=await store.get(localDay(now));e.nextAttemptAt=+now;await store.save(e);
  }
  const e=await tick({store,vault,now,deps,dryRun:mode==='--dry-run'});
+ for(const day of e.expired||[])console.log(`EXPIRED ${day}: evening deadline passed without an approved post`);
  console.log(JSON.stringify({at:now.toISOString(),edition:e.day,phase:e.phase,revision:e.revision,error:e.lastError,nextAttemptAt:e.nextAttemptAt}));
  if(e.dryRun){await durableWrite(join(root,'approved-draft.json'),e.draft);console.log('DRY_RUN_OK');}
  if(e.phase==='published')console.log(`PUBLISHED https://t.me/pizdato_net/${e.receipt.message_id}`);
 }
-if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(()=>{console.error(`${new Date().toISOString()} ERROR: evening state or dependency unavailable; inspect --status and local state`);process.exitCode=1;});
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{console.error(`${new Date().toISOString()} ERROR: ${String(error?.safeMessage||error?.message||'evening state or dependency unavailable').slice(0,300)}; inspect --status and local state`);process.exitCode=1;});

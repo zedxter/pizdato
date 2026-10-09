@@ -10,6 +10,8 @@ export function dueAt(day) {
  const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',hour:'2-digit',hourCycle:'h23'}).format(base));
  return base-(hour-18)*3600000;
 }
+// An evening post that misses its evening is stale; it is cancelled visibly, never sent the next day.
+export const deadlineAt=day=>dueAt(day)+5*3600000;
 export async function durableWrite(path,value) {
  await mkdir(dirname(path),{recursive:true,mode:0o700});
  const temp=`${path}.${randomUUID()}.tmp`,f=await open(temp,'wx',0o600);
@@ -26,7 +28,7 @@ export class EditionStore {
  async list(){let names;try{names=await readdir(join(this.root,'editions'));}catch(e){if(e.code==='ENOENT')return [];throw e;}return Promise.all(names.filter(n=>n.endsWith('.json')).sort().map(n=>this.get(n.slice(0,-5))));}
  async enqueue(now){const s=await json(join(this.root,'scheduler.json'));if(s.version!==1)throw new Error('Unsupported scheduler state');validDay(s.activationDate);
   for(let day=s.activationDate;dueAt(day)<=+now;day=new Date(Date.parse(day+'T12:00Z')+86400000).toISOString().slice(0,10)){
-   try{await this.get(day);}catch(e){if(e.code!=='ENOENT')throw e;await this.save({version:1,day,phase:'discovering',revision:0,findings:[],abandoned:[],searches:[],visited:[],reserve:[],failures:0,nextAttemptAt:dueAt(day),lastActivationAt:0});}
+   try{await this.get(day);}catch(e){if(e.code!=='ENOENT')throw e;await this.save({version:1,day,phase:'discovering',revision:0,findings:[],blockers:[],suggestions:[],flaggedWisdoms:[],abandoned:[],searches:[],visited:[],reserve:[],failures:0,nextAttemptAt:dueAt(day),lastActivationAt:0});}
   }
  }
  async record(e,record){await durableWrite(join(this.root,'reviews',`${e.day}-${randomUUID()}.json`),record);}
@@ -44,14 +46,14 @@ export function scheduleRetry(e,now,error){
  const routine=error?.code==='YIELD';e.failures=routine?0:(e.failures||0)+1;
  e.nextAttemptAt=+now+Math.max(routine?300000:Math.min(60,5*2**Math.min(e.failures-1,4))*60000,error?.retryAfterMs||0);
  e.lastError=routine?'Work checkpointed; continuing next activation':error?.safeMessage||'Dependency or review unavailable; retry scheduled';
- if(error?.blocked){e.resumePhase=e.phase;e.phase='blocked';e.nextAttemptAt=+now+3600000;}
+ if(error?.blocked){if(e.phase!=='blocked')e.resumePhase=e.phase;e.phase='blocked';e.nextAttemptAt=+now+3600000;}
 }
 export async function status(store,now){
  let names;try{names=await readdir(join(store.root,'editions'));}catch(error){if(error.code==='ENOENT')return [];throw error;}
  return Promise.all(names.filter(n=>n.endsWith('.json')).sort().map(async name=>{
   const day=name.slice(0,-5);let e;
   try{e=await store.get(day);}catch{return {day,phase:'blocked',error:'Invalid edition journal; operator repair required'};}
-  return {day:e.day,phase:e.phase,revision:e.revision,ageMinutes:Math.floor((+now-dueAt(e.day))/60000),overdue:!['published','cancelled'].includes(e.phase)&&+now>dueAt(e.day)+1800000,findings:e.findings,error:e.lastError,nextRetry:e.nextAttemptAt?new Date(e.nextAttemptAt).toISOString():null,receipt:e.receipt?.message_id};
+  return {day:e.day,phase:e.phase,revision:e.revision,story:e.gate?.story||1,ageMinutes:Math.floor((+now-dueAt(e.day))/60000),overdue:!['published','cancelled'].includes(e.phase)&&+now>dueAt(e.day)+1800000,deadline:new Date(deadlineAt(e.day)).toISOString(),findings:e.findings,error:e.lastError,cancellation:e.cancellation,nextRetry:e.nextAttemptAt?new Date(e.nextAttemptAt).toISOString():null,receipt:e.receipt?.message_id};
  }));
 }
 export async function deliveryHistory(store,vault,day){

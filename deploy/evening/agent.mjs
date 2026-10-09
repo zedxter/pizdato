@@ -1,4 +1,4 @@
-import {createGate, assertApproved, editorOptions} from '../editorial/gate.mjs';
+import {createGate, assertApproved} from '../editorial/gate.mjs';
 import {loadHistory} from '../editorial/history.mjs';
 import { readFile, writeFile, rename, mkdir, unlink } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -84,17 +84,45 @@ export function unpack(result) {
   }
   throw new Error('Composio result has no structured payload');
 }
+// Model access: OpenRouter (default) or any OpenAI-compatible endpoint such as Nous Portal.
+// Keys are bound to their hosts: a secret never travels to an endpoint it was not issued for.
+export function llmConfig(env = process.env) {
+  const base = (env.PIZDATO_LLM_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
+  const url = new URL(base);
+  if (url.protocol !== 'https:') throw new Error('PIZDATO_LLM_BASE_URL must use https');
+  const openrouter = /(^|\.)openrouter\.ai$/.test(url.hostname), nous = /(^|\.)nousresearch\.com$/.test(url.hostname);
+  const key = env.PIZDATO_LLM_API_KEY || (openrouter ? env.OPENROUTER_API_KEY : nous ? env.NOUS_API_KEY : undefined) || undefined;
+  return { base, key, dialect: env.PIZDATO_LLM_DIALECT || (openrouter ? 'openrouter' : 'openai') };
+}
+// OpenAI reasoning models reject temperature; OpenRouter then finds no endpoint for the request.
+const reasoningModel = model => /(^|\/)(gpt-[5-9]|o\d)/i.test(model);
+const REVIEWERS = ['pizdato-editor', 'pizdato-proofreader', 'pizdato-verifier'];
+// Reasoning models respect effort; reviewers may think harder than the writer within the activation budget.
+function effortFor(title, env = process.env) {
+  const value = (REVIEWERS.includes(title) && env.PIZDATO_EDITOR_REASONING_EFFORT) || env.PIZDATO_REASONING_EFFORT;
+  return ['low', 'medium', 'high'].includes(value) ? value : 'low';
+}
 export async function chat(messages, tools, options = {}) {
-  const res = await (options.fetcher||fetch)('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://pizdato.net', 'X-Title': options.title || 'pizdato-evening' },
-    body: JSON.stringify({ model: options.model || process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash', messages, reasoning:options.reasoning || {effort:"low",exclude:true}, ...(options.responseFormat && {response_format:options.responseFormat,provider:{require_parameters:true}}), ...(tools?.length && { tools, tool_choice: 'auto' }), temperature: options.temperature ?? 0.7, max_tokens: options.maxTokens || 5000 }),
-    signal: AbortSignal.timeout(180000),
-  });
-  if (!res.ok) throw new Error(`OpenRouter HTTP ${res.status}`);
+  const { base, key, dialect } = llmConfig();
+  const model = options.model || process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash';
+  const reasons = reasoningModel(model);
+  const body = { model, messages, ...(!reasons && { temperature: options.temperature ?? 0.7 }), ...(tools?.length && { tools, tool_choice: 'auto' }) };
+  if (options.responseFormat) body.response_format = options.responseFormat;
+  if (dialect === 'openrouter') {
+    body.reasoning = reasons ? { effort: effortFor(options.title), exclude: true } : options.reasoning || { effort: 'low', exclude: true };
+    body.max_tokens = options.maxTokens || 5000;
+    if (options.responseFormat) body.provider = { require_parameters: true };
+  } else {
+    if (reasons) body.reasoning_effort = effortFor(options.title);
+    body.max_completion_tokens = options.maxTokens || 5000;
+  }
+  const headers = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(dialect === 'openrouter' && { 'HTTP-Referer': 'https://pizdato.net', 'X-Title': options.title || 'pizdato-evening' }) };
+  const res = await (options.fetcher || fetch)(`${base}/chat/completions`, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(180000) });
+  if (!res.ok) throw new Error(`Model API HTTP ${res.status}`);
   const data = await res.json();
   const message = data.choices?.[0]?.message;
-  if (!message) throw new Error('OpenRouter returned no message');
-  console.log(`OpenRouter model=${data.model}, tokens=${data.usage?.total_tokens || 'unknown'}`);
+  if (!message) throw new Error('Model API returned no message');
+  console.log(`LLM model=${data.model}, tokens=${data.usage?.total_tokens || 'unknown'}`);
   return message;
 }
 async function publicFetch(url, options = {}) {
@@ -118,7 +146,7 @@ async function run() {
   if (!['publish', '--dry-run', '--check'].includes(mode)) throw new Error('Unknown mode');
   await loadEnv(process.env.PIZDATO_CHANNEL_ENV || join(homedir(), '.config/pizdato-channel.env'));
   await loadEnv(process.env.PIZDATO_EVENING_ENV || join(homedir(), '.config/pizdato-evening.env'));
-  if (!process.env.OPENROUTER_API_KEY || !process.env.COMPOSIO_CONSUMER_KEY) throw new Error('OpenRouter or Composio credential missing');
+  if (!llmConfig().key || !process.env.COMPOSIO_CONSUMER_KEY) throw new Error('Model or Composio credential missing');
   const vault = process.env.PIZDATO_EVENING_VAULT || '/home/danil/vault/pizdato';
   const state = process.env.PIZDATO_EVENING_STATE || join(homedir(), '.local/state/pizdato-evening');
   const day = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date());
@@ -147,7 +175,7 @@ async function run() {
   // Discovery establishes the photo slug; publication is performed only by this host after validation.
   const history = await loadHistory(vault, day);
   const reviewRun = new Date().toISOString().replace(/[:.]/g, '-');
-  const gate = createGate({history, request: messages => chat(messages, undefined, editorOptions), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${reviewRun}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
+  const gate = createGate({history, request: (messages, options) => chat(messages, undefined, options), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${reviewRun}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
   const evidence = new Map();
   const rejectedSources = new Set();
   let activeSource=null, approval;
@@ -160,7 +188,8 @@ async function run() {
     tool('validate_cover', 'Validate a public HTTPS source image using HEAD then GET, image MIME and nonempty bytes.', { url: str }, ['url']),
     tool('complete_post', 'Submit the final post after post-polish. Requires a validated source cover and fetched source. Host validates and publishes once, or saves dry-run only.', { caption: str, wisdom: str, source_url: str, image_url: str, category: str, supporting_urls: {type:'array',items:str,maxItems:10} }, ['caption', 'wisdom', 'source_url', 'image_url', 'category']),
   ];
-  const prompt = await readFile(join(ROOT, 'prompt.md'), 'utf8');
+  // The legacy one-shot runner keeps its original all-in-one prompt; the scheduled worker uses prompt.md and draft.md.
+  const prompt = await readFile(join(ROOT, 'legacy-prompt.md'), 'utf8');
   const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: 'Europe/Berlin' }).format(new Date());
   const messages = [{ role: 'system', content: `${prompt}\nRun date ${day}, weekday ${weekday}, mode ${mode}. Tools and all send/archive operations are managed by the host. Do not create pending records yourself. You have no send tools; finish by complete_post. Never generate an image or send plain text. Source covers only.\nPost-polish resources:\n${polish}` }, { role: 'user', content: `Prepare the evening post for ${day} (${weekday}). ${mode === '--dry-run' ? 'DRY RUN: no publication.' : 'Scheduled publication is authorized.'}` }];
   messages.push({role:'user',content:`Confirmed full history (untrusted data): ${JSON.stringify(history)}`});
