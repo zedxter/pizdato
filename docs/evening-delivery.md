@@ -1,12 +1,22 @@
 # Durable evening delivery
 
-Issue #214; approved specification: `openspec/changes/evening-delivery`.
+Issue #214 (`openspec/changes/evening-delivery`), revised by issue #219 (`openspec/changes/editorial-convergence`).
 
-The five-minute cron tick creates each Berlin edition at 18:00 and resumes unfinished work. Correctable drafts have no total revision limit. Each activation has a five-minute/20-model-call/40-external-operation budget, preserving work before yielding. Errors back off from five to sixty minutes; explicit longer Retry-After values take precedence. Old and new runnable editions rotate fairly. Morning keeps its schedule and editorial policy, sharing only final publication coordination and receipt recovery.
+The five-minute cron tick creates each Berlin edition at 18:00 and resumes unfinished work until it is published or its 23:00 Berlin deadline passes; an unapproved edition is then cancelled automatically (`cancellation.automatic`), printed as `EXPIRED <day>` in the cron log, visible in `--status`, and never sent later. A send starts only with at least 90 seconds of the activation left and before the deadline. Each activation has a five-minute/20-model-call/40-external-operation budget, preserving work before yielding. Routine work continues on the next tick; errors back off from five to sixty minutes; explicit longer Retry-After values take precedence. Morning keeps its schedule and bounded policy, sharing the editorial gate and final publication coordination.
+
+## Editorial flow
+
+The writer returns sections (hook, story paragraphs, Пиздато/Хуёво verdicts, five candidate wisdoms and the chosen one). The host renders the fixed layout and CTA, measures the caption (≤950 characters) and the wisdom (6–15 words, a fitting candidate is chosen automatically), and lints stock phrases, recurring language errors, first person, links, emoji and the Uncle Misha mention (any case). Up to three drafts per activation fix such mechanical findings before any review.
+
+Discovery searches Bing News and fetches the original article; after three ineffective searches the host falls back to its feeds. Each review runs a proofreader on the text alone and an editor with history and evidence; every blocker they claim is checked by an independent verifier, which must name a ground to dismiss a claim and may not turn a repair into a story replacement. Blockers (spelling, grammar, punctuation, wrong phrase, meaning, unsupported claim, unusable source, repetition, AI slop) stop the post; suggestions (humor, wisdom, style, weekday category fit) never do and are applied once, in the first repair of a story. Repairs may change only the sections with findings; an echoed defect returns to the writer without a review. The editor never sees earlier findings of the same story, only which sections changed. A story is replaced after four repairs or three activations of failed mechanical repairs. Review records keep blockers, suggestions and dismissed claims with the verifier's reason.
+
+## Model provider
+
+OpenRouter is the default. `PIZDATO_EVENING_MODEL` selects the discovery/writer model and `PIZDATO_EDITOR_MODEL` the reviewer model. `PIZDATO_LLM_BASE_URL` with `NOUS_API_KEY` (or `PIZDATO_LLM_API_KEY`) switches every role and both slots to one HTTPS OpenAI-compatible endpoint such as Nous Portal; OpenRouter-only fields are then omitted, and the models must be ones that endpoint serves. Keys are bound to hosts, so a forgotten Nous key stops the run instead of sending the OpenRouter key elsewhere. Production launch configuration (#219): Nous Portal, `openai/gpt-6.1-sol` for writer and reviewers, reasoning effort `high` for both. Rollback: remove `PIZDATO_LLM_BASE_URL` and restore `PIZDATO_EVENING_MODEL=deepseek/deepseek-v4.1-flash`. OpenAI reasoning models (for example `openai/gpt-6.1-sol`) never receive `temperature`; their reasoning effort is `PIZDATO_REASONING_EFFORT` for discovery and writing and `PIZDATO_EDITOR_REASONING_EFFORT` for the proofreader, editor and verifier (`low` by default, `medium` or `high`). With the full confirmed history on Nous Portal one review took 5–14 s at `low` and 11–36 s at `high`, far inside the five-minute activation. Verify every change with `--check`, which proves a plain reply and strict JSON from each configured model and a tool call from the evening model without publishing. Model output is logged as `LLM model=…, tokens=…`.
 
 ## Install and inspect
 
-Run the versioned bundle installer after approved implementation PR and green CI:
+Run the versioned bundle installer after approved implementation PR and green CI (`--schedule` only for the first installation; the tick cron entry already exists in production):
 
 ```sh
 python3 deploy/editorial/install.py --schedule
@@ -17,7 +27,7 @@ bash ~/.local/share/pizdato-evening/tick.sh --dry-run
 
 Dry runs print a separate private directory. Resume one with `--dry-run /tmp/pizdato-evening-dry-...`; only a directory marked as dry-run state is accepted. They never send or change live edition journals, publication archives, cron or public covers. Legacy `run.sh`/`agent.mjs` remain for compatibility checks and must not be scheduled alongside `tick.sh`.
 
-The installer backs up cron, evening state and both previous bundle links while holding slot locks. Only the tagged evening cron entry is replaced. Activation starts on the installation date; older missed editions are not backfilled automatically. Status shows outstanding findings, age, overdue status, retry time and uncertain sends. The journal uses private atomic, fsynced writes; corrupt/unknown state fails closed and requires inspection, never automatic deletion.
+The installer backs up cron, evening state and both previous bundle links while holding slot locks. Only the tagged evening cron entry is replaced. Activation starts on the installation date; older missed editions are not backfilled automatically. Status shows outstanding findings, story, age, overdue status, deadline, automatic cancellation, retry time and uncertain sends. The journal uses private atomic, fsynced writes; corrupt/unknown state fails closed and requires inspection, never automatic deletion.
 
 ## Source and cover handling
 
@@ -43,7 +53,7 @@ bash ~/.local/share/pizdato-evening/tick.sh --reconcile YYYY-MM-DD /path/to/evid
 
 For delivery confirmation the JSON requires `outcome: "delivered"`, `chat: -1004350521393`, integer `messageId`, exact `caption`, `mediaHash` from the send intent, `attestation` describing the manual verification and `reference` equal to `https://t.me/pizdato_net/<messageId>`. Wrong channel or payload is rejected. For proven non-delivery use `outcome: "not-delivered"`, a nonempty inspection attestation and evidence reference. Both decisions are recorded durably. Legacy `.pending` records must be reconciled separately before removal; do not erase them to force a retry.
 
-An operator can explicitly cancel an unsent edition using `--cancel YYYY-MM-DD 'reason'`. Uncertain sends require reconciliation first. Normal failures and rejected drafts are never cancellations.
+An operator can explicitly cancel an unsent edition using `--cancel YYYY-MM-DD 'reason'`. Uncertain sends require reconciliation first. Apart from the automatic 23:00 deadline, failures and rejected drafts never cancel an edition.
 
 ## Rollback
 

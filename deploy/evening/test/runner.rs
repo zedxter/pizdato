@@ -178,7 +178,7 @@ fn editorial_repairs_preserve_three_subject_opportunities() {
 import assert from 'node:assert/strict';
 import {createGate,assertApproved} from './deploy/editorial/gate.mjs';
 let calls=0;
-const gate=createGate({history:[],request:async()=>({content:JSON.stringify({decision:++calls===9?'approve':'revise',grammar:calls===9,meaning:true,freshness:true,voice:true,grounding:true,issues:calls===9?[]:['Wrong agreement']})})});
+const gate=createGate({history:[],request:async(m,o)=>o.title==='pizdato-verifier'?{content:JSON.stringify({verdicts:JSON.parse(m[1].content).claims.map(c=>({id:c.id,real:true,category:c.category,ground:'confirmed',reason:'ok'}))})}:o.title==='pizdato-proofreader'?{content:'{"issues":[]}'}:({content:JSON.stringify({issues:++calls===9?[]:[{category:'grammar',quote:'payload',problem:'Wrong agreement',fix:'Agree'}]})})});
 for(let i=1;i<=9;i++) {
  const verdict=await gate.review({text:'payload '+i,wisdom:'wisdom '+i});
  if(i<9) assert.equal(verdict.nextAction,i%3===0?'replace':'repair');
@@ -196,19 +196,21 @@ assert.equal(calls,9);
 }
 
 #[test]
-fn persistent_evening_policy_survives_twelve_repairs_and_restart() {
+fn persistent_evening_policy_replaces_a_stuck_story_and_survives_restart() {
     let out = Command::new("node")
         .args(["--input-type=module", "-e", r#"
 import assert from 'node:assert/strict';
 import {createGate,assertApproved} from './deploy/editorial/gate.mjs';
-let saved;
-for(let i=0;i<=12;i++) {
- const gate=createGate({policy:'persistent-evening',initial:saved,history:[],request:async()=>({content:JSON.stringify({decision:i===12?'approve':'revise',grammar:i===12,meaning:true,freshness:true,voice:true,grounding:true,issues:i===12?[]:['Fix agreement']})})});
+let saved;const actions=[];
+for(let i=0;i<=7;i++) {
+ const gate=createGate({policy:'persistent-evening',initial:saved,history:[],request:async(m,o)=>o.title==='pizdato-verifier'?{content:JSON.stringify({verdicts:JSON.parse(m[1].content).claims.map(c=>({id:c.id,real:true,category:c.category,ground:'confirmed',reason:'ok'}))})}:o.title==='pizdato-proofreader'?{content:'{"issues":[]}'}:({content:JSON.stringify({issues:i===7?[{category:'humor',quote:'',problem:'Optional polish',fix:'Sharper'}]:[{category:'grammar',quote:'draft',problem:'Fix agreement',fix:'Agree'}]})})});
  const verdict=await gate.review({text:'draft '+i,wisdom:'wisdom '+i});
- if(i<12) {assert.equal(verdict.nextAction,'repair');assert.equal(gate.state.story,1);}
- else assertApproved('draft 12',verdict);
+ actions.push(verdict.nextAction);
+ if(i===7) assertApproved('draft 7',verdict);
  saved=gate.snapshot();
 }
+assert.deepEqual(actions,['repair','repair','repair','repair','replace','repair','repair','publish']);
+assert.equal(saved.story,2);assert.equal(saved.abandoned[0].text,'draft 4');
 "#])
         .output()
         .unwrap();
@@ -279,9 +281,10 @@ fn durable_cli_refuses_to_use_live_state_as_dry_run_state() {
 }
 
 #[test]
-fn thirteen_separate_workers_keep_one_draft_and_send_once() {
+fn separate_worker_processes_keep_one_draft_and_send_once() {
     let c = Case::new();
-    for attempt in 0..=12 {
+    let mut phases = Vec::new();
+    for attempt in 0..=5 {
         let out = Command::new("node")
             .arg("deploy/editorial/test/durable-process.mjs")
             .arg(&c.root)
@@ -293,12 +296,18 @@ fn thirteen_separate_workers_keep_one_draft_and_send_once() {
             "{}",
             String::from_utf8_lossy(&out.stderr)
         );
-        let expected = if attempt < 12 {
-            "repairing"
-        } else {
-            "published"
-        };
-        assert_eq!(String::from_utf8(out.stdout).unwrap().trim(), expected);
+        phases.push(String::from_utf8(out.stdout).unwrap().trim().to_owned());
     }
+    assert_eq!(
+        phases,
+        [
+            "repairing",
+            "repairing",
+            "repairing",
+            "published",
+            "idle",
+            "idle"
+        ]
+    );
     assert_eq!(fs::read_to_string(c.root.join("sends")).unwrap(), "send\n");
 }

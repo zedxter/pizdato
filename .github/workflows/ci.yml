@@ -119,7 +119,7 @@ jobs:
         working-directory: deploy/channel
         run: npm test
       - name: Test evening validation and Composio boundaries
-        run: node --test deploy/evening/test/agent.test.mjs deploy/morning/test/agent.test.mjs deploy/editorial/test/*.test.mjs
+        run: node --test deploy/evening/test/*.test.mjs deploy/morning/test/agent.test.mjs deploy/editorial/test/*.test.mjs
 
   design-eval:
     name: Design Eval (css vs spec)
