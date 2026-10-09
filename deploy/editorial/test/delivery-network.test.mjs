@@ -29,13 +29,14 @@ test('discovered source goes straight to a draft and malformed writer output rem
 test('approved media is staged by content hash and sent by its verified copy URL',async()=>{
  const root=await mkdtemp(join(tmpdir(),'delivery-cover-'));const previous=[process.env.OPENROUTER_API_KEY,process.env.COMPOSIO_CONSUMER_KEY];process.env.OPENROUTER_API_KEY='fixture';process.env.COMPOSIO_CONSUMER_KEY='fixture';
  try{
- const bytes=Buffer.from('fixture image bytes');let sent;
- const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
+ const bytes=Buffer.from('fixture image bytes');let sent,elapsed=0;
+ const budget=new Budget({clock:()=>elapsed,resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
   if(u.includes('connect.composio')){
    const req=JSON.parse(o.body);let payload={};
    if(req.method==='tools/call'){
     if(req.params.name==='COMPOSIO_SEARCH_TOOLS')payload={data:{session:{id:'test'},toolkit_connection_statuses:[{toolkit:'telegram',accounts:[{alias:'pizdato-net-channel',status:'ACTIVE'}]}]}};
-    else {const t=req.params.arguments.tools[0];if(t.tool_slug==='TELEGRAM_SEND_PHOTO')sent=t.arguments;payload={data:{results:[{response:{successful:true,data:{ok:true,result:t.tool_slug==='TELEGRAM_GET_CHAT'?{id:-1004350521393,username:'pizdato_net'}:{message_id:55,chat:{id:-1004350521393}}}}}]}};}
+    else {const t=req.params.arguments.tools[0];if(t.tool_slug==='TELEGRAM_GET_CHAT')elapsed=225000;
+    if(t.tool_slug==='TELEGRAM_SEND_PHOTO')sent=t.arguments;payload={data:{results:[{response:{successful:true,data:{ok:true,result:t.tool_slug==='TELEGRAM_GET_CHAT'?{id:-1004350521393,username:'pizdato_net'}:{message_id:55,chat:{id:-1004350521393}}}}}]}};}
    }
    return new Response(JSON.stringify({result:{structuredContent:payload}}));
   }

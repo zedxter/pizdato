@@ -19,3 +19,7 @@ The named Composio channel identity and OpenRouter model check passed (`PREFLIGH
 NASA, ESA and ScienceDaily feed endpoints returned HTTP 200. Original cover validation yielded a stable content hash. Live cover hosting, installed-release checks and the first scheduled edition are recorded separately after deployment; none is implied by a source-tree dry run.
 
 Final writer regressions first failed for lost editorial findings and reasoning-enabled structured drafting. Both now pass: malformed JSON retains all existing findings, and the structured writer disables optional reasoning while the independent editor retains its full review configuration. The final follow-up specification review found no blockers.
+
+Two real review resumptions exceeded the original 60-second model deadline while preserving the draft. The model deadline was tuned to 180 seconds, still clipped to the five-minute activation limit; ordinary network requests remain limited to 15 seconds. This deployment tuning is reflected in the design.
+
+A reviewer identified excess review capacity being reserved again after a successful slow review. The immutable-media test first failed with 75 seconds remaining; final delivery now reserves two external operations and 60 seconds, while preparation retains the full review reserve. The test then passed with the same verified media and exactly one send.

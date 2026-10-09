@@ -8,8 +8,8 @@ import {digest,durableWrite,CHAT,localDay,deliveryHistory} from './store.mjs';
 const ACCOUNT='pizdato-net-channel';
 export const yieldWork=()=>Object.assign(new Error('Checkpoint required: activation budget'),{code:'YIELD'});
 export class Budget {
- constructor({fetcher=fetch,clock=Date.now,checkpoint=async()=>{},resolver=lookup,networkTimeout=15000,modelTimeout=60000}={}){this.networkTimeout=networkTimeout;this.modelTimeout=modelTimeout;this.fetcher=fetcher;this.resolver=resolver;this.clock=clock;this.end=clock()+300000;this.calls=0;this.models=0;this.checkpoint=checkpoint;}
- reserve(){if(this.calls>35||this.models>18||this.end-this.clock()<90000)throw yieldWork();}
+ constructor({fetcher=fetch,clock=Date.now,checkpoint=async()=>{},resolver=lookup,networkTimeout=15000,modelTimeout=180000}={}){this.networkTimeout=networkTimeout;this.modelTimeout=modelTimeout;this.fetcher=fetcher;this.resolver=resolver;this.clock=clock;this.end=clock()+300000;this.calls=0;this.models=0;this.checkpoint=checkpoint;}
+ reserve({delivery=false}={}){if(this.calls>(delivery?38:35)||(!delivery&&this.models>18)||this.end-this.clock()<(delivery?60000:90000))throw yieldWork();}
  async operation(model){if(this.calls>=40||(model&&this.models>=20)||this.clock()>=this.end)throw yieldWork();this.calls++;if(model)this.models++;await this.checkpoint();}
  async request(url,options={},model=false){
   for(let redirects=0;redirects<=5;redirects++){
@@ -134,7 +134,7 @@ export function createServices({store,vault,budget=new Budget(),dryRun=false,cov
   },
   review:messages=>{budget.reserve();return model(messages,undefined,editorOptions);},
   async ready(media){
-   await connect();budget.reserve();if(dryRun)return;
+   await connect();budget.reserve({delivery:true});if(dryRun)return;
    const bytes=await readFile(media.file);if(digest(bytes)!==media.hash)throw new Error('Cover content changed');
    await mkdir(coverRoot,{recursive:true,mode:0o755});const path=join(coverRoot,`${media.hash}.${media.extension}`);
    try{if(digest(await readFile(path))!==media.hash)throw new Error('Immutable cover mismatch');}catch(err){if(err.code!=='ENOENT')throw err;await durableWrite(path,bytes);}
