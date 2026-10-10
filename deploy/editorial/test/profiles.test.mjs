@@ -105,6 +105,15 @@ test('the column profile runs the whole flow with a persona, first person and it
  const repeated=await createGate({profile:column,request:fake().request,history:[{name:'column-1.md',text:'# Знак свыше!\n\nСтарая колонка.'}]}).review({text,fields:{title:'знак  свыше'}});
  assert.equal(repeated.decision,'replace');assert.deepEqual(repeated.blockers.at(-1),{category:'repetition',quote:'знак  свыше',problem:'Title repeats a published column.',fix:'Choose a different subject and title.',by:'host'});
 });
+test('the column rubrics never move a real speaker\'s words to the narrator and read the title one way',()=>{
+ const editor=composeRubric('editor',column),proofreader=composeRubric('proofreader',column);
+ // The fix for a misattribution replaces the words; reusing them as the narrator's would be the defect itself.
+ assert.match(editor,/the fix restores the real speaker or replaces the quotation with the narrator's own remark in his own words\./);
+ assert.doesNotMatch(editor+composeRubric('writer',column),/turns the words into|words into the narrator/);
+ // The title is an editor input outside the candidate, judged by the editor and quoted from `title`; the proofreader never sees it.
+ assert.match(editor,/it is not part of the text; a title finding quotes `title`\./);assert.doesNotMatch(editor,/host prints the title/);
+ assert.doesNotMatch(proofreader,/title/i);
+});
 test('the repeated channel wisdom keeps its exact host blocker',async()=>{
  const r=await createGate({profile:channel,request:fake().request,history:[{text:'«Same wisdom!»'}]}).review({text:'same wisdom',fields:{wisdom:'same wisdom'}});
  assert.deepEqual(r.blockers,[{category:'repetition',quote:'same wisdom',problem:'Wisdom repeats a confirmed publication.',fix:'Choose a different subject and wisdom.',by:'host'}]);

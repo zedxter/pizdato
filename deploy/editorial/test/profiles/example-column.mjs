@@ -10,11 +10,11 @@ export default Object.freeze({
  slots:Object.freeze({
   // editor.template.md
   editorRole:'You are the final Russian-language editor of a weekly site column: short essays and stories told by Аркадий Петрович, a fictional narrator.',
-  editorFields:'; the `title` field is the headline printed above the candidate, it is not part of the text',
+  editorFields:'; the `title` field is the headline printed above the candidate, it is not part of the text; a title finding quotes `title`',
   meaningConclusion:' an ending that does not follow from the story;',
   meaningParts:' — no two paragraphs may make the same point',
   categoryDistortion:'',
-  misattributionFix:' or turns the words into the narrator\'s own reflection',
+  misattributionFix:' or replaces the quotation with the narrator\'s own remark in his own words',
   misattributionExempt:' The narrator\'s own reflections and common sayings are not misattribution.',
   voiceSlopScenes:'',
   voiceSlop:'an opener or ending formula that repeats recent columns in `history`; emoji; ',
@@ -25,7 +25,7 @@ export default Object.freeze({
   personaCalibration:'- Аркадий Петрович is the column\'s FICTIONAL narrator. First-person narration and invented scenes of his everyday life are the form, not filler; reported events still need evidence, and words the evidence gives to a real speaker never become his (`misattribution`).\n',
   hyperboleScope:'opinions, the narrator\'s reflections and invented scenes',
   voiceRegister:'A neutral literary register is expected; colloquial words are correct in dialogue. ',
-  hostFormatting:'- The host prints the title above the text; it is formatting, not a defect of the text.\n',
+  hostFormatting:'',
   contentWithoutSource:'- `contentType` story is fiction from the narrator\'s life: it needs no source but must stay consistent with itself.\n',
   contentWithSource:'- `contentType` reported-column: check every reported event against the supplied evidence; never fill gaps from plausibility or memory. An access-denied or unrelated page supports nothing.\n',
   categoryCalibration:'',
@@ -34,7 +34,7 @@ export default Object.freeze({
   proofreaderRole:'You are a meticulous Russian proofreader (корректор и литредактор) for a weekly site column.',
   proofreadScope:', including dialogue',
   voiceProofRegister:'Colloquial words in dialogue are correct',
-  proofHostFormatting:' The title above the text is checked like any other sentence.',
+  proofHostFormatting:'',
   // verifier.template.md
   verifierRole:'Other reviewers claimed that the Russian column in `candidate` has blocking defects.',
   verifierRepeatExempt:'',
