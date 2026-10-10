@@ -48,6 +48,14 @@ test('capture refuses a wrong commit, a dirty baseline, a profile gate and forei
  assert.throws(()=>provenance({...ok,gateSource:'export function createGate({profile,request}){}'}),/accepts a profile/);
  assert.throws(()=>provenance({...ok,gateExports:['createGate','reviewOptions']}),/accepts a profile/);
  assert.throws(()=>provenance({...ok,changed:['deploy/evening/compose.mjs']}),/compose\.mjs/);
+ // Channel delivery code and data next to the changed files are not this change's.
+ for(const path of ['deploy/editorial/history.mjs','deploy/editorial/publication.mjs','deploy/editorial/install.py','deploy/editorial/fixtures.json','deploy/editorial/store.mjs','deploy/evening/store.mjs','deploy/editorial/test/history.test.mjs','deploy/evening/test/compose.test.mjs','deploy/morning/test/runner2.rs'])
+  assert.throws(()=>provenance({...ok,changed:[path]}),new RegExp(path.replace(/[./]/g,'\\$&')),path);
+});
+test('capture accepts every deploy/ file this change touches since the baseline',t=>{
+ const diff=spawnSync('git',['diff','--name-only',BASELINE,'HEAD','--','deploy/'],{encoding:'utf8'});
+ if(diff.status!==0)return t.skip('baseline commit not in this clone');
+ assert.doesNotThrow(()=>provenance({head:BASELINE,dirty:false,gateSource:'',gateExports:[],changed:diff.stdout.split('\n').filter(Boolean)}));
 });
 test('capture run against a worktree that is not the baseline writes nothing',async()=>{
  const root=await mkdtemp(join(tmpdir(),'golden-capture-'));

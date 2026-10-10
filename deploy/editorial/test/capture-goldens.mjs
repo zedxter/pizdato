@@ -7,13 +7,23 @@ import {join,resolve,dirname} from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {BASELINE,CASES,runCase,runPreflight} from './golden-cases.mjs';
 export const RUBRICS=['editor.md','proofreader.md','verifier.md','writer.md'];
-// The only deploy/ paths this change may touch; anything else means the baseline no longer describes main.
-const OWN=[/^deploy\/editorial\//,/^deploy\/evening\/(agent|worker|network)\.mjs$/,/^deploy\/evening\/test\//,/^deploy\/morning\/agent\.mjs$/,/^deploy\/morning\/test\//];
+// The only deploy/ paths this change may touch, listed exactly: anything else (history.mjs, publication.mjs, the
+// fixtures, another test) means the baseline no longer describes main. A new file of this change is added here.
+const E='deploy/editorial/',T=`${E}test/`;
+const OWN=new Set([
+ ...['compose-rubric.mjs','enums.mjs','eval.mjs','eval-summary.mjs','fixture-guard.mjs','gate.mjs','profiles/pizdato-channel.mjs',
+  ...['editor','proofreader','verifier','writer'].flatMap(n=>[`${n}.md`,`${n}.template.md`])].map(f=>E+f),
+ ...['capture-goldens.mjs','compose-rubric.test.mjs','delivery.test.mjs','eval-summary.test.mjs','fixture-guard.test.mjs','gate.test.mjs','golden-cases.mjs',
+  'golden.test.mjs','goldens/channel.json','install.test.mjs','profiles.test.mjs','profiles/example-column.mjs','profiles/neutral.mjs','system-trace.mjs',
+  ...['editor','proofreader','verifier','writer'].map(n=>`profiles/neutral/${n}.md`)].map(f=>T+f),
+ 'deploy/evening/agent.mjs','deploy/evening/worker.mjs','deploy/evening/network.mjs','deploy/evening/test/runner.rs',
+ 'deploy/morning/agent.mjs','deploy/morning/test/agent.test.mjs','deploy/morning/test/runner.rs'
+]);
 export function provenance({head,dirty,gateSource,gateExports,changed}){
  if(head!==BASELINE)throw new Error(`Baseline worktree is at ${head}, expected ${BASELINE}`);
  if(dirty)throw new Error('Baseline worktree has local changes');
  if(/\bprofile\b/.test(gateSource)||gateExports.includes('reviewOptions'))throw new Error('Baseline gate accepts a profile; capture only from the pre-profile release');
- const foreign=changed.filter(p=>!OWN.some(r=>r.test(p)));
+ const foreign=changed.filter(p=>!OWN.has(p));
  if(foreign.length)throw new Error(`deploy/ changed outside this change since ${BASELINE}: ${foreign.join(', ')}; recapture from the new merge base`);
 }
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
