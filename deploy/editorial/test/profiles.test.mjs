@@ -94,12 +94,12 @@ test('a gate without a valid profile is never constructed',()=>{
  assert.throws(()=>createGate({profile:{...neutral,language:'uk'},request:async()=>reply(),history:[]}),e=>e.code==='EDITORIAL_CONFIG');
 });
 test('the column profile runs the whole flow with a persona, first person and its own title check',async()=>{
- const f=fake({editor:()=>reply(issue('humor','я','Flat'))});
+ const f=fake({editor:()=>reply(issue('humor','я','Flat'),issue('misattribution','решил, что это знак','Words of a real commuter')),verifier:()=>({content:JSON.stringify({verdicts:[{id:0,real:false,category:'misattribution',ground:'persona-opinion',reason:'The narrator\'s own reflection'}]})})});
  const text='Я опять опоздал на электричку и решил, что это знак.';
- const ok=await createGate({profile:column,request:f.request,history:[]}).review({text,fields:{title:'Знак свыше'}});
- assert.equal(ok.decision,'approve');
+ const ok=await createGate({profile:column,request:f.request,history:[]}).review({text,fields:{title:'Знак свыше'},source:{primary:{url:'https://example.com/train',text:'Trains were late.'}}});
+ assert.equal(ok.decision,'approve');assert.equal(ok.dismissed[0].ground,'persona-opinion');
  const input=JSON.parse(f.sent.find(s=>s.o.title==='pizdato-editor').m[1].content);
- assert.deepEqual(Object.keys(input).slice(0,3),['contentType','candidate','title']);assert.equal(input.contentType,'story');
+ assert.deepEqual(Object.keys(input).slice(0,3),['contentType','candidate','title']);assert.equal(input.contentType,'reported-column');
  const editorPrompt=f.sent.find(s=>s.o.title==='pizdato-editor').m[0].content;
  assert.match(editorPrompt,/Аркадий Петрович/);assert.doesNotMatch(editorPrompt,/first-person narration;/);
  const repeated=await createGate({profile:column,request:fake().request,history:[{name:'column-1.md',text:'# Знак свыше!\n\nСтарая колонка.'}]}).review({text,fields:{title:'знак  свыше'}});
