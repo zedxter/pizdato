@@ -6,8 +6,8 @@
 
 ## 2. Goldens first
 
-- [ ] 2.1 `capture-goldens.mjs` with its provenance checks; capture the ten golden cases from a da0b2ed worktree; pin the four rubric sha256 values.
-- [ ] 2.2 Failing tests (scenario → file):
+- [x] 2.1 `capture-goldens.mjs` with its provenance checks; capture the ten golden cases from a da0b2ed worktree; pin the four rubric sha256 values.
+- [x] 2.2 Failing tests (scenario → file):
   - byte-identical rubrics, writer polish, requests, decisions and preflight, plus capture provenance → `test/golden.test.mjs`;
   - strict composition, missing/unused/leftover slots, id and language, prose–enum agreement → `test/compose-rubric.test.mjs`;
   - neutral profile (terms, lint, snapshots), example column profile, profile-dependent enums and option identity, fields and length → `test/profiles.test.mjs`;
@@ -18,12 +18,12 @@
 
 ## 3. Implementation
 
-- [ ] 3.1 `compose-rubric.mjs`, `*.template.md` and `validateProfile`.
-- [ ] 3.2 `profiles/pizdato-channel.mjs`; the test profiles `neutral` and `example-column`.
-- [ ] 3.3 `gate.mjs`: profile requirement, `reviewOptions`, fields, length, profile-dependent enums, generic no-evidence comment.
-- [ ] 3.4 Callers: profile, composed polish, profile options in `network.check`, configuration-error handling, `--check` composition.
-- [ ] 3.5 Harness: `--profile`, per-profile fixtures and bar, composed-rubric contamination and provenance.
-- [ ] 3.6 `docs/editorial-profiles.md` with these sections:
+- [x] 3.1 `compose-rubric.mjs`, `*.template.md` and `validateProfile`.
+- [x] 3.2 `profiles/pizdato-channel.mjs`; the test profiles `neutral` and `example-column`.
+- [x] 3.3 `gate.mjs`: profile requirement, `reviewOptions`, fields, length, profile-dependent enums, generic no-evidence comment.
+- [x] 3.4 Callers: profile, composed polish, profile options in `network.check`, configuration-error handling, `--check` composition.
+- [x] 3.5 Harness: `--profile`, per-profile fixtures and bar, composed-rubric contamination and provenance.
+- [x] 3.6 `docs/editorial-profiles.md` with these sections:
   - slot table;
   - profile fields and the `unique()` contract;
   - the caller-supplied history, hostText and source formats;

@@ -16,7 +16,7 @@ Initial discovery has 30 model turns per subject. Each repair has a separate fiv
 
 This repair-first policy (#210) supersedes #208's mandatory replacement after every rejection. Search-result reliability remains a separate limitation tracked in #209; additional editorial opportunities do not guarantee successful discovery.
 
-Instructions are versioned at `deploy/editorial/writer.md` and `editor.md`. They replace the installed, unversioned post-polish snapshots for these two jobs only. Global Hermes skills are unchanged. Beverage rituals are excluded as narrator filler during recovery; verified beverage-related news remains permissible. Lifting that restriction requires a later editorial decision based on observed variety, not a timer.
+Instructions are versioned as the core templates `deploy/editorial/*.template.md`, composed with the channel's slots in `deploy/editorial/profiles/pizdato-channel.mjs` (see `docs/editorial-profiles.md`); edit the profile slots, not a composed copy. They replace the installed, unversioned post-polish snapshots for these two jobs only. Global Hermes skills are unchanged. Beverage rituals are excluded as narrator filler during recovery; verified beverage-related news remains permissible. Lifting that restriction requires a later editorial decision based on observed variety, not a timer.
 
 ## Install
 

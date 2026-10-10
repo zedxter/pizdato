@@ -1,40 +1,61 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {contamination,overlap,RUBRICS} from '../fixture-guard.mjs';
+import {contamination,overlap,guardedTexts} from '../fixture-guard.mjs';
+import channel from '../profiles/pizdato-channel.mjs';
+import neutral from './profiles/neutral.mjs';
 import {existsSync} from 'node:fs';
 
 const fixture={id:'demo',text:'Кот уронил вазу с подоконника прямо на соседа снизу.',expectedQuote:'на соседа'};
 test('a rubric that copies a fixture sentence or its injected defect is reported',()=>{
- assert.deepEqual(contamination([fixture],{'clean.md':'Report a wrong preposition («в течении»).'}),[]);
- assert.deepEqual(contamination([fixture],{'copied.md':'Example: «уронил вазу с подоконника».'}).map(f=>[f.fixture,f.rubric]),[['demo','copied.md']]);
- assert.deepEqual(contamination([fixture],{'defect.md':'Example: «упал на соседа».'}).map(f=>[f.fixture,f.rubric]),[['demo','defect.md']]);
+ assert.deepEqual(contamination([fixture],{'clean.md':'Report a wrong preposition («в течении»).'},[]),[]);
+ assert.deepEqual(contamination([fixture],{'copied.md':'Example: «уронил вазу с подоконника».'},[]).map(f=>[f.fixture,f.rubric]),[['demo','copied.md']]);
+ assert.deepEqual(contamination([fixture],{'defect.md':'Example: «упал на соседа».'},[]).map(f=>[f.fixture,f.rubric]),[['demo','defect.md']]);
 });
 test('host-printed strings are not contamination, but text after a label is',()=>{
  const post={id:'post',text:'Текст.\n\nХуёво: кот не умеет читать мысли хозяина\n\nМир ждёт твоего голоса: https://pizdato.net'};
- assert.deepEqual(contamination([post],{'prompt.md':'Lines «Хуёво: …» and «Мир ждёт твоего голоса: https://pizdato.net».'}),[]);
- assert.equal(contamination([post],{'copied.md':'Example: «Хуёво: кот не умеет читать мысли».'}).length,1);
+ assert.deepEqual(contamination([post],{'prompt.md':'Lines «Хуёво: …» and «Мир ждёт твоего голоса: https://pizdato.net».'},channel.hostLines),[]);
+ assert.equal(contamination([post],{'copied.md':'Example: «Хуёво: кот не умеет читать мысли».'},channel.hostLines).length,1);
 });
 test('an injected span copied into a rubric is reported even when it is short',()=>{
- assert.equal(contamination([{id:'s',text:'Он одел шапку.',injected:'одел шапку'}],{'r.md':'Flag «одел шапку».'}).length,1);
- assert.equal(contamination([{id:'s',text:'Он одел шапку.',injected:'одел шапку'}],{'r.md':'Flag «надел шапку».'}).length,0);
+ assert.equal(contamination([{id:'s',text:'Он одел шапку.',injected:'одел шапку'}],{'r.md':'Flag «одел шапку».'},[]).length,1);
+ assert.equal(contamination([{id:'s',text:'Он одел шапку.',injected:'одел шапку'}],{'r.md':'Flag «надел шапку».'},[]).length,0);
 });
 test('a held-out set shares no article and no long passage with the other fixtures',()=>{
  const dev=[{id:'d',text:'Один два три четыре пять шесть семь восемь.',source:{primary:{url:'https://a.test/x'}}}];
- assert.deepEqual(overlap([{id:'h',text:'Совсем другой текст про другое событие недели.',source:{primary:{url:'https://b.test/y'}}}],dev),[]);
- assert.equal(overlap([{id:'h',text:'Другое.',source:{primary:{url:'https://a.test/x'}}}],dev).length,1);
- assert.equal(overlap([{id:'h',text:'Вот: два три четыре пять шесть семь.',source:{primary:{url:'https://b.test/y'}}}],dev).length,1);
+ assert.deepEqual(overlap([{id:'h',text:'Совсем другой текст про другое событие недели.',source:{primary:{url:'https://b.test/y'}}}],dev,[]),[]);
+ assert.equal(overlap([{id:'h',text:'Другое.',source:{primary:{url:'https://a.test/x'}}}],dev,[]).length,1);
+ assert.equal(overlap([{id:'h',text:'Вот: два три четыре пять шесть семь.',source:{primary:{url:'https://b.test/y'}}}],dev,[]).length,1);
 });
 test('no fixture text or injected defect reaches a rubric or prompt shown to a model',async()=>{
  const fixtures=JSON.parse(await readFile(new URL('../fixtures.json',import.meta.url),'utf8'));
- const rubrics=Object.fromEntries(await Promise.all(RUBRICS.map(async path=>[path,await readFile(new URL(`../../${path}`,import.meta.url),'utf8')])));
- assert.deepEqual(contamination(fixtures,rubrics),[]);
+ const rubrics=await guardedTexts(channel);
+ assert.deepEqual(contamination(fixtures,rubrics,channel.hostLines),[]);
 });
 test('the revealed held-out set is independent of the dev and #219 fixtures',async t=>{
  const sealed=new URL('../fixtures-heldout-222.json',import.meta.url);
  if(!existsSync(sealed))return t.skip('sealed until the final run');
  const others=JSON.parse(await readFile(new URL('../fixtures.json',import.meta.url),'utf8')),heldout=JSON.parse(await readFile(sealed,'utf8'));
- assert.deepEqual(overlap(heldout,others),[]);
- const rubrics=Object.fromEntries(await Promise.all(RUBRICS.map(async path=>[path,await readFile(new URL(`../../${path}`,import.meta.url),'utf8')])));
- assert.deepEqual(contamination(heldout,rubrics),[]);
+ assert.deepEqual(overlap(heldout,others,channel.hostLines),[]);
+ const rubrics=await guardedTexts(channel);
+ assert.deepEqual(contamination(heldout,rubrics,channel.hostLines),[]);
+});
+test('the guard reads the composed rubrics of a profile and the prompts its callers add',async()=>{
+ const texts=await guardedTexts(channel);
+ assert.deepEqual(Object.keys(texts),['editorial/editor.md','editorial/proofreader.md','editorial/verifier.md','editorial/writer.md','evening/draft.md','evening/prompt.md','evening/legacy-prompt.md','morning/prompt.md']);
+ assert.deepEqual(Object.keys(await guardedTexts(neutral)),['editorial/editor.md','editorial/proofreader.md','editorial/verifier.md','editorial/writer.md']);
+ assert.doesNotMatch(texts['editorial/editor.md'],/\{\{/);
+});
+test('fixture text placed in a profile slot is reported',async()=>{
+ const seeded={...neutral,slots:{...neutral.slots,editorRole:`${neutral.slots.editorRole} Например: «уронил вазу с подоконника».`}};
+ assert.deepEqual(contamination([fixture],await guardedTexts(neutral),[]),[]);
+ assert.deepEqual(contamination([fixture],await guardedTexts(seeded),[]).map(f=>[f.fixture,f.rubric]),[['demo','editorial/editor.md']]);
+});
+test('host lines are per profile: lines of another publication are fixture text',()=>{
+ const post={id:'p',text:'Итог: кот не умеет читать мысли хозяина'};
+ assert.equal(contamination([post],{'r.md':'Line «Итог: кот не умеет читать мысли».'},['Итог:']).length,1);
+ assert.equal(contamination([{id:'h',text:'Пиздато: да'}],{'r.md':'«Пиздато: да»'},channel.hostLines).length,0);
+ // No default: a caller that forgets its profile's lines must not silently get the channel's.
+ assert.throws(()=>contamination([{id:'h',text:'Пиздато: да'}],{'r.md':'«Пиздато: да»'}),/host lines/);
+ assert.throws(()=>overlap([],[]),/host lines/);
 });

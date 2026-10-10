@@ -1,4 +1,6 @@
 import {createGate, assertApproved} from '../editorial/gate.mjs';
+import {composeRubric, validateProfile} from '../editorial/compose-rubric.mjs';
+import channel from '../editorial/profiles/pizdato-channel.mjs';
 import {loadHistory} from '../editorial/history.mjs';
 import { readFile, writeFile, rename, mkdir, unlink } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -146,6 +148,9 @@ const str = { type: 'string' };
 async function run() {
   const mode = process.argv[2] || 'publish';
   if (!['publish', '--dry-run', '--check'].includes(mode)) throw new Error('Unknown mode');
+  // A broken profile fails every mode, --check included, before credentials or any request.
+  validateProfile(channel);
+  const polish = composeRubric('writer', channel);
   await loadEnv(process.env.PIZDATO_CHANNEL_ENV || join(homedir(), '.config/pizdato-channel.env'));
   await loadEnv(process.env.PIZDATO_EVENING_ENV || join(homedir(), '.config/pizdato-evening.env'));
   if (!llmConfig().key || !process.env.COMPOSIO_CONSUMER_KEY) throw new Error('Model or Composio credential missing');
@@ -155,7 +160,6 @@ async function run() {
   const marker = join(vault, `published/telegram/evening-${day}.md`);
   const pending = join(state, `evening-${day}.pending`);
   await mkdir(state, { recursive: true });
-  const polish = await readFile(new URL('../editorial/writer.md', import.meta.url), 'utf8');
   const mcp = new Composio();
   await mcp.connect();
   const discovery = unpack(await mcp.call('COMPOSIO_SEARCH_TOOLS', { queries: [{ use_case: 'Get Telegram channel information and send a photo with a plain caption', known_fields: `chat_id:${CHAT}, account:${ACCOUNT}` }], search_strategy: 'tool_search', session: { generate_id: true } }));
@@ -165,8 +169,8 @@ async function run() {
   if (!status.some(s => s.toolkit === 'telegram' && s.accounts?.some(a => a.alias === ACCOUNT && a.status === 'ACTIVE'))) throw new Error('Named Telegram account is not ACTIVE');
   const execute = async tools => unpack(await mcp.call('COMPOSIO_MULTI_EXECUTE_TOOL', { tools, session_id: sessionId, current_step: 'EVENING_PUBLICATION', sync_response_to_workbench: false }));
   const info = await execute([{ tool_slug: 'TELEGRAM_GET_CHAT', account: ACCOUNT, arguments: { chat_id: CHAT } }]);
-  const channel = info.data?.results?.[0]?.response?.data || info.results?.[0]?.response?.data;
-  if (!channel?.ok || channel.result?.id !== CHAT || channel.result?.username !== 'pizdato_net') throw new Error('Channel identity mismatch');
+  const chatInfo = info.data?.results?.[0]?.response?.data || info.results?.[0]?.response?.data;
+  if (!chatInfo?.ok || chatInfo.result?.id !== CHAT || chatInfo.result?.username !== 'pizdato_net') throw new Error('Channel identity mismatch');
   if (mode === '--check') {
     const answer = await chat([{ role: 'user', content: 'Return exactly MODEL_OK. This is a non-publishing connection check.' }]);
     if (!answer.content?.includes('MODEL_OK')) throw new Error(`Model preflight failed at ${endpointHost()}`);
@@ -177,7 +181,7 @@ async function run() {
   // Discovery establishes the photo slug; publication is performed only by this host after validation.
   const history = await loadHistory(vault, day);
   const reviewRun = new Date().toISOString().replace(/[:.]/g, '-');
-  const gate = createGate({history, request: (messages, options) => chat(messages, undefined, options), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${reviewRun}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
+  const gate = createGate({profile: channel, history, request: (messages, options) => chat(messages, undefined, options), record: entry => atomicWrite(join(state, `reviews/evening-${day}-${reviewRun}-${entry.attempt}.json`), JSON.stringify(entry,null,2))});
   const evidence = new Map();
   const rejectedSources = new Set();
   let activeSource=null, approval;
@@ -243,7 +247,7 @@ async function run() {
           if(!Array.isArray(supportingUrls) || supportingUrls.length>10 || supportingUrls.some(url=>typeof url!=='string'||!evidence.has(url))) throw new Error('Every supporting URL must be fetched first (maximum ten)');
           const sources = {primary:evidence.get(args.source_url),supporting:[...new Set(supportingUrls)].map(url=>evidence.get(url))};
           let verdict;
-          try {verdict = await gate.review({text:args.caption,wisdom:args.wisdom,source:sources});}
+          try {verdict = await gate.review({text:args.caption,fields:{wisdom:args.wisdom},source:sources});}
           catch(error) {error.editorialFatal=true;throw error;}
           if(verdict.decision==='approve') {draft=args;approval=verdict;result={accepted:true};}
           else result={accepted:false,...verdict};

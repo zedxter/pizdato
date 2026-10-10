@@ -177,10 +177,11 @@ fn editorial_repairs_preserve_three_subject_opportunities() {
         .args(["--input-type=module", "-e", r#"
 import assert from 'node:assert/strict';
 import {createGate,assertApproved} from './deploy/editorial/gate.mjs';
+import channel from './deploy/editorial/profiles/pizdato-channel.mjs';
 let calls=0;
-const gate=createGate({history:[],request:async(m,o)=>o.title==='pizdato-verifier'?{content:JSON.stringify({verdicts:JSON.parse(m[1].content).claims.map(c=>({id:c.id,real:true,category:c.category,ground:'confirmed',reason:'ok'}))})}:o.title==='pizdato-proofreader'?{content:'{"issues":[]}'}:({content:JSON.stringify({issues:++calls===9?[]:[{category:'grammar',quote:'payload',problem:'Wrong agreement',fix:'Agree'}]})})});
+const gate=createGate({profile:channel,history:[],request:async(m,o)=>o.title==='pizdato-verifier'?{content:JSON.stringify({verdicts:JSON.parse(m[1].content).claims.map(c=>({id:c.id,real:true,category:c.category,ground:'confirmed',reason:'ok'}))})}:o.title==='pizdato-proofreader'?{content:'{"issues":[]}'}:({content:JSON.stringify({issues:++calls===9?[]:[{category:'grammar',quote:'payload',problem:'Wrong agreement',fix:'Agree'}]})})});
 for(let i=1;i<=9;i++) {
- const verdict=await gate.review({text:'payload '+i,wisdom:'wisdom '+i});
+ const verdict=await gate.review({text:'payload '+i,fields:{wisdom:'wisdom '+i}});
  if(i<9) assert.equal(verdict.nextAction,i%3===0?'replace':'repair');
  else assert.doesNotThrow(()=>assertApproved('payload 9',verdict));
 }
@@ -201,10 +202,11 @@ fn persistent_evening_policy_replaces_a_stuck_story_and_survives_restart() {
         .args(["--input-type=module", "-e", r#"
 import assert from 'node:assert/strict';
 import {createGate,assertApproved} from './deploy/editorial/gate.mjs';
+import channel from './deploy/editorial/profiles/pizdato-channel.mjs';
 let saved;const actions=[];
 for(let i=0;i<=7;i++) {
- const gate=createGate({policy:'persistent-evening',initial:saved,history:[],request:async(m,o)=>o.title==='pizdato-verifier'?{content:JSON.stringify({verdicts:JSON.parse(m[1].content).claims.map(c=>({id:c.id,real:true,category:c.category,ground:'confirmed',reason:'ok'}))})}:o.title==='pizdato-proofreader'?{content:'{"issues":[]}'}:({content:JSON.stringify({issues:i===7?[{category:'humor',quote:'',problem:'Optional polish',fix:'Sharper'}]:[{category:'grammar',quote:'draft',problem:'Fix agreement',fix:'Agree'}]})})});
- const verdict=await gate.review({text:'draft '+i,wisdom:'wisdom '+i});
+ const gate=createGate({profile:channel,policy:'persistent-evening',initial:saved,history:[],request:async(m,o)=>o.title==='pizdato-verifier'?{content:JSON.stringify({verdicts:JSON.parse(m[1].content).claims.map(c=>({id:c.id,real:true,category:c.category,ground:'confirmed',reason:'ok'}))})}:o.title==='pizdato-proofreader'?{content:'{"issues":[]}'}:({content:JSON.stringify({issues:i===7?[{category:'humor',quote:'',problem:'Optional polish',fix:'Sharper'}]:[{category:'grammar',quote:'draft',problem:'Fix agreement',fix:'Agree'}]})})});
+ const verdict=await gate.review({text:'draft '+i,fields:{wisdom:'wisdom '+i}});
  actions.push(verdict.nextAction);
  if(i===7) assertApproved('draft 7',verdict);
  saved=gate.snapshot();
@@ -310,4 +312,64 @@ fn separate_worker_processes_keep_one_draft_and_send_once() {
         ]
     );
     assert_eq!(fs::read_to_string(c.root.join("sends")).unwrap(), "send\n");
+}
+
+// A copy of deploy/ whose channel profile has `from` replaced by `to`; returns the copy root.
+fn broken_release(c: &Case, from: &str, to: &str) -> PathBuf {
+    let copy = c.root.join("release");
+    let _ = fs::remove_dir_all(&copy);
+    fs::create_dir_all(&copy).unwrap();
+    assert!(Command::new("cp")
+        .args(["-r", "deploy"])
+        .arg(&copy)
+        .status()
+        .unwrap()
+        .success());
+    let profile = copy.join("deploy/editorial/profiles/pizdato-channel.mjs");
+    let text = fs::read_to_string(&profile).unwrap();
+    assert!(text.contains(from));
+    fs::write(&profile, text.replace(from, to)).unwrap();
+    copy
+}
+
+// A lost slot and a profile of the wrong shape (which must not crash at import) both fail as configuration errors.
+const BROKEN: [(&str, &str, &str); 2] = [
+    ("  editorRole:", "  editorRoleRenamed:", "editorRole"),
+    (
+        "suggestions:Object.freeze(['wisdom'])",
+        "suggestions:null",
+        "suggestion",
+    ),
+];
+
+#[test]
+fn broken_profile_fails_every_evening_check() {
+    let c = Case::new();
+    for (from, to, named) in BROKEN {
+        let copy = broken_release(&c, from, to);
+        for script in ["run.sh", "tick.sh"] {
+            let out = Command::new("bash")
+                .arg(copy.join("deploy/evening").join(script))
+                .arg("--check")
+                .env("PIZDATO_EVENING_NODE", "node")
+                .env("PIZDATO_EVENING_VAULT", c.root.join("vault"))
+                .env("PIZDATO_EVENING_STATE", c.root.join("state"))
+                .env("PIZDATO_CHANNEL_ENV", c.root.join("missing"))
+                .env("PIZDATO_EVENING_ENV", c.root.join("missing"))
+                .env("OPENROUTER_API_KEY", "test")
+                .env("COMPOSIO_CONSUMER_KEY", "test")
+                .output()
+                .unwrap();
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            assert!(!out.status.success(), "{}: {}", script, stdout);
+            assert!(
+                stderr.contains("EDITORIAL_CONFIG") && stderr.contains(named),
+                "{}: {}",
+                script,
+                stderr
+            );
+            assert!(!stdout.contains("PREFLIGHT_OK"), "{}: {}", script, stdout);
+        }
+    }
 }

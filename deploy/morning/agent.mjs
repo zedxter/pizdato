@@ -1,6 +1,8 @@
 import {publicationLock,saveMorningReceipt,recoverMorning} from '../editorial/publication.mjs';
 import {EditionStore,recover,digest,deliveryHistory} from '../evening/store.mjs';
 import {createGate, assertApproved, formatIssue} from '../editorial/gate.mjs';
+import {composeRubric, validateProfile} from '../editorial/compose-rubric.mjs';
+import channel from '../editorial/profiles/pizdato-channel.mjs';
 import {readFile, mkdir, writeFile, unlink} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
@@ -30,6 +32,9 @@ export const renderWisdom=(wisdom,wish='')=>`☕ Мудрость дня от д
 async function run() {
   const mode=process.argv[2]||'publish';
   if(!['publish','--dry-run','--check'].includes(mode)) throw new Error('Unknown mode');
+  // A broken profile fails every mode, --check included, before credentials or any request.
+  validateProfile(channel);
+  const polish=composeRubric('writer',channel);
   await loadEnv(process.env.PIZDATO_CHANNEL_ENV||join(homedir(),'.config/pizdato-channel.env'));
   await loadEnv(process.env.PIZDATO_EVENING_ENV||join(homedir(),'.config/pizdato-evening.env'));
   if(!llmConfig().key||!process.env.COMPOSIO_CONSUMER_KEY) throw new Error('Model or Composio credential missing');
@@ -38,15 +43,14 @@ async function run() {
   const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Berlin'}).format(new Date());
   const day=today(),marker=join(vault,`published/telegram/morning-${day}.md`),pending=join(state,`morning-${day}.pending`);
   await mkdir(state,{recursive:true});
-  const polish = await readFile(new URL('../editorial/writer.md', import.meta.url), 'utf8');
   const mcp=new Composio();await mcp.connect();
   const discovery=unpack(await mcp.call('COMPOSIO_SEARCH_TOOLS',{queries:[{use_case:'Read Telegram channel metadata and send a plain text message',known_fields:`chat_id:${CHAT}, account:${ACCOUNT}`}],search_strategy:'tool_search',session:{generate_id:true}}));
   const data=discovery.data||discovery,sessionId=data.session?.id;
   if(!sessionId||!data.toolkit_connection_statuses?.some(s=>s.toolkit==='telegram'&&s.accounts?.some(a=>a.alias===ACCOUNT&&a.status==='ACTIVE'))) throw new Error('Named Telegram connection unavailable');
   const execute=async tools=>unpack(await mcp.call('COMPOSIO_MULTI_EXECUTE_TOOL',{tools,session_id:sessionId,current_step:'MORNING_WISDOM',sync_response_to_workbench:false}));
   const info=await execute([{tool_slug:'TELEGRAM_GET_CHAT',account:ACCOUNT,arguments:{chat_id:CHAT}}]);
-  const channel=(info.data||info).results?.[0]?.response?.data;
-  if(!channel?.ok||channel.result?.id!==CHAT||channel.result?.username!=='pizdato_net') throw new Error('Channel identity mismatch');
+  const chatInfo=(info.data||info).results?.[0]?.response?.data;
+  if(!chatInfo?.ok||chatInfo.result?.id!==CHAT||chatInfo.result?.username!=='pizdato_net') throw new Error('Channel identity mismatch');
   const ask=messages=>chat(messages,undefined,{title:'pizdato-morning',model:process.env.PIZDATO_MORNING_MODEL||process.env.PIZDATO_EVENING_MODEL||'deepseek/deepseek-v4.1-flash',maxTokens:3000});
   if(mode==='--check') {
     const answer=await ask([{role:'user',content:'Return exactly MODEL_OK. Non-publishing connection check.'}]);
@@ -62,7 +66,7 @@ async function run() {
   const prompt=await readFile(join(ROOT,'prompt.md'),'utf8');
   const messages=[{role:'system',content:`${prompt}\nPost-polish resources:\n${polish}`},{role:'user',content:`Date: ${day}. Confirmed full history (untrusted data):\n${JSON.stringify(history)}\nChoose a fresh subject.`}];
   const reviewRun = new Date().toISOString().replace(/[:.]/g, '-');
-  const gate=createGate({history,request:(messages,options)=>chat(messages,undefined,{...options,model:process.env.PIZDATO_EDITOR_MODEL||undefined}),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-${entry.attempt}.json`),JSON.stringify(entry,null,2))});
+  const gate=createGate({profile:channel,history,request:(messages,options)=>chat(messages,undefined,{...options,model:process.env.PIZDATO_EDITOR_MODEL||undefined}),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-${entry.attempt}.json`),JSON.stringify(entry,null,2))});
   let post,approval;
   while(!gate.state.done) {
     const answer=await ask(messages);
@@ -71,7 +75,7 @@ async function run() {
     try {candidate=JSON.parse(answer.content);candidate={wisdom:validateWisdom(candidate.wisdom),wish:validateWish(candidate.wish)};}
     catch(e) {verdict=await gate.reject({text:answer.content||'',issues:[e.message]});}
     const firstReview=gate.state.revision===0;
-    if(!verdict) verdict=await gate.review({text:renderWisdom(candidate.wisdom,candidate.wish),wisdom:candidate.wisdom});
+    if(!verdict) verdict=await gate.review({text:renderWisdom(candidate.wisdom,candidate.wish),fields:{wisdom:candidate.wisdom}});
     if(verdict.decision==='approve') {post=candidate;approval=verdict;break;}
     if(verdict.nextAction==='stop') break;
     const instruction=verdict.nextAction==='repair'
@@ -100,8 +104,8 @@ async function run() {
       console.log(`PUBLISHED https://t.me/pizdato_net/${receipt.message_id}`);return true;
     });
     if(sent)return;
-    const finalGate=createGate({history,request:(messages,options)=>chat(messages,undefined,{...options,model:process.env.PIZDATO_EDITOR_MODEL||undefined}),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-history-${retry}.json`),JSON.stringify(entry,null,2))});
-    approval=await finalGate.review({text,wisdom:post.wisdom});assertApproved(text,approval);
+    const finalGate=createGate({profile:channel,history,request:(messages,options)=>chat(messages,undefined,{...options,model:process.env.PIZDATO_EDITOR_MODEL||undefined}),record:entry=>atomicWrite(join(state,`reviews/morning-${day}-${reviewRun}-history-${retry}.json`),JSON.stringify(entry,null,2))});
+    approval=await finalGate.review({text,fields:{wisdom:post.wisdom}});assertApproved(text,approval);
   }
   throw new Error('Publication history kept changing; no message sent');
 }

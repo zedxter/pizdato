@@ -329,3 +329,41 @@ test('offline status exposes corrupt journals as blocked rather than hiding the 
  await durableWrite(store.path('2026-10-09'),'{broken');
  const entries=await status(store,when);assert.equal(entries[0].phase,'blocked');assert.match(entries[0].error,/journal/i);
 }));
+import {cp,writeFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
+const configError=()=>Object.assign(new Error('EDITORIAL_CONFIG: profile pizdato-channel lacks slot editorRole used by editor.template.md'),{code:'EDITORIAL_CONFIG'});
+test('a broken profile in an installed release stops the activation and consumes no story',async()=>fixture(async({root,store,vault})=>{
+ const release=join(root,'release');
+ for(const dir of ['evening','editorial'])await cp(resolve(`deploy/${dir}`),join(release,dir),{recursive:true,filter:path=>!path.includes(`${dir}/test`)});
+ const profile=join(release,'editorial/profiles/pizdato-channel.mjs');
+ await writeFile(profile,(await readFile(profile,'utf8')).replace('  editorRole:','  editorRoleRenamed:'));
+ const {tick:brokenTick}=await import(pathToFileURL(join(release,'evening/worker.mjs')).href);
+ const deps=services();
+ for(let i=0;i<4;i++)await brokenTick({store,vault,now:new Date(+when+i*300000),deps});
+ const e=await store.get('2026-10-09');
+ assert.match(e.lastError,/EDITORIAL_CONFIG.*editorRole/);assert.equal(deps.calls.prepare.length,0);assert.equal(deps.calls.review.length,0);
+ assert.deepEqual(e.abandoned,[]);assert.equal(e.reviewFailures||0,0);assert.equal(e.failures||0,0);assert.equal(e.gate,undefined);assert.equal(e.nextAttemptAt,+when+3*300000+300000);
+}));
+test('a structurally broken profile is recorded as a configuration error, not an import crash',async()=>fixture(async({root,store,vault})=>{
+ const release=join(root,'release');
+ for(const dir of ['evening','editorial'])await cp(resolve(`deploy/${dir}`),join(release,dir),{recursive:true,filter:path=>!path.includes(`${dir}/test`)});
+ const profile=join(release,'editorial/profiles/pizdato-channel.mjs'),text=await readFile(profile,'utf8');
+ assert.ok(text.includes("suggestions:Object.freeze(['wisdom'])"));
+ await writeFile(profile,text.replace("suggestions:Object.freeze(['wisdom'])",'suggestions:null'));
+ const {tick:brokenTick}=await import(pathToFileURL(join(release,'evening/worker.mjs')).href);
+ const deps=services();
+ for(let i=0;i<2;i++)await brokenTick({store,vault,now:new Date(+when+i*300000),deps});
+ const e=await store.get('2026-10-09');
+ assert.match(e.lastError,/EDITORIAL_CONFIG.*suggestion/);assert.equal(deps.calls.prepare.length,0);assert.equal(deps.calls.review.length,0);
+ assert.deepEqual(e.abandoned,[]);assert.equal(e.reviewFailures||0,0);assert.equal(e.failures||0,0);
+}));
+test('a configuration error raised mid-activation is not a reviewer failure and keeps the story',async()=>fixture(async({store,vault})=>{
+ let broken=true;const deps=services({prepare:async()=>{if(broken)throw configError();return {...sections};}});
+ for(let i=0;i<4;i++)await tick({store,vault,now:new Date(+when+i*300000),deps});
+ let e=await store.get('2026-10-09');
+ assert.match(e.lastError,/EDITORIAL_CONFIG/);assert.deepEqual(e.abandoned,[]);assert.equal(e.failures||0,0);assert.equal(e.reviewFailures||0,0);
+ const review=deps.review;deps.review=async(m,o)=>{if(o!==proofreaderOptions&&o!==verifierOptions&&!broken)throw configError();return review(m,o);};
+ broken=false;for(let i=4;i<8;i++)await tick({store,vault,now:new Date(+when+i*300000),deps});
+ e=await store.get('2026-10-09');assert.equal(e.phase,'reviewing');assert.equal(e.reviewFailures||0,0);assert.deepEqual(e.abandoned,[]);assert.match(e.lastError,/EDITORIAL_CONFIG/);
+}));

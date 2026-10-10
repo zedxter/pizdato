@@ -200,3 +200,53 @@ fn editorial_rejection_prevents_delivery_authorization() {
         String::from_utf8_lossy(&out.stderr)
     );
 }
+
+// A lost slot and a profile of the wrong shape (which must not crash at import) both fail as configuration errors.
+#[test]
+fn broken_profile_fails_the_morning_check() {
+    let c = Case::new();
+    let broken = [
+        ("  editorRole:", "  editorRoleRenamed:", "editorRole"),
+        (
+            "suggestions:Object.freeze(['wisdom'])",
+            "suggestions:null",
+            "suggestion",
+        ),
+    ];
+    for (from, to, named) in broken {
+        let copy = c.root.join("release");
+        let _ = fs::remove_dir_all(&copy);
+        fs::create_dir_all(&copy).unwrap();
+        assert!(Command::new("cp")
+            .args(["-r", "deploy"])
+            .arg(&copy)
+            .status()
+            .unwrap()
+            .success());
+        let profile = copy.join("deploy/editorial/profiles/pizdato-channel.mjs");
+        let text = fs::read_to_string(&profile).unwrap();
+        assert!(text.contains(from));
+        fs::write(&profile, text.replace(from, to)).unwrap();
+        let out = Command::new("bash")
+            .arg(copy.join("deploy/morning/run.sh"))
+            .arg("--check")
+            .env("PIZDATO_MORNING_NODE", "node")
+            .env("PIZDATO_MORNING_VAULT", c.root.join("vault"))
+            .env("PIZDATO_MORNING_STATE", c.root.join("state"))
+            .env("PIZDATO_CHANNEL_ENV", c.root.join("missing"))
+            .env("PIZDATO_EVENING_ENV", c.root.join("missing"))
+            .env("OPENROUTER_API_KEY", "test")
+            .env("COMPOSIO_CONSUMER_KEY", "test")
+            .output()
+            .unwrap();
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        assert!(!out.status.success(), "{}", stdout);
+        assert!(
+            stderr.contains("EDITORIAL_CONFIG") && stderr.contains(named),
+            "{}",
+            stderr
+        );
+        assert!(!stdout.contains("PREFLIGHT_OK"), "{}", stdout);
+    }
+}
