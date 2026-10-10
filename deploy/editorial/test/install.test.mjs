@@ -20,7 +20,8 @@ test('installer produces importable coherent bundle and a verifiable manifest',a
  const dry=spawnSync('bash',[join(root,'share',`pizdato-${slot}/run.sh`),'--dry-run'],{encoding:'utf8',env:{...process.env,NODE_OPTIONS:`--import ${resolve('deploy/editorial/test/fake-network.mjs')}`,OPENROUTER_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),[`${prefix}_NODE`]:process.execPath,[`${prefix}_VAULT`]:join(root,'vault'),[`${prefix}_STATE`]:join(root,'state',slot),TEST_TRACE:join(root,'trace'),TEST_VERDICT:'approve'}});
  assert.equal(dry.status,0,dry.stderr);assert.ok(dry.stdout.includes('DRY_RUN_OK'),dry.stdout);
  }
- assert.ok(manifest.sha256['editorial/editor.md']);
+ for(const file of ['editorial/compose-rubric.mjs','editorial/enums.mjs','editorial/profiles/pizdato-channel.mjs',...['editor','proofreader','verifier','writer'].map(n=>`editorial/${n}.template.md`)])assert.ok(manifest.sha256[file],file);
+ assert.deepEqual(Object.keys(manifest.sha256).filter(f=>/test|neutral|example-column|goldens|\/(editor|proofreader|verifier|writer)\.md$/.test(f)),[],'test profiles, goldens and stale rubrics are not installed');
  }finally{await rm(root,{recursive:true,force:true});}
 });
 test('schedule migration changes only evening entry and saves cron and journals',async()=>{
