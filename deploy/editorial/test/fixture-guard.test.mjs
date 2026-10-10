@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {contamination,overlap,RUBRICS} from '../fixture-guard.mjs';
+import {contamination,overlap,guardedTexts} from '../fixture-guard.mjs';
+import channel from '../profiles/pizdato-channel.mjs';
+import neutral from './profiles/neutral.mjs';
 import {existsSync} from 'node:fs';
 
 const fixture={id:'demo',text:'Кот уронил вазу с подоконника прямо на соседа снизу.',expectedQuote:'на соседа'};
@@ -27,7 +29,7 @@ test('a held-out set shares no article and no long passage with the other fixtur
 });
 test('no fixture text or injected defect reaches a rubric or prompt shown to a model',async()=>{
  const fixtures=JSON.parse(await readFile(new URL('../fixtures.json',import.meta.url),'utf8'));
- const rubrics=Object.fromEntries(await Promise.all(RUBRICS.map(async path=>[path,await readFile(new URL(`../../${path}`,import.meta.url),'utf8')])));
+ const rubrics=await guardedTexts(channel);
  assert.deepEqual(contamination(fixtures,rubrics),[]);
 });
 test('the revealed held-out set is independent of the dev and #219 fixtures',async t=>{
@@ -35,6 +37,22 @@ test('the revealed held-out set is independent of the dev and #219 fixtures',asy
  if(!existsSync(sealed))return t.skip('sealed until the final run');
  const others=JSON.parse(await readFile(new URL('../fixtures.json',import.meta.url),'utf8')),heldout=JSON.parse(await readFile(sealed,'utf8'));
  assert.deepEqual(overlap(heldout,others),[]);
- const rubrics=Object.fromEntries(await Promise.all(RUBRICS.map(async path=>[path,await readFile(new URL(`../../${path}`,import.meta.url),'utf8')])));
+ const rubrics=await guardedTexts(channel);
  assert.deepEqual(contamination(heldout,rubrics),[]);
+});
+test('the guard reads the composed rubrics of a profile and the prompts its callers add',async()=>{
+ const texts=await guardedTexts(channel);
+ assert.deepEqual(Object.keys(texts),['editorial/editor.md','editorial/proofreader.md','editorial/verifier.md','editorial/writer.md','evening/draft.md','evening/prompt.md','evening/legacy-prompt.md','morning/prompt.md']);
+ assert.deepEqual(Object.keys(await guardedTexts(neutral)),['editorial/editor.md','editorial/proofreader.md','editorial/verifier.md','editorial/writer.md']);
+ assert.doesNotMatch(texts['editorial/editor.md'],/\{\{/);
+});
+test('fixture text placed in a profile slot is reported',async()=>{
+ const seeded={...neutral,slots:{...neutral.slots,editorRole:`${neutral.slots.editorRole} Например: «уронил вазу с подоконника».`}};
+ assert.deepEqual(contamination([fixture],await guardedTexts(neutral),[]),[]);
+ assert.deepEqual(contamination([fixture],await guardedTexts(seeded),[]).map(f=>[f.fixture,f.rubric]),[['demo','editorial/editor.md']]);
+});
+test('host lines are per profile: lines of another publication are fixture text',()=>{
+ const post={id:'p',text:'Итог: кот не умеет читать мысли хозяина'};
+ assert.equal(contamination([post],{'r.md':'Line «Итог: кот не умеет читать мысли».'},['Итог:']).length,1);
+ assert.equal(contamination([{id:'h',text:'Пиздато: да'}],{'r.md':'«Пиздато: да»'}).length,0,'the channel lines stay the default');
 });
