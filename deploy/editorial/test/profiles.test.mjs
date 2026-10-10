@@ -7,10 +7,11 @@ import channel from '../profiles/pizdato-channel.mjs';
 import neutral from './profiles/neutral.mjs';
 import column from './profiles/example-column.mjs';
 // Design 9: no channel term may survive in a profile that declares none of the channel's features.
-export const BANNED=['pizdato','Пиздато','Хуёво','Миша','Misha','дядя','Мудрость','wisdom','Telegram','канал','channel','утр','morning','вечер','evening','weekday','рубрик','CTA','☕','✨','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday','понедельник','вторник','среда','четверг','пятница','суббота','воскресенье'];
+// Stems and inflection patterns, so «дяди Миши», «мудрости» or «в пятницу» cannot slip through in another case.
+export const BANNED=['pizdato','пиздат','хуёв','хуев','миш(?:а|и|е|у|ей|ой)(?!\\p{L})','misha','дяд(?:я|и|е|ю|ей)(?!\\p{L})','мудр','wisdom','telegram','канал','channel','утр','morning','вечер','evening','weekday','рубрик','cta','☕','✨','monday','tuesday','wednesday','thursday','friday','saturday','sunday','понедельник','вторник','сред(?:а|ы|е|у|ой|ам|ами|ах)(?!\\p{L})','четверг','пятниц','суббот','воскресен'];
 // Terms match case-insensitively at the start of a word: stems such as «утр» and «рубрик» catch every form,
-// while «CTA» inside «predictable» is no channel term.
-export const bannedIn=text=>{const t=text.toLocaleLowerCase('ru');return BANNED.filter(b=>new RegExp(`(?<!\\p{L})${b.toLocaleLowerCase('ru')}`,'u').test(t));};
+// while «CTA» inside «predictable», «среди» or «мишень» is no channel term.
+export const bannedIn=text=>{const t=text.toLocaleLowerCase('ru');return BANNED.filter(b=>new RegExp(`(?<!\\p{L})${b}`,'u').test(t));};
 export function lint(text){
  const found=[];
  text.split('\n').forEach((line,i)=>{
@@ -29,6 +30,10 @@ function fake({editor=()=>reply(),proofreader=()=>reply(),verifier=m=>({content:
  const sent=[];
  return {sent,request:async(m,o)=>{sent.push({m,o});return o.title==='pizdato-proofreader'?proofreader(m):o.title==='pizdato-verifier'?verifier(m):editor(m);}};
 }
+test('the banned-term check catches inflected names, labels and weekdays',()=>{
+ for(const t of ['с дядей Мишей','от дяди Миши','мудрости','пиздатый','Хуёвый','хуевый','в понедельник','во вторник','в среду','в четверг','в пятницу','в субботу','в воскресенье','по средам','утром','вечером','рубрики','Telegram-канала'])assert.notDeepEqual(bannedIn(t),[],t);
+ for(const t of ['среди прочего','средство','мишень','predictable'])assert.deepEqual(bannedIn(t),[],t);
+});
 test('the lint finds each readability defect it names',()=>{
  for(const bad of ['Two  spaces.','Odd , comma.','Empty () brackets.','Double.. stop.','-  ','- ','Ends with и.','Ends with or;','lower start.'])assert.notDeepEqual(lint(bad),[],bad);
  assert.deepEqual(lint('Fine text… with «quotes», (brackets) and — dashes.\n- `token`: a lower-case bullet is fine.'),[]);
