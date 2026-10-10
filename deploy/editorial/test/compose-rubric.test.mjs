@@ -71,3 +71,15 @@ test('templates are read once and re-read when a file changes',async()=>{
   assert.ok(slotNames('writer',dir).includes('writerScope'));
  }finally{await rm(dir,{recursive:true,force:true});}
 });
+test('optional host lines and a tighter release bar are validated',()=>{
+ assert.doesNotThrow(()=>validateProfile({...neutral,hostLines:['Итог:'],releaseBar:{objective:0.95}}));
+ assert.throws(()=>validateProfile({...neutral,hostLines:[1]}),config(/hostLines/));
+ assert.throws(()=>validateProfile({...neutral,releaseBar:{objective:0.8}}),config(/releaseBar/));
+});
+test('the documentation lists every slot with its template and every required section',async()=>{
+ const doc=await readFile(new URL('../../../docs/editorial-profiles.md',import.meta.url),'utf8');
+ for(const heading of ['Slot table','Profile fields and the `unique()` contract','Caller-supplied history, hostText and source','Policy and budget','Size limit','Fixture schema and layout','Evaluation command and release bar','A worked minimal profile'])assert.match(doc,new RegExp(`^## ${heading.replace(/[()`]/g,'\\$&')}$`,'m'),heading);
+ const table=doc.split(/^## Slot table$/m)[1].split(/^## /m)[0];
+ const rows=[...table.matchAll(/^\| `(\w+)` \| (\w+) \|/gm)].map(m=>`${m[2]}:${m[1]}`).sort();
+ assert.deepEqual(rows,TEMPLATES.flatMap(t=>slotNames(t).map(s=>`${t}:${s}`)).sort());
+});
