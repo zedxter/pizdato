@@ -1,14 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: The gate reviews through a validated publication profile
-The editorial gate MUST be constructed with a publication profile. The profile MUST provide:
-- an id and the language `ru`;
-- an optional persona, whether verdict lines are printed, and optional categories;
-- extra suggestion categories, content-type names and a maximum length of at most 4096 characters;
-- extra editor fields in order, with a repetition check for them;
-- text for every rubric slot.
-
-Construction and every `--check` path MUST validate the profile by composing all four rubrics. An invalid profile MUST fail with code `EDITORIAL_CONFIG` before any model request. The gate MUST NOT contain publication-specific names, fields, content types, suggestion categories or rubric passages outside the profile; the internal request titles are excepted.
+The editorial gate MUST be constructed with a publication profile. Construction and every `--check` path MUST validate the profile by composing all four rubrics. An invalid profile MUST fail with code `EDITORIAL_CONFIG` before any model request.
 
 #### Scenario: Gate without a profile
 - **WHEN** a caller constructs the gate without a profile
@@ -17,6 +10,16 @@ Construction and every `--check` path MUST validate the profile by composing all
 #### Scenario: Profile without id or with another language
 - **WHEN** a profile has no id, or its language is not `ru`
 - **THEN** validation throws `EDITORIAL_CONFIG`
+
+### Requirement: The profile holds every publication-specific part
+A profile MUST provide:
+- an id and the language `ru`;
+- an optional persona, whether verdict lines are printed, and optional categories;
+- extra suggestion categories, content-type names and a maximum length of at most 4096 characters;
+- extra editor fields in order, with a repetition check;
+- text for every rubric slot.
+
+The core MUST NOT contain publication-specific names, fields, content types, suggestion categories or rubric passages. Internal request titles are excepted.
 
 #### Scenario: Neutral profile
 - **WHEN** the gate reviews a text with a profile that has no persona, verdict lines, categories, fields or extra suggestions
@@ -58,11 +61,8 @@ Validation MUST throw `EDITORIAL_CONFIG` when:
 - **WHEN** a profile without a persona has verifier slot text that mentions `persona-opinion`
 - **THEN** validation throws
 
-### Requirement: Channel requests and decisions are identical to the baseline release
-For the `pizdato-channel` profile:
-- the composed editor, proofreader, verifier and writer-polish rubrics MUST be byte-identical to the rubric files of the baseline release da0b2ed;
-- for the golden cases in the design, every request (the exact serialized messages and options), the returned verdict, every recorded review entry and the gate snapshot MUST equal the goldens captured from the baseline release through its own API;
-- the `network.check` preflight requests MUST also equal their goldens.
+### Requirement: Channel rubrics are identical to the baseline release
+For the `pizdato-channel` profile, the composed editor, proofreader, verifier and writer-polish rubrics MUST be byte-identical to the rubric files of the baseline release da0b2ed.
 
 #### Scenario: Composed rubric
 - **WHEN** the channel profile composes the editor rubric
@@ -71,6 +71,15 @@ For the `pizdato-channel` profile:
 #### Scenario: Writer polish used by every caller
 - **WHEN** the morning agent, the legacy evening agent or the evening network builds its writer prompt
 - **THEN** the polish it uses equals `deploy/editorial/writer.md` at da0b2ed
+
+### Requirement: Channel requests and decisions are identical to the baseline release
+For the `pizdato-channel` profile and every golden case in the design, the following MUST equal the goldens captured from the baseline release through its own API:
+- each serialized request (messages and options);
+- the returned verdict;
+- each record entry;
+- the gate snapshot.
+
+The `network.check` preflight requests MUST equal their goldens.
 
 #### Scenario: Recorded evening revision
 - **WHEN** the gate reviews the golden evening revision with a source, changed sections and a verifier round
@@ -81,16 +90,13 @@ For the `pizdato-channel` profile:
 - **THEN** it refuses to write goldens
 
 ### Requirement: Profile-dependent suggestions and grounds
-Each of these MUST exist only when the profile declares the matching feature:
+Each of these items MUST exist only when the profile declares the matching feature:
+- `persona-opinion` (in the schema and among the misattribution dismissal grounds): a persona;
+- `verdict-contrast`: verdict lines;
+- `loose-category` and the `category` suggestion: categories;
+- further suggestion categories, such as the channel's `wisdom`: the profile lists them.
 
-| Exists only when | Item |
-| --- | --- |
-| a persona is declared | the ground `persona-opinion`, in the schema and among the misattribution dismissal grounds |
-| verdict lines are declared | the ground `verdict-contrast` |
-| categories are declared | the ground `loose-category` and the suggestion `category` |
-| the profile lists them | further suggestion categories, such as the channel's `wisdom` |
-
-Blocker categories, the language and attribution dismissal rules and every host rule MUST be identical for all profiles. For the channel, every enum MUST keep its current order.
+For the channel, every enum MUST keep its current order.
 
 #### Scenario: Persona ground without a persona
 - **WHEN** the profile has no persona
@@ -131,13 +137,14 @@ An `EDITORIAL_CONFIG` error MUST NOT count as a reviewer failure and MUST NOT ab
 - **WHEN** `--check` runs on such a release for either slot
 - **THEN** it exits non-zero without printing PREFLIGHT_OK
 
-### Requirement: Evaluation is per profile and gates production use
-- The evaluation harness MUST run with a profile.
-- It MUST load that profile's fixtures and optional sealed held-out set, map fixture inputs to the profile's fields, and compute the release bar per profile.
-- It MUST check contamination against the profile's composed rubrics.
-- It MUST record the profile id, the profile module sha256 and the composed rubric sha256 values.
-- The channel MUST keep its current fixture paths as defaults.
-- A profile under `deploy/editorial/profiles/` other than `pizdato-channel` MUST have fixtures and a committed evaluation report that meets at least the channel's default release bar.
+### Requirement: Evaluation is per profile
+The evaluation harness MUST:
+- run with a profile and load that profile's fixtures and optional sealed held-out set;
+- map fixture inputs to the profile's fields and compute the release bar per profile;
+- check contamination against the profile's composed rubrics;
+- record the profile id, the profile module sha256 and the composed rubric sha256 values.
+
+The channel MUST keep its current fixture paths as defaults.
 
 #### Scenario: Channel report provenance
 - **WHEN** the harness runs the channel profile
@@ -147,6 +154,16 @@ An `EDITORIAL_CONFIG` error MUST NOT count as a reviewer failure and MUST NOT ab
 - **WHEN** a profile slot contains a fixture n-gram
 - **THEN** the contamination guard reports it
 
+### Requirement: Production profiles are evaluated
+Every profile under `deploy/editorial/profiles/` other than `pizdato-channel` MUST have fixtures and a committed evaluation report that meets at least the channel's default release bar.
+
 #### Scenario: Unevaluated production profile
 - **WHEN** a profile is added under `deploy/editorial/profiles/` without fixtures or a passing report
 - **THEN** the repository test fails
+
+### Requirement: Core rules are the same for every profile
+Blocker categories, the language and attribution dismissal rules and every host rule MUST be identical for all profiles.
+
+#### Scenario: Language claim dismissed as taste
+- **WHEN** a verifier dismisses a grammar claim on the ground `taste` under any profile
+- **THEN** the claim keeps blocking
