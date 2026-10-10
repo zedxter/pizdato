@@ -94,6 +94,8 @@ export function llmConfig(env = process.env) {
   const key = env.PIZDATO_LLM_API_KEY || (openrouter ? env.OPENROUTER_API_KEY : nous ? env.NOUS_API_KEY : undefined) || undefined;
   return { base, key, dialect: env.PIZDATO_LLM_DIALECT || (openrouter ? 'openrouter' : 'openai') };
 }
+// Preflight logs name the host they verified; never the key or the path.
+export const endpointHost = (config = llmConfig()) => new URL(config.base).host;
 // OpenAI reasoning models reject temperature; OpenRouter then finds no endpoint for the request.
 const reasoningModel = model => /(^|\/)(gpt-[5-9]|o\d)/i.test(model);
 const REVIEWERS = ['pizdato-editor', 'pizdato-proofreader', 'pizdato-verifier'];
@@ -166,9 +168,9 @@ async function run() {
   const channel = info.data?.results?.[0]?.response?.data || info.results?.[0]?.response?.data;
   if (!channel?.ok || channel.result?.id !== CHAT || channel.result?.username !== 'pizdato_net') throw new Error('Channel identity mismatch');
   if (mode === '--check') {
-    const answer = await chat([{ role: 'user', content: 'Return exactly OPENROUTER_OK. This is a non-publishing connection check.' }]);
-    if (!answer.content?.includes('OPENROUTER_OK')) throw new Error('OpenRouter preflight failed');
-    console.log('PREFLIGHT_OK: OpenRouter, named Composio account, channel and post-polish resources verified.');
+    const answer = await chat([{ role: 'user', content: 'Return exactly MODEL_OK. This is a non-publishing connection check.' }]);
+    if (!answer.content?.includes('MODEL_OK')) throw new Error(`Model preflight failed at ${endpointHost()}`);
+    console.log(`PREFLIGHT_OK: model endpoint ${endpointHost()}, named Composio account, channel and post-polish resources verified.`);
     return;
   }
   const schemas = unpack(await mcp.call('COMPOSIO_GET_TOOL_SCHEMAS', { tool_slugs: ['TELEGRAM_SEND_PHOTO'], session_id: sessionId }));

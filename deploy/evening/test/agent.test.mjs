@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateDraft, readOnlyCall, parseMcp } from '../agent.mjs';
+import { validateDraft, readOnlyCall, parseMcp, endpointHost } from '../agent.mjs';
 const wisdom='Пиздато жить там где даже маленькие странности каждый день становятся большими историями';
 const caption=`Дядя Миша увидел смешную историю.\n\nПиздато: улыбнулся. Хуёво: кофе остыл.\n\nМудрость дня: «${wisdom}».\n\nМир ждёт твоего голоса: https://pizdato.net`;
 test('accepts polished copy with exact CTA and wisdom',()=>assert.doesNotThrow(()=>validateDraft({caption,wisdom,source_url:'https://example.com/story'})));
@@ -75,4 +75,8 @@ test('reasoning effort for OpenAI reasoning models is configurable separately fo
  assert.deepEqual((await captured({OPENROUTER_API_KEY:'k',PIZDATO_EDITOR_REASONING_EFFORT:'high'},'openai/gpt-6.1-sol',{title:'pizdato-verifier'})).body.reasoning,{effort:'high',exclude:true});
  assert.equal((await captured({...nous,PIZDATO_REASONING_EFFORT:'extreme',PIZDATO_EDITOR_REASONING_EFFORT:''},'openai/gpt-6.1-sol',{title:'pizdato-editor'})).body.reasoning_effort,'low','unknown values fall back to low');
  assert.deepEqual((await captured({OPENROUTER_API_KEY:'k',PIZDATO_EDITOR_REASONING_EFFORT:'high'},'deepseek/deepseek-v4.1-flash',{title:'pizdato-editor',reasoning:{enabled:false,exclude:true}})).body.reasoning,{enabled:false,exclude:true},'DeepSeek keeps reasoning disabled');
+});
+test('preflight lines name the endpoint host they verified, never a key or path',()=>{
+ assert.equal(endpointHost(llmConfig({OPENROUTER_API_KEY:'k'})),'openrouter.ai');
+ assert.equal(endpointHost(llmConfig({PIZDATO_LLM_BASE_URL:'https://inference-api.nousresearch.com/v1',NOUS_API_KEY:'k'})),'inference-api.nousresearch.com');
 });
