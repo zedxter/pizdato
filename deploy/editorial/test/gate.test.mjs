@@ -247,3 +247,23 @@ test('only quotes confined to host-printed lines are treated as host formatting'
  assert.equal((await run('Пиздато')).decision,'approve');
  assert.equal((await run('мир')).decision,'revise','a word that also appears in the writer text still blocks');
 });
+test('misattribution is a repairable grounding blocker in both reviewer schemas',async()=>{
+ assert.ok(editorOptions.responseFormat.json_schema.schema.properties.issues.items.properties.category.enum.includes('misattribution'));
+ assert.ok(verifierOptions.responseFormat.json_schema.schema.properties.verdicts.items.properties.category.enum.includes('misattribution'));
+ const gate=createGate({request:editor(async()=>reply(issue('misattribution','Дядя Миша сказал: «Мы хотим правдоподобные планы»','Words of the NASA administrator'))),history:[]});
+ const r=await gate.review({text:'Дядя Миша сказал: «Мы хотим правдоподобные планы».',wisdom:'w',source:{primary:{url:'https://example.com',text:'evidence'}}});
+ assert.equal(r.decision,'revise');assert.equal(r.nextAction,'repair');assert.equal(r.grounding,false);
+});
+for(const [ground,blocks] of [['understood-joke',true],['taste',true],['verdict-contrast',true],['correct-as-written',true],['faithful-to-source',false],['persona-opinion',false],['misread',false]]) {
+ test(`a misattribution claim dismissed as ${ground} ${blocks?'keeps blocking':'is cleared'}`,async()=>{
+  const gate=createGate({history:[],request:async(m,o)=>o===proofreaderOptions?reply():o===verifierOptions?{content:JSON.stringify({verdicts:JSON.parse(m[1].content).claims.map(c=>({id:c.id,real:false,category:c.category,ground,reason:'x'}))})}:reply(issue('misattribution','Дядя Миша сказал: «Мы хотим правдоподобные планы»','Words of the NASA administrator'))});
+  const r=await gate.review({text:'Дядя Миша сказал: «Мы хотим правдоподобные планы».',wisdom:'w',source:{primary:{url:'https://example.com',text:'evidence'}}});
+  assert.equal(r.decision,blocks?'revise':'approve');
+ });
+}
+test('a post without evidence never receives a misattribution finding',async()=>{
+ let verified=false;
+ const gate=createGate({history:[],request:async(m,o)=>o===proofreaderOptions?reply():o===verifierOptions?(verified=true,confirmAll(m)):reply(issue('misattribution','«Кто рано встаёт, тому кофе подаёт»','A saying attributed to Misha'))});
+ const r=await gate.review({text:'☕ Мудрость дня от дяди Миши: «Кто рано встаёт, тому кофе подаёт».',wisdom:'Кто рано встаёт, тому кофе подаёт'});
+ assert.equal(r.decision,'approve');assert.equal(verified,false);assert.equal(r.dismissed[0].ground,'no-evidence');
+});
