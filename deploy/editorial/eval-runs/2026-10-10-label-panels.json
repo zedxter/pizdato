@@ -1,0 +1,30 @@
+{
+  "issue": 222,
+  "note": "Label checks by three independent Claude reviewers each (not the evaluated model). Dev panel: blind defect listing for clean bases, change-only judgement for variants. Audit panel: the motivating misses of #219. The audit for stickney-wrong-phrase-wife was given the incident version of its wisdom (ending «…а борозды списали на приливы») instead of the fixture's («…а за борозды никто не отвечает»); all three reviewers noted that «имя жене оставили» is in both.",
+  "dev": {
+    "clean": {
+      "skipton-clean": [["punctuation: asyndetic contrast in the wisdom needs a dash"], ["punctuation: asyndetic contrast in the wisdom needs a dash"], []],
+      "libraries-clean": [["grammar: «к дню» → «ко дню»"], ["grammar: «к дню» → «ко дню»"], ["grammar: «к дню» → «ко дню»"]],
+      "salmon-clean": [["unsupported year «В 2024-м»", "capitalisation: «Посудомойку загрузил?»"], ["unintended reading: «Повторить опыт Энджи не исключает»"], ["unintended reading: «Повторить опыт Энджи не исключает»", "unsupported year (low)", "capitalisation"]]
+    },
+    "clean_resolution": "All listed defects were corrected in the clean bases before commit; «к дню» became the dev fixture libraries-natural-ko-dnyu.",
+    "variants": {
+      "skipton-quote-to-misha": ["misattributed-quote/high", "misattributed-quote/high", "misattributed-quote/high"],
+      "skipton-quote-to-chair": ["misattributed-quote/high", "misattributed-quote/high", "misattributed-quote/high"],
+      "salmon-quote-to-angie": ["misattributed-quote/high", "misattributed-quote/high", "misattributed-quote/high"],
+      "skipton-paronym-subscriber": ["wrong-word-meaning/high", "wrong-word-meaning/high", "wrong-word-meaning/high"],
+      "libraries-paronym-present": ["wrong-word-meaning/high", "wrong-word-meaning/high", "wrong-word-meaning/high"],
+      "salmon-wrong-verb-made": ["wrong-word-meaning/high", "wrong-word-meaning/high", "wrong-word-meaning/high"],
+      "salmon-pronoun-neighbour": ["unintended-reading/high", "unintended-reading/high", "unintended-reading/high"],
+      "libraries-object-reader": ["unintended-reading/high", "unintended-reading/high", "unintended-reading/high"],
+      "skipton-misplaced-price": ["unintended-reading/high", "unintended-reading/high", "unintended-reading/high"],
+      "salmon-dry-run-slip": ["unintended-reading/medium", "unintended-reading/medium", "unintended-reading/medium"]
+    }
+  },
+  "audit": {
+    "nasa-quote-attributed-to-misha": ["misattributed-quote/high", "misattributed-quote/high", "misattributed-quote/high"],
+    "stickney-wrong-phrase-wife": ["wrong-word-meaning/medium", "wrong-word-meaning/medium", "unintended-reading/medium"],
+    "stickney-wrong-word-girth": ["wrong-word-meaning/high", "wrong-word-meaning/high", "wrong-word-meaning/high"],
+    "result": "All three confirmed unanimously as objective defects; each must be caught in at least two of three final trials."
+  }
+}
