@@ -1,6 +1,8 @@
 import {join,dirname} from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {createGate,assertApproved,formatIssue} from '../editorial/gate.mjs';
+import {validateProfile} from '../editorial/compose-rubric.mjs';
+import channel from '../editorial/profiles/pizdato-channel.mjs';
 import {publicationLock,recoverMorning} from '../editorial/publication.mjs';
 import {SECTIONS,CTA,normalize,render,check,chooseWisdom,locate,sectionsFor,merge,category,weekday} from './compose.mjs';
 // The host prints these; a finding about them can never be repaired by the writer.
@@ -43,6 +45,7 @@ async function activate({store,vault,now=new Date(),deps,dryRun=false},expired) 
  e.lastActivationAt=+now;e.blockers??=[];e.suggestions??=[];e.flaggedWisdoms??=[];await store.save(e);
  const checkpoint=()=>store.save(e);
  try{
+  validateProfile(channel);
   if(e.phase==='blocked'){await deps.check();e.phase=e.resumePhase||'discovering';}
   const history=await deps.history(localDay(now));
   if(e.draft&&!Array.isArray(e.draft.body)){
@@ -74,14 +77,14 @@ async function activate({store,vault,now=new Date(),deps,dryRun=false},expired) 
   let verified;
   try{verified=await deps.verify(e.draft,{edition:e,checkpoint,now});}catch(error){if(error.code!=='YIELD'&&!error.blocked)error.verifyFailure=true;throw error;}
   e.evidence=verified.sources;e.media=verified.media;await checkpoint();
-  const gate=createGate({policy:'persistent-evening',initial:e.gate,history,request:deps.review,record:r=>store.record(e,r)});
+  const gate=createGate({profile:channel,policy:'persistent-evening',initial:e.gate,history,request:deps.review,record:r=>store.record(e,r)});
   const firstReview=gate.state.revision===0;
   // The editor checks what changed plus every section the previous review blocked; an unchanged re-review is a full review.
   const reviewed=e.reviewedSections?.source_url===e.draft.source_url?e.reviewedSections:null;
   const changed=reviewed?SECTIONS.filter(k=>JSON.stringify(reviewed[k])!==JSON.stringify(e.draft[k])||(e.blockedSections||[]).includes(k)):[];
   let result;
-  try{result=await gate.review({text:e.draft.caption,wisdom:e.draft.wisdom,hostText:HOST_TEXT,changedSections:changed.length?changed:null,source:{...verified.sources,editionDate:e.day,currentDate:localDay(now),category:e.draft.category,weekday:weekday(e.day)}});}
-  catch(error){e.gate=gate.snapshot();if(error.code!=='YIELD')error.reviewFailure=true;throw error;}
+  try{result=await gate.review({text:e.draft.caption,fields:{wisdom:e.draft.wisdom},hostText:HOST_TEXT,changedSections:changed.length?changed:null,source:{...verified.sources,editionDate:e.day,currentDate:localDay(now),category:e.draft.category,weekday:weekday(e.day)}});}
+  catch(error){e.gate=gate.snapshot();if(error.code!=='YIELD'&&error.code!=='EDITORIAL_CONFIG')error.reviewFailure=true;throw error;}
   // The advanced gate state and the verdict are saved together, so a crash cannot replay a review under new counters.
   e.gate=gate.snapshot();e.revision=e.gate.revision;e.failures=0;e.mechanical=0;e.reviewFailures=0;e.verifyFailures=0;delete e.lastError;
   // Taste suggestions get one polishing pass per story; later rounds fix blockers only; category fit is never pushed onto the copy.
@@ -114,6 +117,8 @@ async function activate({store,vault,now=new Date(),deps,dryRun=false},expired) 
  }catch(error){
   if(e.receipt)throw error;
   if(e.phase==='sending'&&!error.definiteNonDelivery){e.phase='delivery-unknown';e.lastError='Send outcome unknown; reconcile before retry';}
+  // A broken profile is the release's fault, not the story's: keep the story and its counters, retry next tick.
+  else if(error.code==='EDITORIAL_CONFIG'){e.lastError=error.message;e.nextAttemptAt=+now+NEXT;}
   else {
    if(e.phase==='sending')e.phase='ready';
    // Repairs, replacements and abandoned stories are progress, so they continue on the next tick without backoff.
