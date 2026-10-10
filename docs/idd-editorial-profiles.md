@@ -82,5 +82,5 @@ Requests are byte-identical, so a live difference means a bug. Trigger: an `EDIT
 ## Decisions requiring owner sign-off
 
 1. Keep and generalise the gate instead of simplifying it to a single rewrite pass. Decided by the owner on 2026-10-10.
-2. Equivalence is proven by byte-identical requests and identical decisions on goldens, instead of a new LLM evaluation run. Recommended: identical inputs to the same model and settings cannot change behaviour beyond sampling noise, which the existing runs already measure.
-3. Supported scope is short-form texts up to 4096 characters; long-form stories are a follow-up. Recommended, because the owner has not named a long-form consumer yet.
+2. Equivalence is proven by byte-identical requests and identical decisions on goldens, instead of a new LLM evaluation run. Approved by the owner with the spec on 2026-10-10: identical inputs to the same model and settings cannot change behaviour beyond sampling noise, which the existing runs already measure.
+3. Supported scope is short-form texts up to 4096 characters; long-form stories are a follow-up. Decided by the owner on 2026-10-10.

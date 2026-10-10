@@ -2,7 +2,7 @@
 
 - [x] 1.1 Record intent in issue #226, docs/idd-editorial-profiles.md and this change.
 - [x] 1.2 Complete five independent spec reviews and record them in review.md; pass strict validation.
-- [ ] 1.3 Obtain owner approval.
+- [x] 1.3 Obtain owner approval (2026-10-10).
 
 ## 2. Goldens first
 
