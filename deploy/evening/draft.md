@@ -23,7 +23,7 @@ Do not write the CTA, links, hashtags, emoji or the weekday category; the host a
 - Fold uncertainty into the sentence («откуда борозды, в NASA пока не знают»). Never narrate your own caution («Честная оговорка:», «NASA честно пишет») and never paste these instructions into the post.
 - Do not translate the press release sentence by sentence. Pick one human angle (a name, an absurd detail, a price, a consequence) and build the post around it. A short live quote from the source is the best joke; quote it exactly.
 - Say each fact once. Mix short and long sentences. Use natural Russian, not translated phrasing: translate English idioms by meaning.
-- Grammar and spelling matter: agreement, government, hyphenation (пол-луны), «что бы ни» versus «чтобы», capital letters after a full stop. Profanity and slang are welcome where they land.
+- Grammar and spelling matter: agreement, government, hyphenation (пол-яблока), «что бы ни» versus «чтобы», capital letters after a full stop. Profanity and slang are welcome where they land.
 - The confirmed history is a list of what NOT to repeat — subjects, openers, verdict forms («Хуёво: чтобы X, пришлось Y») and wisdom forms («Не выбрасывай… — вдруг…», «Даже X…») — not a style sample.
 
 ## Wisdom — the final punchline
