@@ -28,7 +28,7 @@ const freeze=o=>{if(o&&typeof o==='object'&&!Object.isFrozen(o)){Object.freeze(o
 const memo=new WeakMap();
 // One frozen set per profile, so callers and tests can route requests by option identity.
 export function reviewOptions(profile) {
-  if(!memo.has(profile)) memo.set(profile,freeze({
+  if(!memo.has(profile)) validateProfile(profile), memo.set(profile,freeze({
     editor:reviewerOptions(TITLES.editor,[...BLOCKERS,...suggestionsFor(profile)]),
     // A narrow second reader sees only the text, so language errors are not lost in source and history context.
     proofreader:reviewerOptions(TITLES.proofreader,LANGUAGE),
@@ -38,7 +38,9 @@ export function reviewOptions(profile) {
   }));
   return memo.get(profile);
 }
-export const {editor:editorOptions,proofreader:proofreaderOptions,verifier:verifierOptions}=reviewOptions(channel);
+// A broken channel profile must not crash importers: createGate and every --check raise EDITORIAL_CONFIG where callers record it.
+export let editorOptions,proofreaderOptions,verifierOptions;
+try{({editor:editorOptions,proofreader:proofreaderOptions,verifier:verifierOptions}=reviewOptions(channel));}catch(error){if(error.code!=='EDITORIAL_CONFIG')throw error;}
 const LANGUAGE_DISMISSAL=['correct-as-written','misread'];
 function parseVerdicts(content,grounds) {
   if(typeof content!=='string') throw new Error('Malformed verification');

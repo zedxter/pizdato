@@ -314,9 +314,10 @@ fn separate_worker_processes_keep_one_draft_and_send_once() {
     assert_eq!(fs::read_to_string(c.root.join("sends")).unwrap(), "send\n");
 }
 
-// A copy of deploy/ whose channel profile lost a slot; returns the copy root.
-fn broken_release(c: &Case) -> PathBuf {
+// A copy of deploy/ whose channel profile has `from` replaced by `to`; returns the copy root.
+fn broken_release(c: &Case, from: &str, to: &str) -> PathBuf {
     let copy = c.root.join("release");
+    let _ = fs::remove_dir_all(&copy);
     fs::create_dir_all(&copy).unwrap();
     assert!(Command::new("cp")
         .args(["-r", "deploy"])
@@ -326,41 +327,49 @@ fn broken_release(c: &Case) -> PathBuf {
         .success());
     let profile = copy.join("deploy/editorial/profiles/pizdato-channel.mjs");
     let text = fs::read_to_string(&profile).unwrap();
-    assert!(text.contains("  editorRole:"));
-    fs::write(
-        &profile,
-        text.replace("  editorRole:", "  editorRoleRenamed:"),
-    )
-    .unwrap();
+    assert!(text.contains(from));
+    fs::write(&profile, text.replace(from, to)).unwrap();
     copy
 }
+
+// A lost slot and a profile of the wrong shape (which must not crash at import) both fail as configuration errors.
+const BROKEN: [(&str, &str, &str); 2] = [
+    ("  editorRole:", "  editorRoleRenamed:", "editorRole"),
+    (
+        "suggestions:Object.freeze(['wisdom'])",
+        "suggestions:null",
+        "suggestion",
+    ),
+];
 
 #[test]
 fn broken_profile_fails_every_evening_check() {
     let c = Case::new();
-    let copy = broken_release(&c);
-    for script in ["run.sh", "tick.sh"] {
-        let out = Command::new("bash")
-            .arg(copy.join("deploy/evening").join(script))
-            .arg("--check")
-            .env("PIZDATO_EVENING_NODE", "node")
-            .env("PIZDATO_EVENING_VAULT", c.root.join("vault"))
-            .env("PIZDATO_EVENING_STATE", c.root.join("state"))
-            .env("PIZDATO_CHANNEL_ENV", c.root.join("missing"))
-            .env("PIZDATO_EVENING_ENV", c.root.join("missing"))
-            .env("OPENROUTER_API_KEY", "test")
-            .env("COMPOSIO_CONSUMER_KEY", "test")
-            .output()
-            .unwrap();
-        let stdout = String::from_utf8_lossy(&out.stdout);
-        let stderr = String::from_utf8_lossy(&out.stderr);
-        assert!(!out.status.success(), "{}: {}", script, stdout);
-        assert!(
-            stderr.contains("EDITORIAL_CONFIG") && stderr.contains("editorRole"),
-            "{}: {}",
-            script,
-            stderr
-        );
-        assert!(!stdout.contains("PREFLIGHT_OK"), "{}: {}", script, stdout);
+    for (from, to, named) in BROKEN {
+        let copy = broken_release(&c, from, to);
+        for script in ["run.sh", "tick.sh"] {
+            let out = Command::new("bash")
+                .arg(copy.join("deploy/evening").join(script))
+                .arg("--check")
+                .env("PIZDATO_EVENING_NODE", "node")
+                .env("PIZDATO_EVENING_VAULT", c.root.join("vault"))
+                .env("PIZDATO_EVENING_STATE", c.root.join("state"))
+                .env("PIZDATO_CHANNEL_ENV", c.root.join("missing"))
+                .env("PIZDATO_EVENING_ENV", c.root.join("missing"))
+                .env("OPENROUTER_API_KEY", "test")
+                .env("COMPOSIO_CONSUMER_KEY", "test")
+                .output()
+                .unwrap();
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            assert!(!out.status.success(), "{}: {}", script, stdout);
+            assert!(
+                stderr.contains("EDITORIAL_CONFIG") && stderr.contains(named),
+                "{}: {}",
+                script,
+                stderr
+            );
+            assert!(!stdout.contains("PREFLIGHT_OK"), "{}: {}", script, stdout);
+        }
     }
 }

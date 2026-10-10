@@ -6,8 +6,9 @@ import {Composio,unpack,chat,llmConfig,extractCovers} from './agent.mjs';
 import {reviewOptions} from '../editorial/gate.mjs';
 import {composeRubric,validateProfile} from '../editorial/compose-rubric.mjs';
 import channel from '../editorial/profiles/pizdato-channel.mjs';
-// The worker reviews with the channel profile, so the preflight and the review default use its options.
-const options=reviewOptions(channel);
+// The worker reviews with the channel profile, so the preflight and the review default use its options;
+// built on use, so a broken profile surfaces as EDITORIAL_CONFIG instead of an import crash.
+const options=()=>reviewOptions(channel);
 import {SECTIONS,category,weekday} from './compose.mjs';
 import {digest,durableWrite,CHAT,localDay,deliveryHistory} from './store.mjs';
 const ACCOUNT='pizdato-net-channel';
@@ -104,7 +105,7 @@ export function createServices({store,vault,budget=new Budget(),dryRun=false,cov
     if(!ok)throw new Error(`Model check failed: strict JSON schema from ${label}`);
    }
    // Reviewers must also honour the real enum/array schemas they run with.
-   for(const [schema,field] of [[options.editor,'issues'],[options.verifier,'verdicts']]){
+   for(const [schema,field] of [[options().editor,'issues'],[options().verifier,'verdicts']]){
     const a=await model([{role:'user',content:`Preflight: return an empty ${field} list.`}],undefined,{...schema,model:editor||writer});
     let ok=false;try{ok=Array.isArray(JSON.parse(a.content)[field]);}catch{}
     if(!ok)throw new Error(`Model check failed: ${schema.title} schema from ${editor||writer||'default model'}`);
@@ -183,7 +184,7 @@ export function createServices({store,vault,budget=new Budget(),dryRun=false,cov
   },
   // The Telegram send gets up to 90 s; never start it with less left in the activation.
   canSend:()=>budget.end-budget.clock()>=90000,
-  review:(messages,schema=options.editor)=>{budget.reserve();return model(messages,undefined,{...schema,model:process.env.PIZDATO_EDITOR_MODEL||undefined});},
+  review:(messages,schema=options().editor)=>{budget.reserve();return model(messages,undefined,{...schema,model:process.env.PIZDATO_EDITOR_MODEL||undefined});},
   async ready(media){
    await connect();budget.reserve({delivery:true});if(dryRun)return;
    const bytes=await readFile(media.file);if(digest(bytes)!==media.hash)throw new Error('Cover content changed');
