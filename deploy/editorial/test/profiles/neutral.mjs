@@ -22,7 +22,7 @@ export default Object.freeze({
   personaCalibration:'',
   hyperboleScope:'opinions, jokes and invented everyday observations',
   voiceRegister:'Colloquial speech and slang are correct. ',
-  hostLines:'- Lines that the host prints around the text are formatting, not defects.\n',
+  hostFormatting:'- Lines that the host prints around the text are formatting, not defects.\n',
   contentWithoutSource:'- `contentType` unsourced-text needs no external source but must make literal sense: the stated observation must support the conclusion (a closed umbrella cannot prove the rain has stopped).\n',
   contentWithSource:'- `contentType` sourced-text: check every reported event against the supplied evidence; never fill gaps from plausibility or memory. Uncertainty must survive into the conclusion; an access-denied or unrelated page supports nothing.\n',
   categoryCalibration:'',
@@ -31,7 +31,7 @@ export default Object.freeze({
   proofreaderRole:'You are a meticulous Russian proofreader (корректор и литредактор) for a short-form publication.',
   proofreadScope:', including the closing line',
   voiceProofRegister:'Colloquial speech and slang are correct',
-  proofHostLines:'',
+  proofHostFormatting:'',
   // verifier.template.md
   verifierRole:'Other reviewers claimed that the Russian text in `candidate` has blocking defects.',
   verifierRepeatExempt:'',

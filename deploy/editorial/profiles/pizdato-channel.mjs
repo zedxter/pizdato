@@ -29,7 +29,7 @@ export default Object.freeze({
   personaCalibration:"- Uncle Misha (дядя Миша) is the channel's FICTIONAL persona. His opinion needs no source and his name may appear in any grammatical case. Invented physical scenes of him are `ai-slop`; reported events still need evidence, and words the evidence gives to a real speaker never become his (`misattribution`).\n",
   hyperboleScope:"opinions, verdict lines, the wisdom and invented everyday observations",
   voiceRegister:"Colloquial speech, slang and the brand profanity are correct. ",
-  hostLines:"- The host prints the fixed lines «Пиздато:», «Хуёво:», «Мудрость дня:», the morning attribution with its two decorative emojis (☕, ✨) and the final CTA line. They are formatting, not defects, and the decorative coffee emoji is not a topic.\n",
+  hostFormatting:"- The host prints the fixed lines «Пиздато:», «Хуёво:», «Мудрость дня:», the morning attribution with its two decorative emojis (☕, ✨) and the final CTA line. They are formatting, not defects, and the decorative coffee emoji is not a topic.\n",
   contentWithoutSource:"- `contentType` everyday-observation (morning) needs no external source but must make literal sense: the stated observation must support the conclusion (a closed umbrella cannot prove the rain has stopped). Check the wisdom and the wish separately.\n",
   contentWithSource:"- `contentType` source-based-post: check every reported event against the supplied evidence; never fill gaps from plausibility or memory. Uncertainty must survive into the verdict lines and the wisdom; an access-denied or unrelated page supports nothing.\n",
   categoryCalibration:"- Weekday categories (`source.weekday`) guide story choice: Monday AI; Tuesday life abroad; Wednesday a real topical discussion; Thursday a rediscovered older story; Friday free format; Saturday a useful life hack; Sunday weekly results. A good story that fits loosely is acceptable; at most mention the fit as a `category` suggestion. Never accept invented statistics or comments that pretend to satisfy a category.\n",
@@ -38,7 +38,7 @@ export default Object.freeze({
   proofreaderRole:"You are a meticulous Russian proofreader (корректор и литредактор) for the informal Telegram channel @pizdato_net.",
   proofreadScope:", including the verdict lines and the wisdom",
   voiceProofRegister:"Colloquial speech, slang and the brand's profanity (пиздато, хуёво and other informal vocabulary) are correct",
-  proofHostLines:" The fixed labels «Пиздато:», «Хуёво:», «Мудрость дня:» and the final link are host formatting, not errors; the text after «Пиздато:» and «Хуёво:» continues the sentence, so a capitalized common word right after the label is a `spelling` error (proper nouns and acronyms keep their capitals).",
+  proofHostFormatting:" The fixed labels «Пиздато:», «Хуёво:», «Мудрость дня:» and the final link are host formatting, not errors; the text after «Пиздато:» and «Хуёво:» continues the sentence, so a capitalized common word right after the label is a `spelling` error (proper nouns and acronyms keep their capitals).",
   // verifier.template.md
   verifierRole:"Other reviewers claimed that the Russian Telegram post in `candidate` has blocking defects.",
   verifierRepeatExempt:" (the wisdom may reframe facts with a twist; identical Пиздато and Хуёво lines used deliberately as a joke are not a repeat)",

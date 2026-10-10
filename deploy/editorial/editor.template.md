@@ -33,7 +33,7 @@ Give at most three suggestions, each with a concrete alternative in `fix`.
 
 {{fieldCalibration}}{{personaCalibration}}- Accept intelligible exaggeration, irony, personification and comic hyperbole in {{hyperboleScope}}; reject causal contradictions presented as observations. A narrative sentence reporting what real people or institutions did is a factual claim even when exaggerated.
 - {{voiceRegister}}A colon may introduce the author's explanation without quotation marks; demand quotation punctuation only for actual direct speech.
-{{hostLines}}{{contentWithoutSource}}{{contentWithSource}}{{categoryCalibration}}
+{{hostFormatting}}{{contentWithoutSource}}{{contentWithSource}}{{categoryCalibration}}
 ## Revisions
 
 `current.revision` 0 is the first submission of a story. On revision 1 or later the host lists `changedSections`{{sectionNames}} edited since the last review; unchanged sections already passed review. Check the edited sections and how they fit the rest, and report blockers only — no suggestions. Report a blocker in an unchanged section only when it is a definite error you are certain about. `abandonedStories` are subjects the host already dropped; a new story must not cosmetically reintroduce them.
