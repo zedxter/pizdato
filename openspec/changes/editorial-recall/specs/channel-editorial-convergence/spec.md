@@ -16,7 +16,7 @@ The editor MUST report as `unsupported-claim`, quoting the misattributed words, 
 - **THEN** no attribution finding is reported
 
 ### Requirement: Word meaning and unintended readings are language defects
-The proofreader, the editor and the verifier MUST treat as blocking language defects a word used in a meaning it does not have, including paronyms, and word order, modifier placement or pronoun reference that gives a sentence a second reading a typical reader would notice. The verifier MUST keep such a claim unless the quoted text is correct as written. Ambiguity that context resolves for a typical reader MUST NOT be reported.
+The proofreader, the editor and the verifier MUST treat as blocking language defects a word used in a meaning it does not have, including paronyms, and word order, modifier placement or pronoun reference that gives a sentence a second reading a typical reader would notice. The verifier MUST keep such a claim unless the quoted text is correct as written. Ambiguity that context resolves for a typical reader and deliberate wordplay, where the second meaning is the joke, MUST NOT be reported.
 
 #### Scenario: Paronym
 - **WHEN** the candidate says «одеть куртку» for «надеть куртку»
@@ -28,6 +28,10 @@ The proofreader, the editor and the verifier MUST treat as blocking language def
 
 #### Scenario: Context resolves it
 - **WHEN** a phrase could attach two ways in isolation but the sentence admits only one sensible reading
+- **THEN** nothing is reported
+
+#### Scenario: Deliberate pun
+- **WHEN** a verdict line or the wisdom plays on a double meaning on purpose
 - **THEN** nothing is reported
 
 ### Requirement: The writer checks the same defects

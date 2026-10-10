@@ -27,7 +27,7 @@ The gate names misattributed quotes, words used in a meaning they do not have an
 
 ## Must-nots
 
-Never copy fixture text into a rubric or tune on held-out fixtures. Never relabel a fixture after seeing its result without recording why. Never let the new rules block Uncle Misha's own opinions, jokes or common sayings, or a sentence whose second reading is only theoretical. Never change blocker categories, convergence caps, the deadline, schedules, credentials or the model configuration.
+Never copy fixture text into a rubric or tune on held-out fixtures. Never relabel a fixture after seeing its result without recording why. Never let the new rules block Uncle Misha's own opinions, jokes or common sayings, deliberate wordplay, or a sentence whose second reading is only theoretical. Never change blocker categories, convergence caps, the deadline, schedules, credentials or the model configuration.
 
 ## Decisions requiring owner sign-off
 
