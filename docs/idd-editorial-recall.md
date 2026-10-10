@@ -1,34 +1,61 @@
-# Intent: catch misattributed quotes, wrong word meanings and unintended readings
+# Intent: catch misattributed quotes, wrong word meanings and second readings
 
-Issue: #222. Follow-up of #219 (`editorial-convergence`), which launched below its release bar by owner decision (IDD decision 8 of `docs/idd-editorial-convergence.md`).
+Issue: #222. Follow-up of #219 (`editorial-convergence`), which launched below its release bar by owner decision (decision 8 in `docs/idd-editorial-convergence.md`).
 
 ## Problem
 
-On 0f8fdbe the launch configuration (Nous Portal, `openai/gpt-6.1-sol`, reasoning effort high) blocked no clean trial (21/21) but caught 47/54 objective-defect trials (87%) against the 90% bar (evidence in #221):
+On 0f8fdbe the launch configuration (Nous Portal, `openai/gpt-6.1-sol`, reasoning effort high) blocked no clean trial (21/21) but caught only 47/54 objective-defect trials (87%) against the 90% bar (evidence in #221):
 
-- `nasa-quote-attributed-to-misha` 0/3: the administrator's real words are put in Uncle Misha's mouth. The text is blocked as a staged scene with a neighbour (`ai-slop`), but the misattributed words are never quoted, so a repair can keep them.
-- `stickney-wrong-phrase-wife` 0/3: «имя жене оставили» (a 2026-10-09 incident wisdom) says the wife received a name; neither reader flags it.
+- `nasa-quote-attributed-to-misha` 0/3: the administrator's real words are put in Uncle Misha's mouth. The text is blocked as a staged scene (`ai-slop`), but the misattributed words are never quoted, so a repair can keep them.
+- `stickney-wrong-phrase-wife` 0/3: «имя жене оставили», a wisdom from the 2026-10-09 incident; neither reader flags it.
 - `stickney-wrong-word-girth` 2/3: «девяти километров в обхвате» for a diameter.
-- A caption approved in a dry run contained «Картошку и горошек попросила приготовить соседа», which also reads as "asked to cook the neighbour".
-- Evaluation integrity: on d3afb86 a proofreader example had been copied from a fixture (removed in 7cc1602). Nothing prevents a repeat.
-- Cosmetic: the morning and legacy evening preflights log "OpenRouter" even when the configured endpoint is Nous Portal.
+- A caption approved in a dry run contained «Картошку и горошек попросила приготовить соседа», which also reads as "asked to cook the neighbour". Another approved dry-run caption contained «к дню» (correct: «ко дню»), found by the label panel of this issue.
+
+The evaluation is also partly contaminated. On d3afb86 a proofreader example had been copied from a fixture (removed in 7cc1602). The guard test of this issue found three more fixtures whose defect text is a rubric example: «меньше земной больше чем в тысячу раз» (`stickney-clashing-comparatives`) and «листал ленту за кофе» (`stickney-stock-coffee-opener-is-repairable`, `repeated-hook`). Their 9 passing trials inflated the 87%; without them it was 38/45 (84%). Reviewers found further restatements in English and as fixes (an empty mug that cannot prove the coffee went cold; a lottery win sold as a life hack; «пол-луны»).
+
+Cosmetic: the morning and legacy evening preflights log "OpenRouter" even when the configured endpoint is Nous Portal.
 
 ## Outcome and scope
 
-The gate names misattributed quotes, words used in a meaning they do not have and word order that produces an unintended reading, at the release bar and without blocking clean texts, measured on fixtures that did not shape the rubrics. Scope: proofreader, editor, verifier and writer-polish rubrics; evaluation fixtures, harness and a guard test; the preflight log lines. Out of scope: gate and worker code, convergence caps, the deadline, schedules, credentials, providers and models.
+The gate names misattributed quotes, words used in a meaning they do not have and absurd second readings without blocking clean texts, Uncle Misha's voice or wordplay. The result is measured on fixtures that did not shape the rubrics.
+
+Scope:
+- a `misattribution` category with restricted dismissals in `gate.mjs`;
+- proofreader, editor, verifier and writer-polish rubrics;
+- evaluation fixtures, harness and guard test;
+- the preflight log lines.
+
+Out of scope: worker code, convergence caps, the deadline, schedules, credentials, providers and models.
 
 ## Acceptance criteria
 
-- At least three new held-out fixtures per class (misattributed quotes, words used in a meaning they do not have, unintended readings) and three new held-out clean fixtures, built from real dry-run articles and captions, label-checked by reviewers independent of the evaluated model and committed before any rubric change. They are not run until the final evaluation.
-- Rubric rules are general and their examples come from no fixture; a test fails when a rubric or prompt contains a fixture's text or injected defect.
-- A fresh three-trial run of all fixtures on the final head meets the release bar (no clean trial blocked, at least 90% of objective-defect trials caught with the defect named) with every miss listed; held-out fixtures are reported separately together with their result on the current release.
-- Four isolated evening dry runs and one morning dry run still reach approval within the activation budget.
+- Rubric examples come from a published generic list. Incident phrases and restatements of fixtures leave the rubrics, and a test fails on literal overlap.
+- A sealed held-out set meets all of the following:
+  - it is written by an author other than the rubric author, from articles no other fixture uses;
+  - each article gives a clean text, one variant per class and two clean near-misses;
+  - labels are confirmed unanimously by three independent reviewers;
+  - only its hash is published (repository and #222) before any gate or rubric change.
+- On a fresh three-trial final run of the final head, made back to back with the release baseline:
+  - the #219 set blocks no clean trial and catches at least 90% of its objective trials;
+  - each motivating miss confirmed by the label panel is caught in at least 2/3 trials;
+  - the held-out set blocks no clean or near-miss trial and catches at least 8/9 trials per class;
+  - no class does worse than on the release.
+- A blocker counts only when it quotes the injected span with an expected category. Every miss and every new-class blocker is listed with its reader.
+- Four isolated evening dry runs are each approved within two activations without a story replacement, three morning dry runs succeed, and no new-class blocker in them is false.
 - Preflight log lines name the endpoint host they verified.
 
 ## Must-nots
 
-Never copy fixture text into a rubric or tune on held-out fixtures. Never relabel a fixture after seeing its result without recording why. Never let the new rules block Uncle Misha's own opinions, jokes or common sayings, deliberate wordplay, or a sentence whose second reading is only theoretical. Never change blocker categories, convergence caps, the deadline, schedules, credentials or the model configuration.
+- Never copy fixture text into a rubric, and never show the held-out set to the rubric author before the final run.
+- Never relabel a held-out fixture after a run.
+- Never let the new rules block Uncle Misha's own remarks or his reactions to credited quotes, common sayings, deliberate wordplay, figurative or colloquial use, or readings the endings exclude.
+- Never apply attribution findings to morning posts.
+- Never change convergence caps, the deadline, schedules, credentials or the model configuration.
+
+## Rollback
+
+Trigger: the first live evening after deployment is still unapproved at 19:00 Berlin, or a false block on a quote, on Uncle Misha's line or on wordplay appears in the live logs. Rollback restores the previous release links from the installer backup (`previous.json`); rubrics are read on every review, so it takes effect on the next tick.
 
 ## Decisions requiring owner sign-off
 
-None beyond approving the release; calibration choices are recorded in the design.
+1. The release bar of this change is stricter than #219's pooled 90%: separate bars for the #219 set, the motivating misses and each held-out class. If it is not met, the change is not deployed without a new owner decision.
