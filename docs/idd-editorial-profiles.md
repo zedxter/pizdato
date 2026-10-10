@@ -30,35 +30,39 @@ Scope:
 - `deploy/editorial/` (gate, rubrics, harness);
 - the callers that construct the gate or read `writer.md`: evening agent, worker and network; morning agent.
 
+Supported texts: Russian short-form posts, columns and short stories, non-fiction or fiction, up to 4096 characters (one Telegram message). First-person narration, invented scenes and register are profile choices, not core rules.
+
 Out of scope:
 - recall changes (#225);
 - non-Russian publications;
-- texts longer than one review request;
+- texts over 4096 characters;
 - history loading, delivery and publication markers;
 - providers, models, schedules, credentials, caps and deadlines.
 
 ## Acceptance criteria
 
-1. **Byte-identical channel requests.** For the `pizdato-channel` profile, every request the gate and the writers send is byte-identical to da0b2ed for the same input:
-   - system prompts composed from the core templates and the profile;
-   - user message JSON;
-   - response schemas;
-   - request titles and options.
+1. **Channel equivalence (goldens).** For the `pizdato-channel` profile, the following are identical to release da0b2ed:
+   - the composed editor, proofreader, verifier and writer-polish rubrics, by pinned sha256;
+   - for ten golden cases captured from a da0b2ed worktree through its own API: every serialized request, the verdict, the record entries and the snapshot;
+   - the `network.check` preflight requests.
 
-   Tests pin the sha256 of each da0b2ed rubric file and compare recorded requests on representative inputs (morning, evening first review, revision, verifier).
-2. **Identical channel decisions.** All existing gate, worker, morning and evaluation tests pass unchanged, except for the lines that construct the gate with a profile.
-3. **No channel text in the core.** A neutral test profile (no persona, no fixed lines, no extra fields) composes rubrics and runs the full review flow. Its composed prompts, schemas and messages contain none of the channel terms:
-   - pizdato, Пиздато, Хуёво;
-   - Миша, Misha;
-   - Мудрость, wisdom;
-   - the weekday categories.
-4. **Strict composition.** Composition fails loudly on:
-   - a missing slot;
-   - an unknown slot;
-   - an unresolved `{{…}}`;
-   - a profile without an id or language.
-5. **Documentation.** `docs/editorial-profiles.md` explains how to add a publication and how to evaluate it with its own fixtures.
-6. **Deployment.** One isolated evening dry run and one morning dry run succeed. `--check` passes for both slots.
+   The goldens are compared as exact strings (see the design, decision 7).
+2. **Existing tests.** Existing tests pass, changed only where they construct the gate or call `review`.
+3. **Neutral profile.** A neutral test profile completes the flow. Its prompts, schemas and messages contain no banned channel term, and its composed rubrics pass a readability lint and are committed as snapshots.
+4. **Example profile.** A structurally different example profile (a column or story with a persona, first-person narration, a `title` field and no verdict lines) completes the flow with fake requests.
+5. **Fail-fast configuration.** An invalid profile fails with `EDITORIAL_CONFIG` at construction and in `--check`. In the evening worker it does not consume stories.
+6. **Prose matches the enums.** Dismissal grounds, suggestion categories and content types named in the rubrics match the profile-dependent enums.
+7. **Evaluation per profile.** Every profile has its own fixtures and release bar. The contamination guard reads composed rubrics. Reports record composed-rubric hashes, and for the channel these equal da0b2ed. A repository test refuses an unevaluated production profile.
+8. **Documentation.** `docs/editorial-profiles.md` has these sections, and every slot is listed in its slot table:
+   - slot table;
+   - profile fields and the `unique()` contract;
+   - caller formats;
+   - policy and budget;
+   - size limit;
+   - fixture layout;
+   - evaluation command and bar;
+   - a worked example.
+9. **Deployment.** `--check` composes and validates for both slots. One isolated evening dry run and one morning dry run succeed.
 
 ## Must-nots
 
@@ -69,9 +73,14 @@ Out of scope:
 
 ## Rollback
 
-Requests are byte-identical, so a live difference means a bug. Trigger: any channel post fails review in a way the logs attribute to composition, or `--check` fails. Rollback restores the previous release links from the installer backup (`previous.json`).
+Requests are byte-identical, so a live difference means a bug. Trigger: an `EDITORIAL_CONFIG` error or any other composition failure in the live logs, `--check` failing, or a channel post failing review differently from before. Steps (no state migration is needed):
+1. Take both `run.lock` flocks.
+2. Atomically re-point both slot links to the paths in the installer backup's `previous.json`.
+3. Confirm that each `manifest.json` reports da0b2ed.
+4. Run `--check` for both slots.
 
 ## Decisions requiring owner sign-off
 
 1. Keep and generalise the gate instead of simplifying it to a single rewrite pass. Decided by the owner on 2026-10-10.
-2. Equivalence is proven by byte-identical requests instead of a new LLM evaluation run. Recommended, because identical inputs to the same model and settings cannot change behaviour beyond sampling noise, which the existing runs already measure.
+2. Equivalence is proven by byte-identical requests and identical decisions on goldens, instead of a new LLM evaluation run. Recommended: identical inputs to the same model and settings cannot change behaviour beyond sampling noise, which the existing runs already measure.
+3. Supported scope is short-form texts up to 4096 characters; long-form stories are a follow-up. Recommended, because the owner has not named a long-form consumer yet.
