@@ -3,11 +3,11 @@ import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 const dimensions=['grammar','meaning','freshness','voice','grounding'];
 // Blockers are objective defects; suggestions improve taste but never stop a post.
-export const BLOCKERS=['spelling','grammar','punctuation','wrong-phrase','meaning','unsupported-claim','unusable-source','repetition','ai-slop'];
+export const BLOCKERS=['spelling','grammar','punctuation','wrong-phrase','meaning','unsupported-claim','misattribution','unusable-source','repetition','ai-slop'];
 // Weekday categories guide story choice; an imperfect fit must not cost the evening its post.
 export const SUGGESTIONS=['humor','wisdom','style','category'];
 const REPLACE=['repetition','unusable-source'];
-const DIMENSION={spelling:'grammar',grammar:'grammar',punctuation:'grammar','wrong-phrase':'grammar',meaning:'meaning','unsupported-claim':'grounding','unusable-source':'grounding',repetition:'freshness','ai-slop':'voice'};
+const DIMENSION={spelling:'grammar',grammar:'grammar',punctuation:'grammar','wrong-phrase':'grammar',meaning:'meaning','unsupported-claim':'grounding',misattribution:'grounding','unusable-source':'grounding',repetition:'freshness','ai-slop':'voice'};
 const LANGUAGE=['spelling','grammar','punctuation','wrong-phrase'];
 const reviewerOptions=(title,categories)=>({
   title, temperature:0, maxTokens:16000,
@@ -27,6 +27,8 @@ export const proofreaderOptions=reviewerOptions('pizdato-proofreader',LANGUAGE);
 // A dismissal must name its ground; language claims stand unless the text is correct as written.
 const GROUNDS=['confirmed','correct-as-written','faithful-to-source','persona-opinion','verdict-contrast','understood-joke','loose-category','taste','misread'];
 const LANGUAGE_DISMISSAL=['correct-as-written','misread'];
+// Words moved between speakers are cleared only by the evidence, by Uncle Misha's own voice or by a misread claim, never as a joke or taste.
+const ATTRIBUTION_DISMISSAL=['faithful-to-source','persona-opinion','misread'];
 export const verifierOptions={title:'pizdato-verifier',temperature:0,maxTokens:8000,reasoning:{enabled:false,exclude:true},responseFormat:{type:'json_schema',json_schema:{name:'defect_verification',strict:true,schema:{
   type:'object',additionalProperties:false,required:['verdicts'],
   properties:{verdicts:{type:'array',items:{type:'object',additionalProperties:false,required:['id','real','category','ground','reason'],properties:{id:{type:'integer'},real:{type:'boolean'},category:{type:'string',enum:BLOCKERS},ground:{type:'string',enum:GROUNDS},reason:{type:'string'}}}}}
@@ -109,6 +111,8 @@ export function createGate({request, history, record=async()=>{},policy='bounded
         const ownText=norm(hostText.reduce((t,h)=>t.split(h).join(' \n '),text));
         const hostOwned=i=>{const q=norm(i.quote);return !!q&&norm(text).includes(q)&&!` ${ownText} `.includes(` ${q} `);};
         let claimed=issues.filter(i=>BLOCKERS.includes(i.category)).filter(i=>{if(!hostOwned(i))return true;dismissed.push({...i,dismissal:'Host formatting the writer cannot change',ground:'host-formatting'});return false;});
+        // Without evidence there is no speaker to check, and the host credits every morning wisdom to Uncle Misha.
+        if(source===null) claimed=claimed.filter(i=>{if(i.category!=='misattribution')return true;dismissed.push({...i,dismissal:'No evidence to attribute against',ground:'no-evidence'});return false;});
         const corroborated=claimed.filter(i=>i.by==='proofreader+editor');claimed=claimed.filter(i=>i.by!=='proofreader+editor');
         if(claimed.length) {
           const verifyRubric=await readFile(new URL('./verifier.md',import.meta.url),'utf8');
@@ -117,7 +121,8 @@ export function createGate({request, history, record=async()=>{},policy='bounded
           const answers=new Map(verdicts.map(v=>[v.id,v])),kept=[];
           claimed.forEach((issue,id)=>{
             const v=answers.get(id);
-            if(v?.real===false&&(!LANGUAGE.includes(issue.category)||LANGUAGE_DISMISSAL.includes(v.ground))) {dismissed.push({...issue,dismissal:v.reason,ground:v.ground});return;}
+            const allowed=LANGUAGE.includes(issue.category)?LANGUAGE_DISMISSAL:issue.category==='misattribution'?ATTRIBUTION_DISMISSAL:null;
+            if(v?.real===false&&(!allowed||allowed.includes(v.ground))) {dismissed.push({...issue,dismissal:v.reason,ground:v.ground});return;}
             // The verifier may fix routing (an internal repeat is meaning, not repetition) but never escalate a repair into a replacement.
             const escalates=v&&REPLACE.includes(v.category)&&!REPLACE.includes(issue.category);
             kept.push(v&&v.real&&v.category!==issue.category&&!escalates?{...issue,category:v.category,claimed:issue.category}:issue);

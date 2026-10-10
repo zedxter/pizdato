@@ -1,0 +1,3753 @@
+{
+  "revision": "23a864674b7369963a8861155cf42b152bd2139d",
+  "uncommitted": true,
+  "final": false,
+  "selection": "all",
+  "fixturesSha256": "1da3d7c315b64821b1f1a693dadd0e231680ca16a61456e2a7dfcab9f9e30310",
+  "heldoutSha256": null,
+  "rubricSha256": {
+    "editorial/editor.md": "30aa9daa75f41d791463fc9812c6359a609cc2cef03901be8819b6be1139856c",
+    "editorial/proofreader.md": "807f7238d2427f244591b199c324070e048f9ece95e81e7ca9a43076671bacce",
+    "editorial/verifier.md": "4b98937112ec70060b8d62e66bc5b9b0dd16d356a9a8ffa56724b17e8ca7d8e9",
+    "editorial/writer.md": "1e05eb72b8f45fa4654227ab9c70a9f011d17c0720a6b8e8f518cd54b938adac",
+    "evening/draft.md": "eab82d84d2fa2cc66a4c8317c470f8889a56615e46b9cde82894420e4731e521",
+    "evening/prompt.md": "4f92f53b482fc06de8dbc0f490a0ca61df3381760d0156e2bc34319687cf4cda",
+    "evening/legacy-prompt.md": "c70750c282212711e02833c515f6eafff88ad33db5e44fa532e3b6966b4fa609",
+    "morning/prompt.md": "71e6c2212a59ce6d567768b48f497145eec4d6ba4c0fb760b45c755e654d752e"
+  },
+  "endpoint": "https://inference-api.nousresearch.com/v1",
+  "dialect": "openai",
+  "byClass": {
+    "clean": {
+      "passed": 29,
+      "total": 30
+    },
+    "objective": {
+      "passed": 79,
+      "total": 87
+    },
+    "borderline": {
+      "passed": 0,
+      "total": 6
+    }
+  },
+  "bySet": {
+    "dev-222": {
+      "clean": {
+        "passed": 8,
+        "total": 9
+      },
+      "objective": {
+        "passed": 30,
+        "total": 33
+      }
+    }
+  },
+  "releaseBar": false,
+  "misses": [
+    "circular-platitude",
+    "stickney-clashing-comparatives",
+    "stickney-wrong-phrase-wife",
+    "lottery-sold-as-life-hack",
+    "libraries-clean",
+    "libraries-natural-ko-dnyu"
+  ],
+  "perFixture": {
+    "agreement": {
+      "passed": 3,
+      "trials": 3
+    },
+    "meaning-drink": {
+      "passed": 3,
+      "trials": 3
+    },
+    "repeated-hook": {
+      "passed": 3,
+      "trials": 3
+    },
+    "natural-irony": {
+      "passed": 3,
+      "trials": 3
+    },
+    "coherent-exaggeration": {
+      "passed": 3,
+      "trials": 3
+    },
+    "source-beverage": {
+      "passed": 3,
+      "trials": 3
+    },
+    "circular-platitude": {
+      "passed": 0,
+      "trials": 3
+    },
+    "repairable-grounding": {
+      "passed": 3,
+      "trials": 3
+    },
+    "unusable-source": {
+      "passed": 3,
+      "trials": 3
+    },
+    "same-story-repair": {
+      "passed": 3,
+      "trials": 3
+    },
+    "meaning": {
+      "passed": 3,
+      "trials": 3
+    },
+    "stickney-clean": {
+      "passed": 3,
+      "trials": 3
+    },
+    "stickney-restating-wisdom-is-taste": {
+      "passed": 3,
+      "trials": 3
+    },
+    "stickney-spelling-pollun": {
+      "passed": 3,
+      "trials": 3
+    },
+    "stickney-clashing-comparatives": {
+      "passed": 0,
+      "trials": 3
+    },
+    "stickney-misattributed-name": {
+      "passed": 3,
+      "trials": 3
+    },
+    "stickney-stock-coffee-opener-is-repairable": {
+      "passed": 3,
+      "trials": 3
+    },
+    "nasa-clean": {
+      "passed": 3,
+      "trials": 3
+    },
+    "nasa-quote-attributed-to-misha": {
+      "passed": 3,
+      "trials": 3
+    },
+    "nasa-same-point-three-times": {
+      "passed": 3,
+      "trials": 3
+    },
+    "stickney-inverted-detail": {
+      "passed": 3,
+      "trials": 3
+    },
+    "stickney-wrong-phrase-wife": {
+      "passed": 1,
+      "trials": 3
+    },
+    "lottery-sold-as-life-hack": {
+      "passed": 0,
+      "trials": 3
+    },
+    "repeats-published-story": {
+      "passed": 3,
+      "trials": 3
+    },
+    "stickney-wrong-verb-titled": {
+      "passed": 3,
+      "trials": 3
+    },
+    "stickney-wrong-word-girth": {
+      "passed": 3,
+      "trials": 3
+    },
+    "nasa-wrong-verb-escort": {
+      "passed": 3,
+      "trials": 3
+    },
+    "skipton-clean": {
+      "passed": 3,
+      "trials": 3
+    },
+    "libraries-clean": {
+      "passed": 2,
+      "trials": 3
+    },
+    "salmon-clean": {
+      "passed": 3,
+      "trials": 3
+    },
+    "skipton-quote-to-misha": {
+      "passed": 3,
+      "trials": 3
+    },
+    "skipton-quote-to-chair": {
+      "passed": 3,
+      "trials": 3
+    },
+    "salmon-quote-to-angie": {
+      "passed": 3,
+      "trials": 3
+    },
+    "skipton-paronym-subscriber": {
+      "passed": 3,
+      "trials": 3
+    },
+    "libraries-paronym-present": {
+      "passed": 3,
+      "trials": 3
+    },
+    "salmon-wrong-verb-made": {
+      "passed": 3,
+      "trials": 3
+    },
+    "salmon-pronoun-neighbour": {
+      "passed": 3,
+      "trials": 3
+    },
+    "libraries-object-reader": {
+      "passed": 3,
+      "trials": 3
+    },
+    "skipton-misplaced-price": {
+      "passed": 3,
+      "trials": 3
+    },
+    "libraries-natural-ko-dnyu": {
+      "passed": 0,
+      "trials": 3
+    },
+    "salmon-dry-run-slip": {
+      "passed": 3,
+      "trials": 3
+    }
+  },
+  "model": "openai/gpt-6.1-sol",
+  "reviewerReasoningEffort": "high",
+  "temperature": 0,
+  "trials": 3,
+  "passed": 108,
+  "total": 123,
+  "at": "2026-10-10T01:48:38.961Z",
+  "results": [
+    {
+      "id": "agreement",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «зазвонила» — Сказуемое не согласовано в роде с существительным мужского рода «будильник». Fix: зазвонил"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "зазвонила",
+            "problem": "Сказуемое не согласовано в роде с существительным мужского рода «будильник».",
+            "fix": "зазвонил",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "meaning-drink",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «замечаешь ты это по пустой кружке» — Пустая кружка показывает, что кофе выпит, но не позволяет заметить, что он остыл. Fix: замечаешь ты это только при следующем глотке"
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "замечаешь ты это по пустой кружке",
+            "problem": "Пустая кружка показывает, что кофе выпит, но не позволяет заметить, что он остыл.",
+            "fix": "замечаешь ты это только при следующем глотке",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "meaning-drink",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «замечаешь ты это по пустой кружке» — Пустая кружка показывает, что кофе выпит, но не позволяет заметить, что он остыл. Fix: Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это, только сделав следующий глоток."
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "замечаешь ты это по пустой кружке",
+            "problem": "Пустая кружка показывает, что кофе выпит, но не позволяет заметить, что он остыл.",
+            "fix": "Кофе остывает ровно тогда, когда работа наконец затягивает, — и замечаешь ты это, только сделав следующий глоток.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "meaning-drink",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «замечаешь ты это по пустой кружке» — Пустая кружка показывает, что кофе выпит, но не позволяет заметить, что он остыл. Fix: замечаешь ты это только на первом холодном глотке"
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "замечаешь ты это по пустой кружке",
+            "problem": "Пустая кружка показывает, что кофе выпит, но не позволяет заметить, что он остыл.",
+            "fix": "замечаешь ты это только на первом холодном глотке",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "agreement",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «будильник зазвонила» — Сказуемое «зазвонила» не согласовано в роде с существительным мужского рода «будильник». Fix: будильник зазвонил",
+          "grammar: «зазвонила» — Сказуемое не согласовано с существительным «будильник» мужского рода. Fix: зазвонил"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "будильник зазвонила",
+            "problem": "Сказуемое «зазвонила» не согласовано в роде с существительным мужского рода «будильник».",
+            "fix": "будильник зазвонил",
+            "by": "proofreader"
+          },
+          {
+            "category": "grammar",
+            "quote": "зазвонила",
+            "problem": "Сказуемое не согласовано с существительным «будильник» мужского рода.",
+            "fix": "зазвонил",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «Дядя Миша листал ленту за чаем» — Выдуманная бытовая сцена с дядей Мишей повторяет опубликованный зачин, меняя только кофе на чай. Fix: Заменить весь текст: «В ленте каждая находка невероятная, а потерять в ней полчаса — обычное дело»."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Дядя Миша листал ленту за чаем",
+            "problem": "Выдуманная бытовая сцена с дядей Мишей повторяет опубликованный зачин, меняя только кофе на чай.",
+            "fix": "Заменить весь текст: «В ленте каждая находка невероятная, а потерять в ней полчаса — обычное дело».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "natural-irony",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "agreement",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "grammar: «будильник зазвонила» — Сказуемое «зазвонила» не согласовано в роде с существительным мужского рода «будильник». Fix: будильник зазвонил",
+          "ai-slop: «дядя Миша решил сразу встать» — Выдуманная сценка пробуждения дяди Миши подменяет бытовое наблюдение. Fix: Заменить предложение целиком: «Старый будильник зазвонил раньше обычного — возраст не мешает ему портить утро»."
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "будильник зазвонила",
+            "problem": "Сказуемое «зазвонила» не согласовано в роде с существительным мужского рода «будильник».",
+            "fix": "будильник зазвонил",
+            "by": "proofreader+editor"
+          },
+          {
+            "category": "ai-slop",
+            "quote": "дядя Миша решил сразу встать",
+            "problem": "Выдуманная сценка пробуждения дяди Миши подменяет бытовое наблюдение.",
+            "fix": "Заменить предложение целиком: «Старый будильник зазвонил раньше обычного — возраст не мешает ему портить утро».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "natural-irony",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "coherent-exaggeration",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "natural-irony",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "coherent-exaggeration",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "coherent-exaggeration",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "source-beverage",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "source-beverage",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "source-beverage",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «Дядя Миша листал ленту за чаем» — Выдуманная бытовая сценка повторяет зачин из предыдущего поста с заменой кофе на чай. Fix: Заменить предложение целиком: «В ленте каждая находка невероятная — обычные, видимо, не проходят модерацию»."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Дядя Миша листал ленту за чаем",
+            "problem": "Выдуманная бытовая сценка повторяет зачин из предыдущего поста с заменой кофе на чай.",
+            "fix": "Заменить предложение целиком: «В ленте каждая находка невероятная — обычные, видимо, не проходят модерацию».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "repeated-hook",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «Дядя Миша листал ленту за чаем» — Вымышленная бытовая сцена с дядей Мишей почти дословно повторяет недавний зачин, заменяя только кофе на чай. Fix: Заменить предложение: «В ленте опять „невероятная находка“ — обычные, видимо, не прошли кастинг»."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Дядя Миша листал ленту за чаем",
+            "problem": "Вымышленная бытовая сцена с дядей Мишей почти дословно повторяет недавний зачин, заменяя только кофе на чай.",
+            "fix": "Заменить предложение: «В ленте опять „невероятная находка“ — обычные, видимо, не прошли кастинг».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "repairable-grounding",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «Теперь все читатели берут книги только ради капучино.» — Источник не сообщает о мотивах читателей и прямо указывает, что такие данные не собирались. Fix: Теперь можно взять книгу и заказать капучино в одном месте."
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Теперь все читатели берут книги только ради капучино.",
+            "problem": "Источник не сообщает о мотивах читателей и прямо указывает, что такие данные не собирались.",
+            "fix": "Теперь можно взять книгу и заказать капучино в одном месте.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "repairable-grounding",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «Теперь все читатели берут книги только ради капучино.» — Источник не подтверждает ни поведение всех читателей, ни их мотивы и прямо указывает, что данные о мотивах не собирались. Fix: Теперь здесь можно взять книгу и заказать капучино."
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Теперь все читатели берут книги только ради капучино.",
+            "problem": "Источник не подтверждает ни поведение всех читателей, ни их мотивы и прямо указывает, что данные о мотивах не собирались.",
+            "fix": "Теперь здесь можно взять книгу и заказать капучино.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "repairable-grounding",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «Теперь все читатели берут книги только ради капучино.» — Источник не подтверждает мотивы читателей и прямо указывает, что данные о них не собирались. Fix: Теперь можно взять книгу и заказать капучино в одном месте."
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Теперь все читатели берут книги только ради капучино.",
+            "problem": "Источник не подтверждает мотивы читателей и прямо указывает, что данные о них не собирались.",
+            "fix": "Теперь можно взять книгу и заказать капучино в одном месте.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "unusable-source",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unusable-source: «В библиотеке открыли кофейню.» — Источник содержит только сообщение «403 Access denied» и не подтверждает центральное событие — открытие кофейни в библиотеке. Fix: Заменить сюжет на историю с доступным источником, подтверждающим центральное событие."
+        ],
+        "blockers": [
+          {
+            "category": "unusable-source",
+            "quote": "В библиотеке открыли кофейню.",
+            "problem": "Источник содержит только сообщение «403 Access denied» и не подтверждает центральное событие — открытие кофейни в библиотеке.",
+            "fix": "Заменить сюжет на историю с доступным источником, подтверждающим центральное событие.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "unusable-source",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unusable-source: «В библиотеке открыли кофейню.» — Единственный источник возвращает «403 Access denied» и не подтверждает открытие кофейни в библиотеке. Fix: Заменить историю на другую с доступным источником, подтверждающим центральный факт."
+        ],
+        "blockers": [
+          {
+            "category": "unusable-source",
+            "quote": "В библиотеке открыли кофейню.",
+            "problem": "Единственный источник возвращает «403 Access denied» и не подтверждает открытие кофейни в библиотеке.",
+            "fix": "Заменить историю на другую с доступным источником, подтверждающим центральный факт.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "unusable-source",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unusable-source: «В библиотеке открыли кофейню.» — Источник содержит только ошибку 403 Access denied и не подтверждает открытие кофейни в библиотеке. Fix: Заменить сюжет на историю с доступным источником, подтверждающим центральное событие."
+        ],
+        "blockers": [
+          {
+            "category": "unusable-source",
+            "quote": "В библиотеке открыли кофейню.",
+            "problem": "Источник содержит только ошибку 403 Access denied и не подтверждает открытие кофейни в библиотеке.",
+            "fix": "Заменить сюжет на историю с доступным источником, подтверждающим центральное событие.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "circular-platitude",
+      "trial": 1,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [
+          {
+            "category": "wisdom",
+            "quote": "Дольше всех ждут те, кого уже перестали искать, — и дожидаются.",
+            "problem": "Финальное «и дожидаются» превращает парадоксальное начало в предсказуемое утешение про вознаграждённое терпение.",
+            "fix": "Когда тебя перестали искать, терпение лучше заменить шумом.",
+            "by": "editor"
+          }
+        ],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "circular-platitude",
+      "trial": 3,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [
+          {
+            "category": "wisdom",
+            "quote": "— и дожидаются.",
+            "problem": "Концовка обещает счастливый исход, но оставляет непонятным, чего именно дожидаются те, кого перестали искать.",
+            "fix": "Дольше всех ждут те, кто ещё не знает, что их перестали искать.",
+            "by": "editor"
+          }
+        ],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "circular-platitude",
+      "trial": 2,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "meaning",
+            "quote": "Дольше всех ждут те, кого уже перестали искать, — и дожидаются.",
+            "problem": "Прекращение поисков не объясняет, почему эти люди ждут дольше всех, и не даёт основания утверждать, что они обязательно дождутся.",
+            "fix": "Если тебя перестали искать, пора самому выйти на связь.",
+            "by": "editor",
+            "dismissal": "Это афористическое бытовое наблюдение, а не причинное объяснение или фактическая гарантия: прекращение поисков само по себе не исключает, что человек чего-то дождётся.",
+            "ground": "persona-opinion"
+          }
+        ],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "same-story-repair",
+      "trial": 2,
+      "pass": true,
+      "initial": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «растут» — Сказуемое должно стоять в единственном числе, согласуясь с местоимением «который», относящимся к слову «проект». Fix: растёт"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "растут",
+            "problem": "Сказуемое должно стоять в единственном числе, согласуясь с местоимением «который», относящимся к слову «проект».",
+            "fix": "растёт",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      },
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "same-story-repair",
+      "trial": 1,
+      "pass": true,
+      "initial": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «растут» — Сказуемое должно стоять в единственном числе, согласуясь с «проект, который». Fix: растёт",
+          "grammar: «который стабильно растут» — Глагол «растут» не согласован в числе с «который», относящимся к слову «проект». Fix: который стабильно растёт"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "растут",
+            "problem": "Сказуемое должно стоять в единственном числе, согласуясь с «проект, который».",
+            "fix": "растёт",
+            "by": "proofreader"
+          },
+          {
+            "category": "grammar",
+            "quote": "который стабильно растут",
+            "problem": "Глагол «растут» не согласован в числе с «который», относящимся к слову «проект».",
+            "fix": "который стабильно растёт",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      },
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "same-story-repair",
+      "trial": 3,
+      "pass": true,
+      "initial": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «растут» — Сказуемое должно стоять в единственном числе: «который» относится к слову «проект». Fix: растёт"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "растут",
+            "problem": "Сказуемое должно стоять в единственном числе: «который» относится к слову «проект».",
+            "fix": "растёт",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      },
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "meaning",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «по её яркому свету» — Подразумевается, что дядя Миша заметил отсутствие света, но написанное означает, что перегоревшая лампочка продолжала ярко светить. Fix: по отсутствию света",
+          "meaning: «по её яркому свету» — Перегоревшая лампочка не светит, поэтому яркий свет не может быть признаком того, что она перегорела. Fix: Заменить «по её яркому свету» на «по отсутствию света»."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "по её яркому свету",
+            "problem": "Подразумевается, что дядя Миша заметил отсутствие света, но написанное означает, что перегоревшая лампочка продолжала ярко светить.",
+            "fix": "по отсутствию света",
+            "by": "proofreader"
+          },
+          {
+            "category": "meaning",
+            "quote": "по её яркому свету",
+            "problem": "Перегоревшая лампочка не светит, поэтому яркий свет не может быть признаком того, что она перегорела.",
+            "fix": "Заменить «по её яркому свету» на «по отсутствию света».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "meaning",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «по её яркому свету» — Имеется в виду, что дядя Миша заметил перегорание по исчезновению света, но написанное означает, что перегоревшая лампочка продолжала ярко светить. Fix: по отсутствию света",
+          "meaning: «заметил это по её яркому свету» — Перегоревшая лампочка не светит, поэтому её яркий свет не может свидетельствовать о том, что она перегорела. Fix: Заменить на «заметил это по тому, что она перестала светить»."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "по её яркому свету",
+            "problem": "Имеется в виду, что дядя Миша заметил перегорание по исчезновению света, но написанное означает, что перегоревшая лампочка продолжала ярко светить.",
+            "fix": "по отсутствию света",
+            "by": "proofreader"
+          },
+          {
+            "category": "meaning",
+            "quote": "заметил это по её яркому свету",
+            "problem": "Перегоревшая лампочка не светит, поэтому её яркий свет не может свидетельствовать о том, что она перегорела.",
+            "fix": "Заменить на «заметил это по тому, что она перестала светить».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-clean",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-clean",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "meaning",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «перегорела» — По контексту лампочка начала светить, но «перегорела» означает, что она вышла из строя и перестала светить. Fix: загорелась",
+          "meaning: «заметил это по её яркому свету» — Перегоревшая лампочка не светит, поэтому её яркий свет не может быть признаком перегорания. Fix: Заменить на «заметил это по тому, что свет так и не включился»."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "перегорела",
+            "problem": "По контексту лампочка начала светить, но «перегорела» означает, что она вышла из строя и перестала светить.",
+            "fix": "загорелась",
+            "by": "proofreader"
+          },
+          {
+            "category": "meaning",
+            "quote": "заметил это по её яркому свету",
+            "problem": "Перегоревшая лампочка не светит, поэтому её яркий свет не может быть признаком перегорания.",
+            "fix": "Заменить на «заметил это по тому, что свет так и не включился».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-clean",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "grammar",
+            "quote": "Назвали его",
+            "problem": "Местоимение «его» подразумевает кратер, но ближайшее подходящее существительное — «Фобос», поэтому фразу можно прочитать так, будто в честь Хлои Стикни Холл назвали саму луну.",
+            "fix": "Назвали кратер",
+            "by": "proofreader",
+            "dismissal": "Местоимение «его» естественно продолжает речь о кратере — подлежащем предыдущего предложения, а близость зависимого слова «Фобоса» не создаёт обязательного прочтения о названии луны.",
+            "ground": "correct-as-written"
+          }
+        ],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-spelling-pollun",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "spelling: «поллуны» — «Пол-» перед существительным, начинающимся на «л», пишется через дефис. Fix: пол-луны"
+        ],
+        "blockers": [
+          {
+            "category": "spelling",
+            "quote": "поллуны",
+            "problem": "«Пол-» перед существительным, начинающимся на «л», пишется через дефис.",
+            "fix": "пол-луны",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-restating-wisdom-is-taste",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [
+          {
+            "category": "wisdom",
+            "quote": "Даже кратер почти в половину Фобоса его так и не расколол",
+            "problem": "Мудрость пересказывает масштаб удара и его исход, но не добавляет нового поворота.",
+            "fix": "«Получить по лицу — ещё не значит потерять лицо».",
+            "by": "editor"
+          }
+        ],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-spelling-pollun",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "spelling: «поллуны» — Перед словом, начинающимся с «л», «пол-» пишется через дефис. Fix: пол-луны"
+        ],
+        "blockers": [
+          {
+            "category": "spelling",
+            "quote": "поллуны",
+            "problem": "Перед словом, начинающимся с «л», «пол-» пишется через дефис.",
+            "fix": "пол-луны",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-restating-wisdom-is-taste",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [
+          {
+            "category": "wisdom",
+            "quote": "Даже кратер почти в половину Фобоса его так и не расколол",
+            "problem": "Мудрость пересказывает размеры кратера и факт выживания Фобоса, но не добавляет нового поворота.",
+            "fix": "«Вмятина на пол-лица — ещё не повод заказывать памятник».",
+            "by": "editor"
+          }
+        ],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-spelling-pollun",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "spelling: «поллуны» — Сочетания с «пол-» перед буквой «л» пишутся через дефис. Fix: пол-луны"
+        ],
+        "blockers": [
+          {
+            "category": "spelling",
+            "quote": "поллуны",
+            "problem": "Сочетания с «пол-» перед буквой «л» пишутся через дефис.",
+            "fix": "пол-луны",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-clashing-comparatives",
+      "trial": 1,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-clashing-comparatives",
+      "trial": 2,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-restating-wisdom-is-taste",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [
+          {
+            "category": "wisdom",
+            "quote": "Даже кратер почти в половину Фобоса его так и не расколол",
+            "problem": "Мудрость лишь пересказывает размер кратера и то, что Фобос уцелел, без нового поворота.",
+            "fix": "Мудрость дня: «Уцелеть — не значит сохранить товарный вид».",
+            "by": "editor"
+          }
+        ],
+        "dismissed": [
+          {
+            "category": "wrong-phrase",
+            "quote": "кратер почти в половину Фобоса его так и не расколол",
+            "problem": "По смыслу Фобос едва не расколол удар, но здесь раскалывание приписано самому кратеру — следу этого удара.",
+            "fix": "удар, оставивший кратер почти в половину Фобоса, его так и не расколол",
+            "by": "proofreader",
+            "dismissal": "В афористической «мудрости дня» кратер метонимически обозначает разрушительное воздействие образовавшего его удара — это допустимое образное сокращение, а не ошибочная подмена причины.",
+            "ground": "correct-as-written"
+          }
+        ],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-clashing-comparatives",
+      "trial": 3,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-misattributed-name",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "wrong-phrase: «Луну» — Имеется в виду кратер, названный в честь жены астронома, но слово «Луну» утверждает, что в её честь назвали сам Фобос. Fix: Кратер",
+          "unsupported-claim: «Луну назвали в честь жены астронома» — В честь Хлои Стикни Холл назвали кратер Стикни, а не саму луну Фобос. Fix: Заменить мудрость на: «Кратер назвали в честь жены астронома, а сама луна свои борозды так и не объяснила»."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Луну",
+            "problem": "Имеется в виду кратер, названный в честь жены астронома, но слово «Луну» утверждает, что в её честь назвали сам Фобос.",
+            "fix": "Кратер",
+            "by": "proofreader"
+          },
+          {
+            "category": "unsupported-claim",
+            "quote": "Луну назвали в честь жены астронома",
+            "problem": "В честь Хлои Стикни Холл назвали кратер Стикни, а не саму луну Фобос.",
+            "fix": "Заменить мудрость на: «Кратер назвали в честь жены астронома, а сама луна свои борозды так и не объяснила».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "grammar",
+            "quote": "она так и не объяснила",
+            "problem": "Задумано, что борозды не объяснила луна, но местоимение «она» отсылает к ближайшему существительному женского рода — жене астронома.",
+            "fix": "Фобос так и не объяснил",
+            "by": "proofreader",
+            "dismissal": "Местоимение «она» по контексту отсылает к луне с её бороздами и не обязано обозначать ближайшее существительное женского рода.",
+            "ground": "correct-as-written"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-misattributed-name",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "wrong-phrase: «Луну назвали в честь жены астронома, а свои борозды она так и не объяснила» — По смыслу предыдущего текста в честь жены астронома назвали кратер, но здесь утверждается, что в её честь назвали саму луну. Fix: Кратер назвали в честь жены астронома, а свои борозды луна так и не объяснила",
+          "unsupported-claim: «Луну назвали в честь жены астронома» — В честь Хлои Стикни Холл назвали кратер Стикни, а не сам Фобос. Fix: Заменить мудрость: «Кратер назвали в честь жены астронома, но от этого Фобос разговорчивее не стал»."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Луну назвали в честь жены астронома, а свои борозды она так и не объяснила",
+            "problem": "По смыслу предыдущего текста в честь жены астронома назвали кратер, но здесь утверждается, что в её честь назвали саму луну.",
+            "fix": "Кратер назвали в честь жены астронома, а свои борозды луна так и не объяснила",
+            "by": "proofreader"
+          },
+          {
+            "category": "unsupported-claim",
+            "quote": "Луну назвали в честь жены астронома",
+            "problem": "В честь Хлои Стикни Холл назвали кратер Стикни, а не сам Фобос.",
+            "fix": "Заменить мудрость: «Кратер назвали в честь жены астронома, но от этого Фобос разговорчивее не стал».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-stock-coffee-opener-is-repairable",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": false,
+        "issues": [
+          "ai-slop: «Дядя Миша листал ленту за кофе — а там» — Выдуманная бытовая сценка с листанием ленты за кофе — шаблонная подводка, не добавляющая ничего к истории. Fix: Заменить на «На Фобосе есть».",
+          "unsupported-claim: «кратер, который едва не расколол Фобос» — Источник лишь предполагает, что удар едва не расколол Фобос, а здесь это подано как установленный факт. Fix: «кратер от удара, который, вероятно, едва не расколол Фобос»"
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Дядя Миша листал ленту за кофе — а там",
+            "problem": "Выдуманная бытовая сценка с листанием ленты за кофе — шаблонная подводка, не добавляющая ничего к истории.",
+            "fix": "Заменить на «На Фобосе есть».",
+            "by": "editor"
+          },
+          {
+            "category": "unsupported-claim",
+            "quote": "кратер, который едва не расколол Фобос",
+            "problem": "Источник лишь предполагает, что удар едва не расколол Фобос, а здесь это подано как установленный факт.",
+            "fix": "«кратер от удара, который, вероятно, едва не расколол Фобос»",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "unsupported-claim",
+            "quote": "у Фобоса теперь есть кратер",
+            "problem": "Слово «теперь» представляет кратер новым приобретением, хотя источник описывает его на снимке 2008 года.",
+            "fix": "«у Фобоса есть кратер»",
+            "by": "editor",
+            "dismissal": "«Теперь» в шуточном вердикте о хвастовстве перед другими лунами не сообщает дату образования кратера и не утверждает, что он возник недавно.",
+            "ground": "understood-joke"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "nasa-clean",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-misattributed-name",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "wrong-phrase: «Луну» — Имеется в виду кратер Стикни, названный в честь жены астронома, но написано, что в её честь назвали саму луну — Фобос. Fix: Кратер",
+          "unsupported-claim: «Луну назвали в честь жены астронома» — В честь Хлои Стикни Холл назвали кратер Стикни, а не сам Фобос. Fix: Заменить мудрость целиком: «Кратер назвали в честь жены астронома, а Фобос свои борозды так и не объяснил»."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Луну",
+            "problem": "Имеется в виду кратер Стикни, названный в честь жены астронома, но написано, что в её честь назвали саму луну — Фобос.",
+            "fix": "Кратер",
+            "by": "proofreader"
+          },
+          {
+            "category": "unsupported-claim",
+            "quote": "Луну назвали в честь жены астронома",
+            "problem": "В честь Хлои Стикни Холл назвали кратер Стикни, а не сам Фобос.",
+            "fix": "Заменить мудрость целиком: «Кратер назвали в честь жены астронома, а Фобос свои борозды так и не объяснил».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "grammar",
+            "quote": "она",
+            "problem": "Местоимение должно обозначать луну, но ближайшее существительное женского рода — «жены», поэтому получается, что свои борозды не объяснила жена астронома.",
+            "fix": "луна",
+            "by": "proofreader",
+            "dismissal": "Местоимение «она» корректно отсылает к луне, о бороздах которой идёт речь, и не обязано обозначать ближайшее существительное женского рода.",
+            "ground": "correct-as-written"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-stock-coffee-opener-is-repairable",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": false,
+        "issues": [
+          "ai-slop: «Дядя Миша листал ленту за кофе» — Выдуманная бытовая сцена с дядей Мишей — шаблонная подводка вместо захода в саму историю. Fix: Заменить первый абзац: «Фобос получил кратер и, вероятно, чуть не раскололся».",
+          "unsupported-claim: «который едва не расколол Фобос» — Источник говорит, что удар, вероятно, едва не расколол Фобос, а кандидат подаёт эту оценку как установленный факт. Fix: Сохранить неопределённость: «удар, создавший этот кратер, вероятно, едва не расколол Фобос»."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Дядя Миша листал ленту за кофе",
+            "problem": "Выдуманная бытовая сцена с дядей Мишей — шаблонная подводка вместо захода в саму историю.",
+            "fix": "Заменить первый абзац: «Фобос получил кратер и, вероятно, чуть не раскололся».",
+            "by": "editor"
+          },
+          {
+            "category": "unsupported-claim",
+            "quote": "который едва не расколол Фобос",
+            "problem": "Источник говорит, что удар, вероятно, едва не расколол Фобос, а кандидат подаёт эту оценку как установленный факт.",
+            "fix": "Сохранить неопределённость: «удар, создавший этот кратер, вероятно, едва не расколол Фобос».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "unsupported-claim",
+            "quote": "теперь",
+            "problem": "Слово создаёт ложное впечатление, что кратер появился недавно, хотя источник описывает его на снимке 2008 года.",
+            "fix": "«Пиздато: у Фобоса есть кратер, которым можно хвастаться перед всеми лунами Марса».",
+            "by": "editor",
+            "dismissal": "«Теперь» входит в шуточный вердикт о хвастовстве Фобоса перед другими лунами, а не в сообщение о недавнем образовании кратера.",
+            "ground": "understood-joke"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "nasa-clean",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-stock-coffee-opener-is-repairable",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": false,
+        "issues": [
+          "ai-slop: «Дядя Миша листал ленту за кофе» — Вымышленная бытовая сцена с дядей Мишей — шаблонная подводка вместо захода в саму историю. Fix: Убрать сцену с кофе и начать так: «Кратер Стикни — след удара, который, вероятно, едва не расколол Фобос».",
+          "unsupported-claim: «кратер, который едва не расколол Фобос» — Источник говорит, что удар, образовавший кратер, вероятно, едва не расколол луну, а кандидат превращает предположение в установленный факт. Fix: Заменить на: «кратер от удара, который, вероятно, едва не расколол Фобос»."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Дядя Миша листал ленту за кофе",
+            "problem": "Вымышленная бытовая сцена с дядей Мишей — шаблонная подводка вместо захода в саму историю.",
+            "fix": "Убрать сцену с кофе и начать так: «Кратер Стикни — след удара, который, вероятно, едва не расколол Фобос».",
+            "by": "editor"
+          },
+          {
+            "category": "unsupported-claim",
+            "quote": "кратер, который едва не расколол Фобос",
+            "problem": "Источник говорит, что удар, образовавший кратер, вероятно, едва не расколол луну, а кандидат превращает предположение в установленный факт.",
+            "fix": "Заменить на: «кратер от удара, который, вероятно, едва не расколол Фобос».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "grammar",
+            "quote": "Назвали его",
+            "problem": "Имеется в виду кратер, но «его» после ближайшего существительного «Фобоса» допускает другое прочтение: в честь Хлои Стикни Холл назвали сам спутник.",
+            "fix": "Кратер назвали",
+            "by": "proofreader",
+            "dismissal": "«Его» естественно отсылает к кратеру — теме предыдущего предложения, а упоминание Фобоса в сравнении размеров не переключает эту тему.",
+            "ground": "correct-as-written"
+          },
+          {
+            "category": "unsupported-claim",
+            "quote": "теперь есть",
+            "problem": "Слово «теперь» представляет кратер как новое приобретение Фобоса, хотя источник описывает его снимок ещё 2008 года.",
+            "fix": "Заменить «теперь есть» на «есть».",
+            "by": "editor",
+            "dismissal": "«Теперь есть» входит в шутливую персонификацию Фобоса в оценочном вердикте и не сообщает о недавнем образовании кратера.",
+            "ground": "understood-joke"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "nasa-clean",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [
+          {
+            "category": "category",
+            "quote": "NASA ищет частные космические станции",
+            "problem": "Это космическая новость, а не полезный лайфхак для субботней рубрики.",
+            "fix": "Перенести пост в пятничный свободный формат.",
+            "by": "editor"
+          }
+        ],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "nasa-quote-attributed-to-misha",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: «Дядя Миша так и сказал соседу: «Мы хотим правдоподобные планы и компании, готовые вкладываться в собственные станции».» — Это сокращённый перевод слов главы NASA Джареда Айзекмана, ошибочно приписанный дяде Мише. Fix: Глава NASA Джаред Айзекман ждёт убедительных планов и компаний, готовых вкладываться в собственные станции."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "Дядя Миша так и сказал соседу: «Мы хотим правдоподобные планы и компании, готовые вкладываться в собственные станции».",
+            "problem": "Это сокращённый перевод слов главы NASA Джареда Айзекмана, ошибочно приписанный дяде Мише.",
+            "fix": "Глава NASA Джаред Айзекман ждёт убедительных планов и компаний, готовых вкладываться в собственные станции.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "nasa-quote-attributed-to-misha",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: «Дядя Миша так и сказал соседу: «Мы хотим правдоподобные планы и компании, готовые вкладываться в собственные станции»» — Это близкий пересказ слов главы NASA Джареда Айзекмана из источника, ошибочно приписанный дяде Мише. Fix: Глава NASA Джаред Айзекман заявил, что агентство ждёт убедительных планов и готовности компаний инвестировать в станции."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "Дядя Миша так и сказал соседу: «Мы хотим правдоподобные планы и компании, готовые вкладываться в собственные станции»",
+            "problem": "Это близкий пересказ слов главы NASA Джареда Айзекмана из источника, ошибочно приписанный дяде Мише.",
+            "fix": "Глава NASA Джаред Айзекман заявил, что агентство ждёт убедительных планов и готовности компаний инвестировать в станции.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "nasa-quote-attributed-to-misha",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: «Дядя Миша так и сказал соседу: «Мы хотим правдоподобные планы и компании, готовые вкладываться в собственные станции».» — Эта реплика пересказывает заявление главы NASA Джареда Айзекмана, но приписана дяде Мише. Fix: Глава NASA Джаред Айзекман заявил, что агентство ждёт убедительных планов и готовности компаний инвестировать в собственные станции."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "Дядя Миша так и сказал соседу: «Мы хотим правдоподобные планы и компании, готовые вкладываться в собственные станции».",
+            "problem": "Эта реплика пересказывает заявление главы NASA Джареда Айзекмана, но приписана дяде Мише.",
+            "fix": "Глава NASA Джаред Айзекман заявил, что агентство ждёт убедительных планов и готовности компаний инвестировать в собственные станции.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "nasa-same-point-three-times",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «Сначала станцию строили всем миром — теперь её надо окупить» — Реплика дяди Миши, строка «Хуёво» и мудрость трижды повторяют один вывод: раньше станцию строили сообща, теперь требуется окупаемость. Fix: Оставить реплику Миши, а две другие строки заменить: «Хуёво: между красивой заявкой и работающей станцией — стройка, испытания и сертификация». «Мудрость дня: „На орбите невесомость, но накладные расходы никто не отменял“»."
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "Сначала станцию строили всем миром — теперь её надо окупить",
+            "problem": "Реплика дяди Миши, строка «Хуёво» и мудрость трижды повторяют один вывод: раньше станцию строили сообща, теперь требуется окупаемость.",
+            "fix": "Оставить реплику Миши, а две другие строки заменить: «Хуёво: между красивой заявкой и работающей станцией — стройка, испытания и сертификация». «Мудрость дня: „На орбите невесомость, но накладные расходы никто не отменял“».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "nasa-same-point-three-times",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «Сначала станцию строили всем миром — теперь её надо окупить» — Реплика дяди Миши, строка «Хуёво» и мудрость трижды повторяют одну мысль: раньше станцию строили сообща, теперь её нужно окупать. Fix: Оставить мысль об окупаемости только в строке «Хуёво». Реплику заменить на «Дядя Миша заметил: фиксированная цена — хоть что-то в этом проекте не должно улететь». Мудрость заменить на «Если снимаешь жильё на орбите, сначала уточни, входит ли обратный билет»."
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "Сначала станцию строили всем миром — теперь её надо окупить",
+            "problem": "Реплика дяди Миши, строка «Хуёво» и мудрость трижды повторяют одну мысль: раньше станцию строили сообща, теперь её нужно окупать.",
+            "fix": "Оставить мысль об окупаемости только в строке «Хуёво». Реплику заменить на «Дядя Миша заметил: фиксированная цена — хоть что-то в этом проекте не должно улететь». Мудрость заменить на «Если снимаешь жильё на орбите, сначала уточни, входит ли обратный билет».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-inverted-detail",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «грунт, которого давно не касались» — Источник говорит о возможной недавно обнажившейся поверхности, а не о грунте, которого давно никто не касался. Fix: Пиздато: светло-голубые участки у кромки могут указывать на недавно обнажившийся грунт."
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "грунт, которого давно не касались",
+            "problem": "Источник говорит о возможной недавно обнажившейся поверхности, а не о грунте, которого давно никто не касался.",
+            "fix": "Пиздато: светло-голубые участки у кромки могут указывать на недавно обнажившийся грунт.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "nasa-same-point-three-times",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «Сначала станцию строили всем миром — теперь её надо окупить» — Реплика дяди Миши, строка «Хуёво» и мудрость трижды повторяют один тезис: вместо совместной стройки теперь нужна окупаемость. Fix: Оставить строку «Хуёво», а две другие заменить: «Дядя Миша заметил: главное, чтобы обратный билет не продавали отдельно» и «Мудрость дня: „Невесомость невесомостью, а цена пусть будет твёрдой“»."
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "Сначала станцию строили всем миром — теперь её надо окупить",
+            "problem": "Реплика дяди Миши, строка «Хуёво» и мудрость трижды повторяют один тезис: вместо совместной стройки теперь нужна окупаемость.",
+            "fix": "Оставить строку «Хуёво», а две другие заменить: «Дядя Миша заметил: главное, чтобы обратный билет не продавали отдельно» и «Мудрость дня: „Невесомость невесомостью, а цена пусть будет твёрдой“».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-inverted-detail",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «грунт, которого давно не касались» — Источник говорит о возможной недавно обнажившейся поверхности, но не сообщает, что грунта давно никто не касался. Fix: Пиздато: голубоватые участки у кромки могут указывать на недавно обнажившуюся поверхность."
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "грунт, которого давно не касались",
+            "problem": "Источник говорит о возможной недавно обнажившейся поверхности, но не сообщает, что грунта давно никто не касался.",
+            "fix": "Пиздато: голубоватые участки у кромки могут указывать на недавно обнажившуюся поверхность.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-inverted-detail",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «грунт, которого давно не касались» — Источник говорит о возможной недавно обнажившейся поверхности, а не о грунте, которого давно не касались. Fix: Пиздато: у кромки, возможно, обнажился свежий слой грунта."
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "грунт, которого давно не касались",
+            "problem": "Источник говорит о возможной недавно обнажившейся поверхности, а не о грунте, которого давно не касались.",
+            "fix": "Пиздато: у кромки, возможно, обнажился свежий слой грунта.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-wrong-phrase-wife",
+      "trial": 2,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [
+          {
+            "category": "wisdom",
+            "quote": "Яму вырыли, имя жене оставили, а за борозды никто не отвечает",
+            "problem": "Финал собирает детали новости, но оборот «имя жене оставили» делает шутку о посвящении кратера неясной.",
+            "fix": "Мудрость дня: «Если яму назвали в твою честь, это ещё не значит, что ты за неё отвечаешь».",
+            "by": "editor"
+          }
+        ],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "stickney-wrong-phrase-wife",
+      "trial": 3,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "grammar",
+            "quote": "Назвали его",
+            "problem": "Имеется в виду название кратера, но ближайшее подходящее существительное — «Фобоса», поэтому фразу можно прочитать так, будто в честь Хлои назвали саму луну.",
+            "fix": "Кратер назвали",
+            "by": "proofreader",
+            "dismissal": "Местоимение «его» естественно относится к кратеру — теме предыдущего предложения; упоминание Фобоса в сравнении размеров не меняет референт и не создаёт ошибочного чтения.",
+            "ground": "correct-as-written"
+          }
+        ],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "repeats-published-story",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": false,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "repetition: «Венгр собрал 2000 банок энергетика и попал в Книгу рекордов Гиннесса» — Этот сюжет уже опубликован 2 октября: тот же коллекционер, рекорд в 2000 банок и хранение на потолке с помощью липучек. Fix: Заменить историю другой подтверждённой новостью: сокращение текста и новые шутки не устраняют повтор сюжета."
+        ],
+        "blockers": [
+          {
+            "category": "repetition",
+            "quote": "Венгр собрал 2000 банок энергетика и попал в Книгу рекордов Гиннесса",
+            "problem": "Этот сюжет уже опубликован 2 октября: тот же коллекционер, рекорд в 2000 банок и хранение на потолке с помощью липучек.",
+            "fix": "Заменить историю другой подтверждённой новостью: сокращение текста и новые шутки не устраняют повтор сюжета.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "stickney-wrong-phrase-wife",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «имя жене оставили» — Имеется в виду, что в названии кратера сохранили имя жены, но форма «жене» означает, что имя оставили самой жене. Fix: имя жены оставили"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "имя жене оставили",
+            "problem": "Имеется в виду, что в названии кратера сохранили имя жены, но форма «жене» означает, что имя оставили самой жене.",
+            "fix": "имя жены оставили",
+            "by": "proofreader"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "repeats-published-story",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": false,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "repetition: «Венгр собрал 2000 банок энергетика и попал в Книгу рекордов Гиннесса» — Этот же рекорд Гергё Борбея, включая начало коллекции в общаге и банки на потолке, уже описан в опубликованном посте evening-2026-10-02.md. Fix: Заменить весь сюжет другой новостью для пятничного выпуска: сокращение уже опубликованной истории не делает её новой."
+        ],
+        "blockers": [
+          {
+            "category": "repetition",
+            "quote": "Венгр собрал 2000 банок энергетика и попал в Книгу рекордов Гиннесса",
+            "problem": "Этот же рекорд Гергё Борбея, включая начало коллекции в общаге и банки на потолке, уже описан в опубликованном посте evening-2026-10-02.md.",
+            "fix": "Заменить весь сюжет другой новостью для пятничного выпуска: сокращение уже опубликованной истории не делает её новой.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "lottery-sold-as-life-hack",
+      "trial": 2,
+      "pass": false,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «Дядя Миша уже ищет старые квитанции с адресами.» — Выдуманное действие дяди Миши подменяет его собственную остроумную реплику постановочной сценой. Fix: Дядя Миша: «А почта обычно только счета приносит»."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Дядя Миша уже ищет старые квитанции с адресами.",
+            "problem": "Выдуманное действие дяди Миши подменяет его собственную остроумную реплику постановочной сценой.",
+            "fix": "Дядя Миша: «А почта обычно только счета приносит».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Проверенный способ выиграть в лотерею",
+            "problem": "Источник описывает один удачный билет, а не проверенный способ выигрывать в лотерею.",
+            "fix": "Заменить заголовок: «Старый почтовый индекс принёс жителю Мэриленда $50 000».",
+            "by": "editor",
+            "dismissal": "Заголовок подаёт единичную удачу как шуточный лотерейный лайфхак, а не как доказанную стратегию выигрыша.",
+            "ground": "understood-joke"
+          },
+          {
+            "category": "unsupported-claim",
+            "quote": "у остальных старых индексов такой удачи не будет",
+            "problem": "Один выигрыш не даёт оснований утверждать, что другие старые индексы не выиграют.",
+            "fix": "индекс помнишь — но выигрыш он не гарантирует.",
+            "by": "editor",
+            "dismissal": "В строке «Хуёво» это комическое обобщение о неповторимости удачи, а не фактический прогноз результатов других билетов.",
+            "ground": "understood-joke"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "lottery-sold-as-life-hack",
+      "trial": 1,
+      "pass": false,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «Дядя Миша уже ищет старые квитанции с адресами.» — Вместо собственной реплики персонажу приписана шаблонная выдуманная сценка. Fix: Дядя Миша: главное теперь не решить, что знаешь секрет лотереи."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Дядя Миша уже ищет старые квитанции с адресами.",
+            "problem": "Вместо собственной реплики персонажу приписана шаблонная выдуманная сценка.",
+            "fix": "Дядя Миша: главное теперь не решить, что знаешь секрет лотереи.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Проверенный способ выиграть в лотерею",
+            "problem": "Единичный выигрыш подан как проверенная стратегия, хотя источник сообщает только об одном удачном билете.",
+            "fix": "Заменить заголовок целиком: «Лотерейный билет с бывшей пропиской».",
+            "by": "editor",
+            "dismissal": "Заголовок шутливо превращает единичный выигрыш в лотерейный «лайфхак», а не сообщает о доказанной стратегии.",
+            "ground": "understood-joke"
+          },
+          {
+            "category": "unsupported-claim",
+            "quote": "у остальных старых индексов такой удачи не будет.",
+            "problem": "Источник не позволяет утверждать, что другие старые индексы никогда не принесут выигрыша.",
+            "fix": "лотерея не обязана помнить ваш адрес.",
+            "by": "editor",
+            "dismissal": "В строке «Хуёво» неудача остальных индексов — комическое преувеличение, а не фактический прогноз будущих розыгрышей.",
+            "ground": "understood-joke"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "repeats-published-story",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": false,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "repetition: «Венгр собрал 2000 банок энергетика и попал в Книгу рекордов Гиннесса» — Этот сюжет уже опубликован в evening-2026-10-02.md: тот же коллекционер, рекорд в 2000 банок и около 900 банок на потолке мансарды. Fix: Заменить историю на другую пятничную новость: сокращение текста и новая мудрость не делают уже опубликованный сюжет новым."
+        ],
+        "blockers": [
+          {
+            "category": "repetition",
+            "quote": "Венгр собрал 2000 банок энергетика и попал в Книгу рекордов Гиннесса",
+            "problem": "Этот сюжет уже опубликован в evening-2026-10-02.md: тот же коллекционер, рекорд в 2000 банок и около 900 банок на потолке мансарды.",
+            "fix": "Заменить историю на другую пятничную новость: сокращение текста и новая мудрость не делают уже опубликованный сюжет новым.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "stickney-wrong-verb-titled",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «Озаглавили» — Имеется в виду, что кратеру дали название в честь человека, но «озаглавили» означает, что ему дали заглавие, как тексту или произведению. Fix: Назвали"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Озаглавили",
+            "problem": "Имеется в виду, что кратеру дали название в честь человека, но «озаглавили» означает, что ему дали заглавие, как тексту или произведению.",
+            "fix": "Назвали",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-wrong-verb-titled",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «Озаглавили» — Имеется в виду, что кратер назвали в честь человека, но «озаглавили» означает, что ему дали заглавие, как тексту или произведению. Fix: Назвали"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Озаглавили",
+            "problem": "Имеется в виду, что кратер назвали в честь человека, но «озаглавили» означает, что ему дали заглавие, как тексту или произведению.",
+            "fix": "Назвали",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "lottery-sold-as-life-hack",
+      "trial": 3,
+      "pass": false,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «Дядя Миша уже ищет старые квитанции с адресами.» — Вместо собственной реплики дяде Мише приписана выдуманная физическая сцена. Fix: «Дядя Миша: обычно за прошлое платят, а тут оно само доплатило»."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Дядя Миша уже ищет старые квитанции с адресами.",
+            "problem": "Вместо собственной реплики дяде Мише приписана выдуманная физическая сцена.",
+            "fix": "«Дядя Миша: обычно за прошлое платят, а тут оно само доплатило».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Проверенный способ выиграть в лотерею",
+            "problem": "Источник описывает единичный выигрыш, а не проверенный способ выигрывать в лотерею.",
+            "fix": "Заменить заголовок: «Старый адрес пригодился: житель Мэриленда поставил на его индекс и выиграл $50 000».",
+            "by": "editor",
+            "dismissal": "Заголовок подаёт единичный выигрыш как шуточный «лайфхак», а не как доказанную закономерность лотереи.",
+            "ground": "understood-joke"
+          },
+          {
+            "category": "meaning",
+            "quote": "у остальных старых индексов такой удачи не будет",
+            "problem": "Из одного выигрыша не следует, что всем остальным старым индексам обязательно не повезёт.",
+            "fix": "«Хуёво: повторить адрес можно, выигрыш — не по заказу».",
+            "by": "editor",
+            "dismissal": "В строке вердикта это комическое преувеличение редкости выигрыша с персонификацией индексов, а не буквальный прогноз для всех остальных комбинаций.",
+            "ground": "understood-joke"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-wrong-word-girth",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «в обхвате» — Имеется в виду диаметр кратера, но «в обхвате» означает длину его окружности, которую далее сопоставляют с диаметром Фобоса. Fix: в диаметре"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "в обхвате",
+            "problem": "Имеется в виду диаметр кратера, но «в обхвате» означает длину его окружности, которую далее сопоставляют с диаметром Фобоса.",
+            "fix": "в диаметре",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-wrong-verb-titled",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «Озаглавили» — Имеется в виду, что кратер назвали в честь Хлои Стикни Холл, но «озаглавили» означает, что ему дали заглавие, как тексту или произведению. Fix: Назвали"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Озаглавили",
+            "problem": "Имеется в виду, что кратер назвали в честь Хлои Стикни Холл, но «озаглавили» означает, что ему дали заглавие, как тексту или произведению.",
+            "fix": "Назвали",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "unsupported-claim",
+            "quote": "теперь",
+            "problem": "Слово представляет кратер как новое приобретение Фобоса, хотя источник описывает уже существовавший кратер на снимке 2008 года.",
+            "fix": "Удалить «теперь»: «Пиздато: у Фобоса есть кратер, которым можно хвастаться перед всеми лунами Марса».",
+            "by": "editor",
+            "dismissal": "«Теперь» в шуточной строке «Пиздато» обозначает результат описанного удара, а не утверждает, что кратер возник недавно.",
+            "ground": "understood-joke"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-wrong-word-girth",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «в обхвате» — По смыслу имеется в виду диаметр кратера, а «в обхвате» обозначает длину его окружности. Fix: в диаметре"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "в обхвате",
+            "problem": "По смыслу имеется в виду диаметр кратера, а «в обхвате» обозначает длину его окружности.",
+            "fix": "в диаметре",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "stickney-wrong-word-girth",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «в обхвате» — Имеется в виду диаметр кратера, но «обхват» обозначает длину окружности, а не диаметр. Fix: в диаметре"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "в обхвате",
+            "problem": "Имеется в виду диаметр кратера, но «обхват» обозначает длину окружности, а не диаметр.",
+            "fix": "в диаметре",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-clean",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "skipton-clean",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "nasa-wrong-verb-escort",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «доводить до них экипажи» — Имеется в виду доставка экипажей на станции, но «доводить» означает вести или сопровождать людей до места, а не перевозить их. Fix: доставлять на них экипажи"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "доводить до них экипажи",
+            "problem": "Имеется в виду доставка экипажей на станции, но «доводить» означает вести или сопровождать людей до места, а не перевозить их.",
+            "fix": "доставлять на них экипажи",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-clean",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "libraries-clean",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "libraries-clean",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "nasa-wrong-verb-escort",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «доводить до них экипажи» — Имеется в виду перевозка экипажей на станции, но «доводить до них» означает вести или сопровождать людей до места, а не доставлять их транспортом. Fix: доставлять на них экипажи"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "доводить до них экипажи",
+            "problem": "Имеется в виду перевозка экипажей на станции, но «доводить до них» означает вести или сопровождать людей до места, а не доставлять их транспортом.",
+            "fix": "доставлять на них экипажи",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-clean",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "salmon-clean",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "salmon-clean",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "nasa-wrong-verb-escort",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «доводить до них экипажи» — По смыслу экипажи нужно доставлять на станции, а «доводить до них» означает вести или сопровождать экипажи до места, а не перевозить их. Fix: доставлять на них экипажи"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "доводить до них экипажи",
+            "problem": "По смыслу экипажи нужно доставлять на станции, а «доводить до них» означает вести или сопровождать экипажи до места, а не перевозить их.",
+            "fix": "доставлять на них экипажи",
+            "by": "proofreader"
+          }
+        ],
+        "suggestions": [
+          {
+            "category": "style",
+            "quote": "доводить до них экипажи",
+            "problem": "Для космической перевозки «доставлять» точнее и естественнее, чем «доводить».",
+            "fix": "доставлять туда экипажи",
+            "by": "editor"
+          }
+        ],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-clean",
+      "trial": 2,
+      "pass": false,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «Дядя Миша одобряет аэрогриль на пробу: любовь к кабачкам ещё не повод покупать технику.» — Реплика дяди Миши и строка «Пиздато» повторяют одну мысль: желание попробовать аэрогриль можно удовлетворить без покупки. Fix: Дядя Миша одобряет: ещё бы картошку выдавали — был бы полный комплект."
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "Дядя Миша одобряет аэрогриль на пробу: любовь к кабачкам ещё не повод покупать технику.",
+            "problem": "Реплика дяди Миши и строка «Пиздато» повторяют одну мысль: желание попробовать аэрогриль можно удовлетворить без покупки.",
+            "fix": "Дядя Миша одобряет: ещё бы картошку выдавали — был бы полный комплект.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-quote-to-chair",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: «Председатель благотворительной организации Share Skipton Анджела Монахэн советует: хочешь посмотреть на метеорный поток — бери телескоп.» — В источнике совет взять телескоп даёт пользовательница библиотеки Сьюзан Маллетт, а не Анджела Монахэн. Fix: Сьюзан Маллетт, которая часто пользуется библиотекой, советует: хочешь посмотреть на метеорный поток — бери телескоп."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "Председатель благотворительной организации Share Skipton Анджела Монахэн советует: хочешь посмотреть на метеорный поток — бери телескоп.",
+            "problem": "В источнике совет взять телескоп даёт пользовательница библиотеки Сьюзан Маллетт, а не Анджела Монахэн.",
+            "fix": "Сьюзан Маллетт, которая часто пользуется библиотекой, советует: хочешь посмотреть на метеорный поток — бери телескоп.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-quote-to-chair",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: «Председатель благотворительной организации Share Skipton Анджела Монахэн советует: хочешь посмотреть на метеорный поток — бери телескоп.» — В источнике совет взять телескоп для наблюдения за метеорным потоком даёт Сьюзан Маллетт, а не Анджела Монахэн. Fix: Посетительница библиотеки Сьюзан Маллетт советует: хочешь посмотреть на метеорный поток — бери телескоп."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "Председатель благотворительной организации Share Skipton Анджела Монахэн советует: хочешь посмотреть на метеорный поток — бери телескоп.",
+            "problem": "В источнике совет взять телескоп для наблюдения за метеорным потоком даёт Сьюзан Маллетт, а не Анджела Монахэн.",
+            "fix": "Посетительница библиотеки Сьюзан Маллетт советует: хочешь посмотреть на метеорный поток — бери телескоп.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-quote-to-misha",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: «Дядя Миша сказал прямо: «Наверное, всё дело в деньгах: за обдиралку для обоев или культиватор отдашь кучу денег, а потом, скорее всего, больше ими не воспользуешься».» — Это перевод слов Дэниела Брауна из материала BBC, ошибочно приписанный дяде Мише. Fix: Заменить собственной репликой персонажа: «Дядя Миша: „В такой библиотеке главное — вернуть дрель раньше, чем соседи напишут рецензию“»."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "Дядя Миша сказал прямо: «Наверное, всё дело в деньгах: за обдиралку для обоев или культиватор отдашь кучу денег, а потом, скорее всего, больше ими не воспользуешься».",
+            "problem": "Это перевод слов Дэниела Брауна из материала BBC, ошибочно приписанный дяде Мише.",
+            "fix": "Заменить собственной репликой персонажа: «Дядя Миша: „В такой библиотеке главное — вернуть дрель раньше, чем соседи напишут рецензию“».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-quote-to-misha",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "grammar: «ими» — Имеется в виду, что больше не воспользуешься купленным инструментом, но ближайшее подходящее по числу существительное — «денег», поэтому местоимение читается как указание на деньги. Fix: купленным инструментом",
+          "misattribution: «Дядя Миша сказал прямо: «Наверное, всё дело в деньгах: за обдиралку для обоев или культиватор отдашь кучу денег, а потом, скорее всего, больше ими не воспользуешься».» — В источнике эти слова принадлежат Дэниелу Брауну, а не дяде Мише. Fix: Заменить на собственную реплику персонажа: «Дядя Миша: „Вернуть дрель в библиотеку проще, чем выпросить её обратно у соседа“»."
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "ими",
+            "problem": "Имеется в виду, что больше не воспользуешься купленным инструментом, но ближайшее подходящее по числу существительное — «денег», поэтому местоимение читается как указание на деньги.",
+            "fix": "купленным инструментом",
+            "by": "proofreader"
+          },
+          {
+            "category": "misattribution",
+            "quote": "Дядя Миша сказал прямо: «Наверное, всё дело в деньгах: за обдиралку для обоев или культиватор отдашь кучу денег, а потом, скорее всего, больше ими не воспользуешься».",
+            "problem": "В источнике эти слова принадлежат Дэниелу Брауну, а не дяде Мише.",
+            "fix": "Заменить на собственную реплику персонажа: «Дядя Миша: „Вернуть дрель в библиотеку проще, чем выпросить её обратно у соседа“».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-quote-to-angie",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: ««Если закрыть глаза, выглядит прекрасно», — оценила свой ужин сама Энджи.» — В источнике эту фразу произносит один из комментаторов, а не Энджи. Fix: «Если закрыть глаза, выглядит прекрасно», — пошутил один из комментаторов."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "«Если закрыть глаза, выглядит прекрасно», — оценила свой ужин сама Энджи.",
+            "problem": "В источнике эту фразу произносит один из комментаторов, а не Энджи.",
+            "fix": "«Если закрыть глаза, выглядит прекрасно», — пошутил один из комментаторов.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-quote-to-chair",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: «Председатель благотворительной организации Share Skipton Анджела Монахэн советует: хочешь посмотреть на метеорный поток — бери телескоп.» — В источнике совет взять телескоп для наблюдения за метеорным потоком даёт Сьюзан Маллетт, а не Анджела Монахэн. Fix: Пользовательница библиотеки Сьюзан Маллетт советует взять телескоп, если хочется посмотреть на метеорный поток."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "Председатель благотворительной организации Share Skipton Анджела Монахэн советует: хочешь посмотреть на метеорный поток — бери телескоп.",
+            "problem": "В источнике совет взять телескоп для наблюдения за метеорным потоком даёт Сьюзан Маллетт, а не Анджела Монахэн.",
+            "fix": "Пользовательница библиотеки Сьюзан Маллетт советует взять телескоп, если хочется посмотреть на метеорный поток.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-quote-to-angie",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: ««Если закрыть глаза, выглядит прекрасно», — оценила свой ужин сама Энджи.» — В источнике эти слова принадлежат одному из комментаторов, а не Энджи. Fix: «Если закрыть глаза, выглядит прекрасно», — пошутил один из комментаторов."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "«Если закрыть глаза, выглядит прекрасно», — оценила свой ужин сама Энджи.",
+            "problem": "В источнике эти слова принадлежат одному из комментаторов, а не Энджи.",
+            "fix": "«Если закрыть глаза, выглядит прекрасно», — пошутил один из комментаторов.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-paronym-subscriber",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «Абонент» — Имеется в виду абонемент на пользование библиотекой, а «абонент» означает самого пользователя, поэтому фраза буквально сообщает о стоимости человека. Fix: Абонемент"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Абонент",
+            "problem": "Имеется в виду абонемент на пользование библиотекой, а «абонент» означает самого пользователя, поэтому фраза буквально сообщает о стоимости человека.",
+            "fix": "Абонемент",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-paronym-subscriber",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «Абонент» — Имеется в виду абонемент на пользование библиотекой, а «абонент» — её пользователь, так что буквально £10 в год стоил человек. Fix: Абонемент"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Абонент",
+            "problem": "Имеется в виду абонемент на пользование библиотекой, а «абонент» — её пользователь, так что буквально £10 в год стоил человек.",
+            "fix": "Абонемент",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-quote-to-angie",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "misattribution: ««Если закрыть глаза, выглядит прекрасно», — оценила свой ужин сама Энджи.» — В источнике эту фразу произносит один из комментаторов, а не Энджи. Fix: «Если закрыть глаза, выглядит прекрасно», — пошутил один из комментаторов."
+        ],
+        "blockers": [
+          {
+            "category": "misattribution",
+            "quote": "«Если закрыть глаза, выглядит прекрасно», — оценила свой ужин сама Энджи.",
+            "problem": "В источнике эту фразу произносит один из комментаторов, а не Энджи.",
+            "fix": "«Если закрыть глаза, выглядит прекрасно», — пошутил один из комментаторов.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-paronym-subscriber",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «Абонент» — Имеется в виду абонемент на пользование библиотекой, но «абонент» означает пользователя, поэтому получается, что £10 в год стоил человек. Fix: Абонемент",
+          "wrong-phrase: «Абонент стоил £10 в год» — «Абонент» — пользователь услуги, а не абонемент: получается, что £10 стоил человек. Fix: Абонемент стоил £10 в год."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Абонент",
+            "problem": "Имеется в виду абонемент на пользование библиотекой, но «абонент» означает пользователя, поэтому получается, что £10 в год стоил человек.",
+            "fix": "Абонемент",
+            "by": "proofreader"
+          },
+          {
+            "category": "wrong-phrase",
+            "quote": "Абонент стоил £10 в год",
+            "problem": "«Абонент» — пользователь услуги, а не абонемент: получается, что £10 стоил человек.",
+            "fix": "Абонемент стоил £10 в год.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-quote-to-misha",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "grammar: «ими» — Имеется в виду, что покупатель больше не воспользуется инструментом, но «ими» отсылает к ближайшему существительному во множественном числе — «денег», и получается, что он больше не воспользуется деньгами. Fix: этим инструментом",
+          "misattribution: «Дядя Миша сказал прямо: «Наверное, всё дело в деньгах: за обдиралку для обоев или культиватор отдашь кучу денег, а потом, скорее всего, больше ими не воспользуешься».» — Это перевод слов Дэниела Брауна из источника, ошибочно приписанный дяде Мише. Fix: Заменить на собственную реплику персонажа: «Дядя Миша: „После такой библиотеки соседи сами попросят тебя вернуться к чтению“»."
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "ими",
+            "problem": "Имеется в виду, что покупатель больше не воспользуется инструментом, но «ими» отсылает к ближайшему существительному во множественном числе — «денег», и получается, что он больше не воспользуется деньгами.",
+            "fix": "этим инструментом",
+            "by": "proofreader"
+          },
+          {
+            "category": "misattribution",
+            "quote": "Дядя Миша сказал прямо: «Наверное, всё дело в деньгах: за обдиралку для обоев или культиватор отдашь кучу денег, а потом, скорее всего, больше ими не воспользуешься».",
+            "problem": "Это перевод слов Дэниела Брауна из источника, ошибочно приписанный дяде Мише.",
+            "fix": "Заменить на собственную реплику персонажа: «Дядя Миша: „После такой библиотеки соседи сами попросят тебя вернуться к чтению“».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-paronym-present",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «представляет» — По смыслу библиотека предоставляет приборы во временное пользование, а «представляет» означает, что она демонстрирует их или знакомит с ними читателей. Fix: предоставляет"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "представляет",
+            "problem": "По смыслу библиотека предоставляет приборы во временное пользование, а «представляет» означает, что она демонстрирует их или знакомит с ними читателей.",
+            "fix": "предоставляет",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-paronym-present",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «представляет» — По смыслу библиотека предоставляет аэрогрили читателям, а «представляет» означает, что она их демонстрирует или знакомит с ними. Fix: предоставляет"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "представляет",
+            "problem": "По смыслу библиотека предоставляет аэрогрили читателям, а «представляет» означает, что она их демонстрирует или знакомит с ними.",
+            "fix": "предоставляет",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-paronym-present",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «представляет» — Имеется в виду, что библиотека предоставляет аэрогрили во временное пользование, но «представляет» означает, что она их демонстрирует или знакомит с ними читателей. Fix: предоставляет"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "представляет",
+            "problem": "Имеется в виду, что библиотека предоставляет аэрогрили во временное пользование, но «представляет» означает, что она их демонстрирует или знакомит с ними читателей.",
+            "fix": "предоставляет",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-pronoun-neighbour",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «пока он запекался в посудомойке» — По смыслу в посудомойке запекался лосось, но местоимение «он» отсылает к горошку или соседу, создавая неверное прочтение. Fix: пока лосось запекался в посудомойке"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "пока он запекался в посудомойке",
+            "problem": "По смыслу в посудомойке запекался лосось, но местоимение «он» отсылает к горошку или соседу, создавая неверное прочтение.",
+            "fix": "пока лосось запекался в посудомойке",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-pronoun-neighbour",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «пока он запекался в посудомойке» — По смыслу в посудомойке запекался лосось, но местоимение «он» можно отнести к горошку или соседу, приписав запекание им. Fix: пока лосось запекался в посудомойке"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "пока он запекался в посудомойке",
+            "problem": "По смыслу в посудомойке запекался лосось, но местоимение «он» можно отнести к горошку или соседу, приписав запекание им.",
+            "fix": "пока лосось запекался в посудомойке",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-wrong-verb-made",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «изготовила лосося» — Имеется в виду приготовление рыбы, тогда как «изготовила лосося» звучит как создание самой рыбы, а не блюда из неё. Fix: приготовила лосося"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "изготовила лосося",
+            "problem": "Имеется в виду приготовление рыбы, тогда как «изготовила лосося» звучит как создание самой рыбы, а не блюда из неё.",
+            "fix": "приготовила лосося",
+            "by": "proofreader"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-pronoun-neighbour",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «он» — Имеется в виду лосось, но местоимение «он» отсылает к ближайшему существительному мужского рода «горошек», и получается, что в посудомойке запекался горошек. Fix: лосось",
+          "grammar: «пока он запекался в посудомойке» — Под «он» подразумевается лосось, но после слова «соседа» фраза читается так, будто в посудомойке запекался сосед. Fix: Заменить предложение на: «Энджи попросила соседа приготовить картошку и горошек к лососю»."
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "он",
+            "problem": "Имеется в виду лосось, но местоимение «он» отсылает к ближайшему существительному мужского рода «горошек», и получается, что в посудомойке запекался горошек.",
+            "fix": "лосось",
+            "by": "proofreader"
+          },
+          {
+            "category": "grammar",
+            "quote": "пока он запекался в посудомойке",
+            "problem": "Под «он» подразумевается лосось, но после слова «соседа» фраза читается так, будто в посудомойке запекался сосед.",
+            "fix": "Заменить предложение на: «Энджи попросила соседа приготовить картошку и горошек к лососю».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-object-reader",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «Прибор библиотека просит вернуть читателя чистым и в срок» — Имеется в виду просьба к читателю вернуть чистый прибор, но «просит вернуть читателя» означает, что вернуть нужно самого читателя. Fix: Библиотека просит читателя вернуть прибор чистым и в срок"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "Прибор библиотека просит вернуть читателя чистым и в срок",
+            "problem": "Имеется в виду просьба к читателю вернуть чистый прибор, но «просит вернуть читателя» означает, что вернуть нужно самого читателя.",
+            "fix": "Библиотека просит читателя вернуть прибор чистым и в срок",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-wrong-verb-made",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «изготовила лосося» — Имеется в виду приготовление рыбы, но «изготовила лосося» читается как создание самой рыбы, а не готовка. Fix: приготовила лосося"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "изготовила лосося",
+            "problem": "Имеется в виду приготовление рыбы, но «изготовила лосося» читается как создание самой рыбы, а не готовка.",
+            "fix": "приготовила лосося",
+            "by": "proofreader"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-wrong-verb-made",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «изготовила лосося» — Имеется в виду приготовление рыбы, но «изготовила лосося» читается как создание самого лосося в качестве изделия. Fix: приготовила лосося"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "изготовила лосося",
+            "problem": "Имеется в виду приготовление рыбы, но «изготовила лосося» читается как создание самого лосося в качестве изделия.",
+            "fix": "приготовила лосося",
+            "by": "proofreader"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-misplaced-price",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «аппарат для снятия обоев, купив дом за £2 в неделю» — Имеется в виду аренда аппарата за £2 в неделю, но слова в таком порядке сообщают, что за £2 в неделю Браун купил дом. Fix: аппарат для снятия обоев за £2 в неделю, купив дом",
+          "wrong-phrase: «купив дом за £2 в неделю» — Задумано, что прокат аппарата стоил £2 в неделю, но фраза сообщает, что за £2 в неделю Браун купил дом. Fix: Заменить предложение на: «Купив дом в Скиптоне, Дэниел Браун взял аппарат для снятия обоев за £2 в неделю: покупать его ради одного ремонта он решил не делать»."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "аппарат для снятия обоев, купив дом за £2 в неделю",
+            "problem": "Имеется в виду аренда аппарата за £2 в неделю, но слова в таком порядке сообщают, что за £2 в неделю Браун купил дом.",
+            "fix": "аппарат для снятия обоев за £2 в неделю, купив дом",
+            "by": "proofreader"
+          },
+          {
+            "category": "wrong-phrase",
+            "quote": "купив дом за £2 в неделю",
+            "problem": "Задумано, что прокат аппарата стоил £2 в неделю, но фраза сообщает, что за £2 в неделю Браун купил дом.",
+            "fix": "Заменить предложение на: «Купив дом в Скиптоне, Дэниел Браун взял аппарат для снятия обоев за £2 в неделю: покупать его ради одного ремонта он решил не делать».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "skipton-misplaced-price",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «аппарат для снятия обоев, купив дом за £2 в неделю» — Имеется в виду аренда аппарата за £2 в неделю после покупки дома, но слова «за £2 в неделю» относятся к покупке дома. Fix: аппарат для снятия обоев за £2 в неделю, купив дом",
+          "wrong-phrase: «Дэниел Браун взял аппарат для снятия обоев, купив дом за £2 в неделю» — Вместо проката аппарата за £2 в неделю конструкция сообщает о покупке дома за эту сумму. Fix: Купив дом, Дэниел Браун взял аппарат для снятия обоев за £2 в неделю"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "аппарат для снятия обоев, купив дом за £2 в неделю",
+            "problem": "Имеется в виду аренда аппарата за £2 в неделю после покупки дома, но слова «за £2 в неделю» относятся к покупке дома.",
+            "fix": "аппарат для снятия обоев за £2 в неделю, купив дом",
+            "by": "proofreader"
+          },
+          {
+            "category": "wrong-phrase",
+            "quote": "Дэниел Браун взял аппарат для снятия обоев, купив дом за £2 в неделю",
+            "problem": "Вместо проката аппарата за £2 в неделю конструкция сообщает о покупке дома за эту сумму.",
+            "fix": "Купив дом, Дэниел Браун взял аппарат для снятия обоев за £2 в неделю",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-natural-ko-dnyu",
+      "trial": 1,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "skipton-misplaced-price",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «взял аппарат для снятия обоев, купив дом за £2 в неделю» — Имеется в виду прокат аппарата за £2 в неделю, но по порядку слов выходит, что за £2 в неделю Браун купил дом. Fix: взял аппарат для снятия обоев за £2 в неделю, купив дом"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "взял аппарат для снятия обоев, купив дом за £2 в неделю",
+            "problem": "Имеется в виду прокат аппарата за £2 в неделю, но по порядку слов выходит, что за £2 в неделю Браун купил дом.",
+            "fix": "взял аппарат для снятия обоев за £2 в неделю, купив дом",
+            "by": "proofreader+editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-object-reader",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «Прибор библиотека просит вернуть читателя» — Имеется в виду, что библиотека просит читателя вернуть прибор, но расстановка дополнений меняет роли: библиотека просит прибор вернуть читателя. Fix: Библиотека просит читателя вернуть прибор",
+          "wrong-phrase: «Прибор библиотека просит вернуть читателя чистым и в срок» — Вместо просьбы читателю вернуть чистый прибор фраза читается как просьба вернуть чистым самого читателя. Fix: Прибор стоит вернуть чистым и в срок"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "Прибор библиотека просит вернуть читателя",
+            "problem": "Имеется в виду, что библиотека просит читателя вернуть прибор, но расстановка дополнений меняет роли: библиотека просит прибор вернуть читателя.",
+            "fix": "Библиотека просит читателя вернуть прибор",
+            "by": "proofreader"
+          },
+          {
+            "category": "wrong-phrase",
+            "quote": "Прибор библиотека просит вернуть читателя чистым и в срок",
+            "problem": "Вместо просьбы читателю вернуть чистый прибор фраза читается как просьба вернуть чистым самого читателя.",
+            "fix": "Прибор стоит вернуть чистым и в срок",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-object-reader",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «просит вернуть читателя» — Имеется в виду, что библиотека просит читателя вернуть прибор, но такой порядок слов делает самого читателя объектом возврата. Fix: просит читателя вернуть",
+          "wrong-phrase: «Прибор библиотека просит вернуть читателя чистым и в срок» — Из-за порядка слов вместо просьбы читателю вернуть чистый прибор фраза читается как просьба вернуть чистого читателя. Fix: Прибор нужно вернуть чистым и в срок"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "просит вернуть читателя",
+            "problem": "Имеется в виду, что библиотека просит читателя вернуть прибор, но такой порядок слов делает самого читателя объектом возврата.",
+            "fix": "просит читателя вернуть",
+            "by": "proofreader"
+          },
+          {
+            "category": "wrong-phrase",
+            "quote": "Прибор библиотека просит вернуть читателя чистым и в срок",
+            "problem": "Из-за порядка слов вместо просьбы читателю вернуть чистый прибор фраза читается как просьба вернуть чистого читателя.",
+            "fix": "Прибор нужно вернуть чистым и в срок",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-natural-ko-dnyu",
+      "trial": 3,
+      "pass": false,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "salmon-dry-run-slip",
+      "trial": 3,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «Картошку и горошек попросила приготовить соседа.» — Задумано, что она попросила соседа приготовить картошку и горошек, но фраза также читается так, будто она попросила картошку и горошек приготовить соседа. Fix: Попросила соседа приготовить картошку и горошек."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Картошку и горошек попросила приготовить соседа.",
+            "problem": "Задумано, что она попросила соседа приготовить картошку и горошек, но фраза также читается так, будто она попросила картошку и горошек приготовить соседа.",
+            "fix": "Попросила соседа приготовить картошку и горошек.",
+            "by": "proofreader"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-dry-run-slip",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «Картошку и горошек попросила приготовить соседа» — Задумано, что она попросила соседа приготовить картошку и горошек, но порядок слов допускает прочтение, будто она попросила картошку и горошек приготовить соседа. Fix: Попросила соседа приготовить картошку и горошек"
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Картошку и горошек попросила приготовить соседа",
+            "problem": "Задумано, что она попросила соседа приготовить картошку и горошек, но порядок слов допускает прочтение, будто она попросила картошку и горошек приготовить соседа.",
+            "fix": "Попросила соседа приготовить картошку и горошек",
+            "by": "proofreader"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "libraries-natural-ko-dnyu",
+      "trial": 2,
+      "pass": false,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «можно пережить приступ «хочу такой же» без ущерба для кошелька» — Вердикт повторяет мысль реплики дяди Миши: желание попробовать аэрогриль не обязывает покупать технику. Fix: Заменить строку на «Пиздато: кулинарную книгу можно взять вместе с техникой для её рецептов»."
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "можно пережить приступ «хочу такой же» без ущерба для кошелька",
+            "problem": "Вердикт повторяет мысль реплики дяди Миши: желание попробовать аэрогриль не обязывает покупать технику.",
+            "fix": "Заменить строку на «Пиздато: кулинарную книгу можно взять вместе с техникой для её рецептов».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "salmon-dry-run-slip",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "wrong-phrase: «Картошку и горошек попросила приготовить соседа.» — Имеется в виду просьба к соседу приготовить картошку и горошек, но фраза также читается так, будто картошку и горошек попросили приготовить самого соседа. Fix: Попросила соседа приготовить картошку и горошек."
+        ],
+        "blockers": [
+          {
+            "category": "wrong-phrase",
+            "quote": "Картошку и горошек попросила приготовить соседа.",
+            "problem": "Имеется в виду просьба к соседу приготовить картошку и горошек, но фраза также читается так, будто картошку и горошек попросили приготовить самого соседа.",
+            "fix": "Попросила соседа приготовить картошку и горошек.",
+            "by": "proofreader"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [
+          {
+            "category": "grammar",
+            "quote": "Она",
+            "problem": "Имеется в виду Энджи, но ближайшее существительное женского рода — «посудомойка», поэтому местоимение приписывает поиск рецепта и заворачивание филе машине.",
+            "fix": "Энджи",
+            "by": "proofreader",
+            "dismissal": "Местоимение «она» естественно отсылает к Энджи: в русском языке оно не обязано обозначать ближайшее существительное женского рода.",
+            "ground": "correct-as-written"
+          }
+        ],
+        "nextAction": "repair"
+      }
+    }
+  ]
+}

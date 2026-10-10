@@ -5,7 +5,7 @@ import {readFile, mkdir, writeFile, unlink} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {loadEnv, Composio, unpack, chat, llmConfig, atomicWrite, confirmedReceipt} from './transport.mjs';
+import {loadEnv, Composio, unpack, chat, llmConfig, endpointHost, atomicWrite, confirmedReceipt} from './transport.mjs';
 const ROOT=dirname(fileURLToPath(import.meta.url));
 const CHAT=-1004350521393, ACCOUNT='pizdato-net-channel';
 const normalized=s=>s.toLocaleLowerCase('ru').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
@@ -49,9 +49,9 @@ async function run() {
   if(!channel?.ok||channel.result?.id!==CHAT||channel.result?.username!=='pizdato_net') throw new Error('Channel identity mismatch');
   const ask=messages=>chat(messages,undefined,{title:'pizdato-morning',model:process.env.PIZDATO_MORNING_MODEL||process.env.PIZDATO_EVENING_MODEL||'deepseek/deepseek-v4.1-flash',maxTokens:3000});
   if(mode==='--check') {
-    const answer=await ask([{role:'user',content:'Return exactly OPENROUTER_OK. Non-publishing connection check.'}]);
-    if(!answer.content?.includes('OPENROUTER_OK')) throw new Error('OpenRouter preflight failed');
-    console.log('PREFLIGHT_OK: OpenRouter, named Telegram channel and polish resources verified.');return;
+    const answer=await ask([{role:'user',content:'Return exactly MODEL_OK. Non-publishing connection check.'}]);
+    if(!answer.content?.includes('MODEL_OK')) throw new Error(`Model preflight failed at ${endpointHost()}`);
+    console.log(`PREFLIGHT_OK: model endpoint ${endpointHost()}, named Telegram channel and polish resources verified.`);return;
   }
   await mcp.call('COMPOSIO_GET_TOOL_SCHEMAS',{tool_slugs:['TELEGRAM_SEND_MESSAGE'],session_id:sessionId});
   const sharedBase=dirname(state),publicationPath=join(sharedBase,'pizdato-publication.lock');

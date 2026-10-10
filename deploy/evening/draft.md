@@ -20,17 +20,17 @@ Do not write the CTA, links, hashtags, emoji or the weekday category; the host a
 
 - Open with the fact itself. Never invent a narrator scene (reading the feed, coffee, tea, choking on a drink) and never announce a reaction («прибалдел», «глазам не поверил», «новость, от которой…»): show the detail that causes it.
 - No signposting («И вот соль:», «Смысл простой:», «Дальше веселее»), no «это не просто X, а Y», no explaining the joke, no motivational or cosmic morals, no rubric labels in the headline.
-- Fold uncertainty into the sentence («откуда борозды, в NASA пока не знают»). Never narrate your own caution («Честная оговорка:», «NASA честно пишет») and never paste these instructions into the post.
+- Fold uncertainty into the sentence («почему так вышло, учёные пока спорят»). Never narrate your own caution («Честная оговорка:», «NASA честно пишет») and never paste these instructions into the post.
 - Do not translate the press release sentence by sentence. Pick one human angle (a name, an absurd detail, a price, a consequence) and build the post around it. A short live quote from the source is the best joke; quote it exactly.
 - Say each fact once. Mix short and long sentences. Use natural Russian, not translated phrasing: translate English idioms by meaning.
-- Grammar and spelling matter: agreement, government, hyphenation (пол-луны), «что бы ни» versus «чтобы», capital letters after a full stop. Profanity and slang are welcome where they land.
+- Grammar and spelling matter: agreement, government, hyphenation (пол-яблока), «что бы ни» versus «чтобы», capital letters after a full stop. Profanity and slang are welcome where they land.
 - The confirmed history is a list of what NOT to repeat — subjects, openers, verdict forms («Хуёво: чтобы X, пришлось Y») and wisdom forms («Не выбрасывай… — вдруг…», «Даже X…») — not a style sample.
 
 ## Wisdom — the final punchline
 
 Take one detail and flip it or carry it into everyday life. It may reuse facts from the story only by reframing them.
 Strong: «Сэкономил 11 долларов в год — потратил 5 и полчаса»; «Не обязательно уметь летать, чтобы сбить человека с ног»; «Капибара не спорит с повесткой — она просто в неё входит»; «Проигрываешь человеку — не кради его бота. Бот обидится».
-Weak: a restated fact («Даже на луне грунт умудряется сползать»); patience or luck morals («Копай двенадцать лет — и однажды…»); «Вселенная отвечает»; «Лучшее X — то, что…»; «Кто… — тот…»; padding words added only to reach a count.
+Weak: a restated fact («Даже в пустыне песок умудряется пересыпаться»); patience or luck morals («Копай двенадцать лет — и однажды…»); «Вселенная отвечает»; «Лучшее X — то, что…»; «Кто… — тот…»; padding words added only to reach a count.
 
 ## Repairs
 
