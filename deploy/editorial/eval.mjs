@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {loadEnv,chat,llmConfig} from '../evening/agent.mjs';
 import {execFileSync} from 'node:child_process';
 import {createGate} from './gate.mjs';
-import {summarize,passes,selectFixtures,verifySealed,profilePaths,fixtureFields,barFor,provenance} from './eval-summary.mjs';
+import {summarize,passes,selectFixtures,verifySealed,profilePaths,fixtureFields,barFor,provenance,contaminationOf} from './eval-summary.mjs';
 import {validateProfile} from './compose-rubric.mjs';
 import {homedir} from 'node:os';
 import {join,dirname,resolve} from 'node:path';
@@ -25,6 +25,9 @@ if(final) {
  heldout=verifySealed(bytes,await readFile(paths.heldoutSha256,'utf8'));
  all=[...all,...JSON.parse(bytes)];
 }
+// A profile whose rubrics show the model its own fixtures measures memory, not rules: refuse before any request.
+const contaminated=await contaminationOf(profile,all);
+if(contaminated.length){console.error(`Fixture text in rubrics of ${profile.id}: ${contaminated.map(f=>`${f.fixture} in ${f.rubric}`).join(', ')}`);process.exit(2);}
 const fixtures=selectFixtures(all,ids?ids.split(',').filter(Boolean):null,final);
 const results=[];
 const trials=Math.max(1,Number(process.env.PIZDATO_EVAL_TRIALS)||3);

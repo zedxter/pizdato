@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import {readFile,readdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
-import {guardedTexts} from './fixture-guard.mjs';
+import {guardedTexts,contamination} from './fixture-guard.mjs';
 // Release bar (editorial-convergence): no clean trial blocked and at least 90% of objective-defect trials caught.
 // Borderline fixtures are reported only; held-out sets are reported separately; a subset run never claims the bar.
 export const DEFAULT_BAR=Object.freeze({clean:1,objective:0.9});
@@ -59,22 +59,29 @@ export async function provenance(profile,module=profilePaths(profile.id).module)
  const texts=await guardedTexts(profile);
  return {profile:profile.id,profileSha256:sha(await readFile(module)),rubricSha256:Object.fromEntries(Object.entries(texts).map(([k,t])=>[k,sha(t)]))};
 }
-// Production rule: a publication ships only with fixtures and a passing final report on its current profile and rubrics.
+// No fixture sentence, injected span or expected quote may reach what the profile's model is shown, with its own host lines.
+export const contaminationOf=async(profile,fixtures)=>contamination(fixtures,await guardedTexts(profile),profile.hostLines??[]);
+// Production rule: a publication ships only with fixtures and a passing final report on its current profile, rubrics,
+// committed fixtures and published held-out set, and with no fixture text in its composed rubrics.
 export async function productionViolations(dir=fileURLToPath(new URL('./profiles/',import.meta.url))){
  const out=[];
  for(const name of (await readdir(dir)).filter(n=>n.endsWith('.mjs')).sort()){
   const id=name.slice(0,-4),own=join(dir,id);
   if(id==='pizdato-channel')continue;
-  const json=async file=>{try{return JSON.parse(await readFile(join(own,file),'utf8'));}catch{return null;}};
+  const bytes=async file=>{try{return await readFile(join(own,file));}catch{return null;}},json=async file=>{try{return JSON.parse(await bytes(file));}catch{return null;}};
   const fixtures=await json('fixtures.json');
   if(!Array.isArray(fixtures)||!fixtures.length){out.push(`${id}: no fixtures`);continue;}
+  const published=String(await bytes('fixtures-heldout.sha256')||'').trim().split(/\s+/)[0],heldout=await json('fixtures-heldout.json');
   const report=await json('report.json');
   if(!report){out.push(`${id}: no evaluation report`);continue;}
   const profile=(await import(pathToFileURL(join(dir,name)).href)).default;
   const current=await provenance(profile,join(dir,name));
   if(profile.id!==id||report.profile!==id||report.profileSha256!==current.profileSha256||JSON.stringify(report.rubricSha256)!==JSON.stringify(current.rubricSha256))out.push(`${id}: the report is stale for the current profile or rubrics`);
   if(!(report.bar?.clean>=DEFAULT_BAR.clean&&report.bar?.objective>=DEFAULT_BAR.objective))out.push(`${id}: the report bar is looser than the default bar`);
-  if(report.final!==true||!report.heldoutSha256)out.push(`${id}: the report has no sealed held-out set`);
+  if(report.final!==true||!report.heldoutSha256||report.heldoutSha256!==published)out.push(`${id}: the report has no sealed held-out set matching fixtures-heldout.sha256`);
+  if(report.fixturesSha256!==sha(await bytes('fixtures.json')))out.push(`${id}: the report was measured on other fixtures`);
+  if(report.uncommitted!==false)out.push(`${id}: the report was run from an uncommitted tree`);
+  for(const f of await contaminationOf(profile,[...fixtures,...(Array.isArray(heldout)?heldout:[])]))out.push(`${id}: fixture ${f.fixture} is in ${f.rubric} («${f.match}»)`);
   if(report.releaseBar!==true)out.push(`${id}: the report does not meet its release bar`);
  }
  return out;

@@ -57,6 +57,7 @@ import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import channel from '../profiles/pizdato-channel.mjs';
 import column from './profiles/example-column.mjs';
+const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 test('the channel keeps its fixture paths, field mapping and bar',()=>{
  const p=profilePaths('pizdato-channel');
  assert.deepEqual(Object.fromEntries(Object.entries(p).map(([k,u])=>[k,fileURLToPath(u).split('/deploy/editorial/')[1]])),{module:'profiles/pizdato-channel.mjs',fixtures:'fixtures.json',heldout:'fixtures-heldout-222.json',heldoutSha256:'fixtures-heldout-222.sha256'});
@@ -92,8 +93,25 @@ test('every production profile but the channel needs fixtures and a passing fina
   await writeFile(join(dir,'example-column/fixtures.json'),'[{"id":"c","class":"clean","text":"x","expected":"approve"}]');
   assert.match((await productionViolations(dir)).join('\n'),/example-column: no evaluation report/);
   const report=async r=>{await writeFile(join(dir,'example-column/report.json'),JSON.stringify(r));return (await productionViolations(dir)).join('\n');};
-  const good={...await provenance(column,module),final:true,heldoutSha256:'a'.repeat(64),bar:DEFAULT_BAR,releaseBar:true};
+  const fixtures=join(dir,'example-column/fixtures.json'),heldoutSha256='a'.repeat(64);
+  await writeFile(join(dir,'example-column/fixtures-heldout.sha256'),`${heldoutSha256}  fixtures-heldout.json\n`);
+  const good={...await provenance(column,module),final:true,uncommitted:false,fixturesSha256:sha(await readFile(fixtures)),heldoutSha256,bar:DEFAULT_BAR,releaseBar:true};
   assert.equal(await report(good),'');
+  // The report must describe the committed fixtures and the published held-out set it was measured on.
+  assert.match(await report({...good,uncommitted:true}),/uncommitted/);
+  assert.match(await report({...good,heldoutSha256:'b'.repeat(64)}),/held-out/);
+  await writeFile(fixtures,'[{"id":"c","class":"clean","text":"y","expected":"approve"}]');
+  assert.match(await report(good),/fixtures/);
+  await writeFile(fixtures,'[{"id":"c","class":"clean","text":"x","expected":"approve"}]');assert.equal(await report(good),'');
+  await rm(join(dir,'example-column/fixtures-heldout.sha256'));assert.match(await report(good),/held-out/);
+  await writeFile(join(dir,'example-column/fixtures-heldout.sha256'),heldoutSha256);assert.equal(await report(good),'');
+  // Fixture text in the profile's own composed rubrics fails the rule, for the dev and the revealed held-out set.
+  await writeFile(fixtures,'[{"id":"c","class":"clean","text":"x","expected":"approve","injected":"Аркадий Петрович"}]');
+  assert.match(await report({...good,fixturesSha256:sha(await readFile(fixtures))}),/example-column: fixture c is in editorial\/editor\.md/);
+  await writeFile(fixtures,'[{"id":"c","class":"clean","text":"x","expected":"approve"}]');
+  await writeFile(join(dir,'example-column/fixtures-heldout.json'),'[{"id":"h","class":"clean","text":"x","expected":"approve","injected":"Аркадий Петрович"}]');
+  assert.match(await report(good),/fixture h is in/);
+  await rm(join(dir,'example-column/fixtures-heldout.json'));
   assert.match(await report({...good,releaseBar:false}),/release bar/);
   assert.match(await report({...good,heldoutSha256:null}),/held-out/);
   assert.match(await report({...good,bar:{clean:1,objective:0.8}}),/bar/);

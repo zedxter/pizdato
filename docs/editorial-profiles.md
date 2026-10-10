@@ -83,7 +83,7 @@ A profile is a frozen default export of `deploy/editorial/profiles/<id>.mjs`.
 | `fields` | Extra editor inputs in order; sent after `candidate`. The channel has `['wisdom']`. |
 | `unique(fields, history)` | Repetition check, see below. |
 | `slots` | Text for every slot in the table above. |
-| `hostLines` | Optional: strings the host prints in every text; the fixture guard ignores them. |
+| `hostLines` | Optional: strings the host prints in every text; the profile's fixture guard ignores them (no lines when absent). |
 | `releaseBar` | Optional `{objective}` between 0.9 and 1: tightens the release bar, never loosens it. |
 
 Enums keep the channel's order: suggestions are `humor`, the profile's `suggestions`, `style`, then `category`; grounds are `confirmed`, `correct-as-written`, `faithful-to-source`, `persona-opinion`, `verdict-contrast`, `understood-joke`, `loose-category`, `taste`, `misread`, each optional one only when declared. Blockers, the language and misattribution dismissal rules and every host rule are the same for all profiles.
@@ -130,7 +130,7 @@ A fixture is `{id, class, expected, text, …}`:
 - optional `source`, `history`, `initial` (a first draft that must be sent back for repair), `injected` (the defect span, for the contamination guard) and `set` (`held-out-…`);
 - `fields`: the profile fields; a missing one falls back to the fixture key of the same name, then to `text` (the channel: `wisdom || text`).
 
-The fixture guard (`fixture-guard.mjs`) checks that no fixture sentence, injected span or expected quote appears in the profile's composed rubrics or in its callers' prompts.
+The fixture guard (`fixture-guard.mjs`) checks that no fixture sentence, injected span or expected quote appears in the profile's composed rubrics or in its callers' prompts, ignoring only the profile's own `hostLines`. `eval.mjs` refuses a contaminated profile before any request, and the production rule checks the fixtures and the revealed held-out set.
 
 ## Evaluation command and release bar
 
@@ -140,7 +140,7 @@ node deploy/editorial/eval.mjs <report.json> [id,id,...] [--final] --profile <id
 
 Without `--profile` the channel is evaluated. `PIZDATO_EVAL_TRIALS` sets the trials per fixture (default 3) and `PIZDATO_EDITOR_MODEL` the reviewer model. The held-out set joins only a `--final` run and only byte-identical to its hash. The report records `profile`, `profileSha256`, `rubricSha256` (composed rubrics and caller prompts), `bar` and `releaseBar`; a subset run reports `releaseBar: null`.
 
-The release bar: every clean trial passes and at least 90% of objective trials are caught (more if the profile's `releaseBar` says so), in a final run with a sealed held-out set. A repository test (`productionViolations` in `eval-summary.mjs`) refuses any profile under `deploy/editorial/profiles/` other than `pizdato-channel` without fixtures and a committed final report that meets the bar for the current profile and rubrics.
+The release bar: every clean trial passes and at least 90% of objective trials are caught (more if the profile's `releaseBar` says so), in a final run with a sealed held-out set. A repository test (`productionViolations` in `eval-summary.mjs`) refuses any profile under `deploy/editorial/profiles/` other than `pizdato-channel` without fixtures and a committed final report that meets the bar for the current profile and rubrics, was run from a committed tree (`uncommitted: false`) on the current `fixtures.json` (`fixturesSha256`) and the published `fixtures-heldout.sha256` (`heldoutSha256`), and whose fixtures do not appear in the profile's composed rubrics.
 
 ## A worked minimal profile
 

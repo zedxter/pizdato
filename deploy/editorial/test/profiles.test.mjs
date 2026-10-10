@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile,readdir} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import {composeRubric,TEMPLATES} from '../compose-rubric.mjs';
 import {createGate,reviewOptions,editorOptions,proofreaderOptions,verifierOptions,BLOCKERS} from '../gate.mjs';
 import channel from '../profiles/pizdato-channel.mjs';
@@ -115,5 +115,4 @@ test('production entrypoints import the channel profile directly, with no profil
   assert.match(source,/^import channel from '\.\.\/editorial\/profiles\/pizdato-channel\.mjs';$/m,path);
   assert.doesNotMatch(source,/PROFILE|profiles\/\$\{/,path);
  }
- assert.deepEqual((await readdir('deploy/editorial/profiles')).filter(n=>n.endsWith('.mjs')),['pizdato-channel.mjs']);
 });
