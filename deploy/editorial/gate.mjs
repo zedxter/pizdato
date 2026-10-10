@@ -1,14 +1,14 @@
-import {recentWisdoms} from './history.mjs';
 import {createHash} from 'node:crypto';
-import {readFile} from 'node:fs/promises';
+import {composeRubric,validateProfile,configError} from './compose-rubric.mjs';
+import {BLOCKERS,LANGUAGE,suggestionsFor,groundsFor,attributionDismissalFor} from './enums.mjs';
+import channel from './profiles/pizdato-channel.mjs';
+export {BLOCKERS};
 const dimensions=['grammar','meaning','freshness','voice','grounding'];
 // Blockers are objective defects; suggestions improve taste but never stop a post.
-export const BLOCKERS=['spelling','grammar','punctuation','wrong-phrase','meaning','unsupported-claim','misattribution','unusable-source','repetition','ai-slop'];
-// Weekday categories guide story choice; an imperfect fit must not cost the evening its post.
-export const SUGGESTIONS=['humor','wisdom','style','category'];
 const REPLACE=['repetition','unusable-source'];
 const DIMENSION={spelling:'grammar',grammar:'grammar',punctuation:'grammar','wrong-phrase':'grammar',meaning:'meaning','unsupported-claim':'grounding',misattribution:'grounding','unusable-source':'grounding',repetition:'freshness','ai-slop':'voice'};
-const LANGUAGE=['spelling','grammar','punctuation','wrong-phrase'];
+// Request titles are infrastructure labels: agent.mjs routes reviewer reasoning effort by them.
+const TITLES={editor:'pizdato-editor',proofreader:'pizdato-proofreader',verifier:'pizdato-verifier'};
 const reviewerOptions=(title,categories)=>({
   title, temperature:0, maxTokens:16000,
   // OpenRouter providers may spend the whole token budget on "low" reasoning and return no content.
@@ -20,23 +20,30 @@ const reviewerOptions=(title,categories)=>({
     }}}}
   }}}
 });
-export const editorOptions=reviewerOptions('pizdato-editor',[...BLOCKERS,...SUGGESTIONS]);
-// A narrow second reader sees only the text, so language errors are not lost in source and history context.
-export const proofreaderOptions=reviewerOptions('pizdato-proofreader',LANGUAGE);
-// Open-ended critics over-report; a narrow yes/no check of each claimed blocker filters their false positives.
-// A dismissal must name its ground; language claims stand unless the text is correct as written.
-const GROUNDS=['confirmed','correct-as-written','faithful-to-source','persona-opinion','verdict-contrast','understood-joke','loose-category','taste','misread'];
-const LANGUAGE_DISMISSAL=['correct-as-written','misread'];
-// Words moved between speakers are cleared only by the evidence, by Uncle Misha's own voice or by a misread claim, never as a joke or taste.
-const ATTRIBUTION_DISMISSAL=['faithful-to-source','persona-opinion','misread'];
-export const verifierOptions={title:'pizdato-verifier',temperature:0,maxTokens:8000,reasoning:{enabled:false,exclude:true},responseFormat:{type:'json_schema',json_schema:{name:'defect_verification',strict:true,schema:{
+const verifierSchema=grounds=>({title:TITLES.verifier,temperature:0,maxTokens:8000,reasoning:{enabled:false,exclude:true},responseFormat:{type:'json_schema',json_schema:{name:'defect_verification',strict:true,schema:{
   type:'object',additionalProperties:false,required:['verdicts'],
-  properties:{verdicts:{type:'array',items:{type:'object',additionalProperties:false,required:['id','real','category','ground','reason'],properties:{id:{type:'integer'},real:{type:'boolean'},category:{type:'string',enum:BLOCKERS},ground:{type:'string',enum:GROUNDS},reason:{type:'string'}}}}}
-}}}};
-function parseVerdicts(content) {
+  properties:{verdicts:{type:'array',items:{type:'object',additionalProperties:false,required:['id','real','category','ground','reason'],properties:{id:{type:'integer'},real:{type:'boolean'},category:{type:'string',enum:BLOCKERS},ground:{type:'string',enum:grounds},reason:{type:'string'}}}}}
+}}}});
+const freeze=o=>{if(o&&typeof o==='object'&&!Object.isFrozen(o)){Object.freeze(o);Object.values(o).forEach(freeze);}return o;};
+const memo=new WeakMap();
+// One frozen set per profile, so callers and tests can route requests by option identity.
+export function reviewOptions(profile) {
+  if(!memo.has(profile)) memo.set(profile,freeze({
+    editor:reviewerOptions(TITLES.editor,[...BLOCKERS,...suggestionsFor(profile)]),
+    // A narrow second reader sees only the text, so language errors are not lost in source and history context.
+    proofreader:reviewerOptions(TITLES.proofreader,LANGUAGE),
+    // Open-ended critics over-report; a narrow yes/no check of each claimed blocker filters their false positives.
+    // A dismissal must name its ground; language claims stand unless the text is correct as written.
+    verifier:verifierSchema(groundsFor(profile))
+  }));
+  return memo.get(profile);
+}
+export const {editor:editorOptions,proofreader:proofreaderOptions,verifier:verifierOptions}=reviewOptions(channel);
+const LANGUAGE_DISMISSAL=['correct-as-written','misread'];
+function parseVerdicts(content,grounds) {
   if(typeof content!=='string') throw new Error('Malformed verification');
   const parsed=JSON.parse(content);
-  if(!parsed||Object.keys(parsed).join()!=='verdicts'||!Array.isArray(parsed.verdicts)||parsed.verdicts.some(v=>!v||!Number.isInteger(v.id)||typeof v.real!=='boolean'||!BLOCKERS.includes(v.category)||!GROUNDS.includes(v.ground)||typeof v.reason!=='string')) throw new Error('Malformed verification');
+  if(!parsed||Object.keys(parsed).join()!=='verdicts'||!Array.isArray(parsed.verdicts)||parsed.verdicts.some(v=>!v||!Number.isInteger(v.id)||typeof v.real!=='boolean'||!BLOCKERS.includes(v.category)||!grounds.includes(v.ground)||typeof v.reason!=='string')) throw new Error('Malformed verification');
   if(new Set(parsed.verdicts.map(v=>v.id)).size!==parsed.verdicts.length) throw new Error('Malformed verification: duplicate claim ids');
   return parsed.verdicts;
 }
@@ -55,7 +62,17 @@ function parseVerdict(content,categories) {
   }
   return verdict.issues;
 }
-export function createGate({request, history, record=async()=>{},policy='bounded',initial=null}) {
+// Publication inputs arrive only as declared profile fields; a missing or foreign one is a caller bug, not a review.
+function checkInput(profile,text,fields) {
+  if(!fields||typeof fields!=='object') throw configError('review fields must be an object');
+  const undeclared=Object.keys(fields).filter(k=>!profile.fields.includes(k)),missing=profile.fields.filter(k=>!(k in fields)||fields[k]===undefined);
+  if(undeclared.length) throw configError(`profile ${profile.id} does not declare field ${undeclared.join(', ')}`);
+  if(missing.length) throw configError(`profile ${profile.id} needs field ${missing.join(', ')}`);
+  if(typeof text==='string'&&[...text].length>profile.maxChars) throw configError(`text of ${[...text].length} characters exceeds the ${profile.maxChars}-character limit of profile ${profile.id}`);
+}
+export function createGate({profile, request, history, record=async()=>{},policy='bounded',initial=null}) {
+  validateProfile(profile);
+  const options=reviewOptions(profile),SUGGESTIONS=suggestionsFor(profile),GROUNDS=groundsFor(profile),ATTRIBUTION_DISMISSAL=attributionDismissalFor(profile);
   const persistent=policy==='persistent-evening';
   // Evening keeps working until its deadline but must not polish one story forever.
   const maxRepairs=persistent?4:2;
@@ -72,14 +89,17 @@ export function createGate({request, history, record=async()=>{},policy='bounded
     revision++;return 'repair';
   };
   return {
+    options,
     get state() {return {story,revision,done};},
     snapshot() {return {attempts,story,revision,abandoned:abandoned.slice(-6)};},
-    async review({text,wisdom,source=null,changedSections=null,hostText=[]}) {
+    async review({text,fields={},source=null,changedSections=null,hostText=[]}) {
       ensureOpen();
+      // Configuration errors surface before any request and leave the budget and the story untouched.
+      checkInput(profile,text,fields);
+      const rubric=composeRubric('editor',profile),proofRubric=composeRubric('proofreader',profile),verifyRubric=composeRubric('verifier',profile);
       const current={attempt:++attempts,story,revision};
       let errorKind='Reviewer transport failed';
       try {
-        const [rubric,proofRubric]=await Promise.all(['./editor.md','./proofreader.md'].map(f=>readFile(new URL(f,import.meta.url),'utf8')));
         // Each revision is judged fresh: earlier drafts and findings of this story anchor the editor into repeating them.
         // One immediate retry absorbs an empty or malformed answer from a single provider.
         // One retry absorbs a transport hiccup or an empty/malformed answer; a budget yield is never retried.
@@ -94,10 +114,10 @@ export function createGate({request, history, record=async()=>{},policy='bounded
             }
           }
         };
-        const contentType=source===null?'everyday-observation':'source-based-post';
+        const contentType=source===null?profile.contentTypes.withoutSource:profile.contentTypes.withSource;
         const [proofIssues,editorIssues]=await Promise.all([
-          ask([{role:'system',content:proofRubric},{role:'user',content:JSON.stringify({candidate:text})}],proofreaderOptions,c=>parseVerdict(c,LANGUAGE)),
-          ask([{role:'system',content:rubric},{role:'user',content:JSON.stringify({contentType,candidate:text,wisdom,history,source,current,...(changedSections&&{changedSections}),abandonedStories:abandoned.slice(-6)})}],editorOptions,c=>parseVerdict(c,[...BLOCKERS,...SUGGESTIONS]))
+          ask([{role:'system',content:proofRubric},{role:'user',content:JSON.stringify({candidate:text})}],options.proofreader,c=>parseVerdict(c,LANGUAGE)),
+          ask([{role:'system',content:rubric},{role:'user',content:JSON.stringify({contentType,candidate:text,...Object.fromEntries(profile.fields.map(k=>[k,fields[k]])),history,source,current,...(changedSections&&{changedSections}),abandonedStories:abandoned.slice(-6)})}],options.editor,c=>parseVerdict(c,[...BLOCKERS,...SUGGESTIONS]))
         ]);
         const norm=s=>String(s??'').toLocaleLowerCase('ru').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
         const key=i=>`${i.category}|${norm(i.quote)||i.problem}`,merged=new Map();
@@ -111,12 +131,12 @@ export function createGate({request, history, record=async()=>{},policy='bounded
         const ownText=norm(hostText.reduce((t,h)=>t.split(h).join(' \n '),text));
         const hostOwned=i=>{const q=norm(i.quote);return !!q&&norm(text).includes(q)&&!` ${ownText} `.includes(` ${q} `);};
         let claimed=issues.filter(i=>BLOCKERS.includes(i.category)).filter(i=>{if(!hostOwned(i))return true;dismissed.push({...i,dismissal:'Host formatting the writer cannot change',ground:'host-formatting'});return false;});
-        // Without evidence there is no speaker to check, and the host credits every morning wisdom to Uncle Misha.
+        // Without evidence there is no speaker to check against; an invented quote of a real person is still caught
+        // as unsupported-claim by the editor and verifier rules.
         if(source===null) claimed=claimed.filter(i=>{if(i.category!=='misattribution')return true;dismissed.push({...i,dismissal:'No evidence to attribute against',ground:'no-evidence'});return false;});
         const corroborated=claimed.filter(i=>i.by==='proofreader+editor');claimed=claimed.filter(i=>i.by!=='proofreader+editor');
         if(claimed.length) {
-          const verifyRubric=await readFile(new URL('./verifier.md',import.meta.url),'utf8');
-          const verdicts=await ask([{role:'system',content:verifyRubric},{role:'user',content:JSON.stringify({contentType,candidate:text,source,history,claims:claimed.map(({category,quote,problem},id)=>({id,category,quote,problem}))})}],verifierOptions,parseVerdicts);
+          const verdicts=await ask([{role:'system',content:verifyRubric},{role:'user',content:JSON.stringify({contentType,candidate:text,source,history,claims:claimed.map(({category,quote,problem},id)=>({id,category,quote,problem}))})}],options.verifier,c=>parseVerdicts(c,GROUNDS));
           // A claim the verifier does not answer keeps blocking: only an explicit dismissal clears it.
           const answers=new Map(verdicts.map(v=>[v.id,v])),kept=[];
           claimed.forEach((issue,id)=>{
@@ -130,8 +150,8 @@ export function createGate({request, history, record=async()=>{},policy='bounded
           claimed=kept;
         }
         claimed=[...corroborated,...claimed];
-        const normalize=s=>s.toLocaleLowerCase('ru').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
-        if(recentWisdoms(history).some(previous=>normalize(previous)===normalize(wisdom))) claimed.push({category:'repetition',quote:wisdom,problem:'Wisdom repeats a confirmed publication.',fix:'Choose a different subject and wisdom.',by:'host'});
+        // The profile's repetition check turns a field that repeats confirmed history into a host blocker.
+        for(const f of profile.unique(fields,history)) claimed.push({category:'repetition',quote:f.quote,problem:f.problem,fix:f.fix,by:'host'});
         const blockers=claimed,suggestions=issues.filter(i=>SUGGESTIONS.includes(i.category));
         const decision=blockers.some(i=>REPLACE.includes(i.category))?'replace':blockers.length?'revise':'approve';
         const verdict={decision,...Object.fromEntries(dimensions.map(k=>[k,!blockers.some(i=>DIMENSION[i.category]===k)])),issues:blockers.map(formatIssue),blockers,suggestions,dismissed};
