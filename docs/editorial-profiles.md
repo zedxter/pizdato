@@ -64,7 +64,7 @@ The rubrics are `editor.template.md`, `proofreader.template.md`, `verifier.templ
 | `writerVary` | writer | The list of what a new text must vary. | no |
 | `writerRecovery` | writer | Sentence (leading space) with extra recovery rules. | yes |
 
-Prose–enum agreement: the bullets under «## Suggestions» must be exactly the suggestion enum; the `` `contentType` `` names must be exactly `contentTypes`; the verifier's «names why:» list plus `confirmed` must be exactly the ground enum, and no rubric may name a ground the profile does not offer; without a persona no rubric may mention a persona; with one the editor rubric must name it.
+Prose–enum agreement: the bullets under «## Suggestions» must be exactly the suggestion enum; the `` `contentType` `` names must be exactly `contentTypes`; the verifier's «names why:» list plus `confirmed` must be exactly the ground enum, and no rubric may name a ground the profile does not offer; the grounds of the verifier's «A `misattribution` claim may be dismissed only as …» sentence must be exactly `faithful-to-source`, `persona-opinion` (with a persona) and `misread`; without a persona no rubric may mention a persona or a fictional speaker («persona», «fictional», «персонаж», «вымышлен»); with one the editor and verifier rubrics must name it. A persona's bare name is not detectable in a profile without one: review those slots by eye.
 
 ## Profile fields and the `unique()` contract
 

@@ -58,6 +58,16 @@ test('suggestion and content-type prose must match their enums',()=>{
 });
 test('a persona profile must name its persona',()=>{
  assert.throws(()=>validateProfile({...column,persona:{name:'Somebody Else'}}),config(/Somebody Else/));
+ // The verifier is the one that clears persona lines, so it must know whom it clears.
+ assert.throws(()=>validateProfile(withSlots(column,s=>({...s,personaDismissal:''}))),config(/verifier.*Аркадий Петрович/));
+});
+test('the misattribution dismissal prose lists exactly the attribution grounds',()=>{
+ assert.throws(()=>validateProfile(withSlots(column,s=>({...s,personaAttributionGround:''}))),config(/misattribution dismissal.*persona-opinion/));
+ assert.throws(()=>validateProfile(withSlots(neutral,s=>({...s,personaAttributionGround:'`taste` (a matter of style) '}))),config(/misattribution dismissal.*taste/));
+});
+test('a profile without a persona describes no fictional narrator',()=>{
+ assert.throws(()=>validateProfile(withSlots(neutral,s=>({...s,personaCalibration:'- Аркадий Петрович is the FICTIONAL narrator of the column.\n'}))),config(/persona|fictional/i));
+ assert.throws(()=>validateProfile(withSlots(neutral,s=>({...s,misattributionExempt:' Реплики вымышленного рассказчика не считаются misattribution.'}))),config(/persona|fictional/i));
 });
 test('templates are read once and re-read when a file changes',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'rubric-templates-'));

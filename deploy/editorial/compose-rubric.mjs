@@ -2,7 +2,7 @@
 import {readFileSync,statSync} from 'node:fs';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {BLOCKERS,suggestionsFor,groundsFor,OPTIONAL_GROUNDS} from './enums.mjs';
+import {BLOCKERS,suggestionsFor,groundsFor,attributionDismissalFor,OPTIONAL_GROUNDS} from './enums.mjs';
 export const TEMPLATES=['editor','proofreader','verifier','writer'];
 const HERE=fileURLToPath(new URL('.',import.meta.url)),SLOT=/\{\{([A-Za-z][A-Za-z0-9]*)\}\}/g;
 // A configuration error is never a reviewer failure: callers stop before any request and keep the story.
@@ -45,8 +45,12 @@ function agreement(p,rubrics){
  const grounds=groundsFor(p);
  same([real,...[...list.matchAll(/`([a-z-]+)`/g)].map(m=>m[1])],grounds,`dismissal grounds of profile ${p.id}`);
  for(const [name,text] of Object.entries(rubrics))for(const g of OPTIONAL_GROUNDS.filter(g=>!grounds.includes(g)))if(text.includes(`\`${g}\``))throw configError(`the ${name} rubric of profile ${p.id} names ground ${g}, which the profile does not offer`);
- if(!p.persona){for(const [name,text] of Object.entries(rubrics))if(/persona/i.test(text))throw configError(`the ${name} rubric of profile ${p.id} names a persona, but the profile has none`);}
- else if(!rubrics.editor.includes(p.persona.name))throw configError(`the editor rubric of profile ${p.id} never names its persona ${p.persona.name}`);
+ const attribution=rubrics.verifier.match(/A `misattribution` claim may be dismissed only as (.*?)\.(?:\s|$)/s)?.[1];
+ if(attribution===undefined)throw configError('the verifier rubric does not list its misattribution dismissal grounds');
+ same([...attribution.matchAll(/`([a-z-]+)`/g)].map(m=>m[1]),attributionDismissalFor(p),`misattribution dismissal grounds of profile ${p.id}`);
+ // Names cannot be told apart from other words, but a persona or fictional speaker is always introduced as one.
+ if(!p.persona){for(const [name,text] of Object.entries(rubrics))if(/persona|fictional|персонаж|вымышлен/i.test(text))throw configError(`the ${name} rubric of profile ${p.id} names a persona or fictional speaker, but the profile has none`);}
+ else for(const name of ['editor','verifier'])if(!rubrics[name].includes(p.persona.name))throw configError(`the ${name} rubric of profile ${p.id} never names its persona ${p.persona.name}`);
 }
 export function validateProfile(p,dir){
  if(!p||typeof p!=='object')throw configError('a publication profile is required');
