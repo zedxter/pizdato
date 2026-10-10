@@ -59,3 +59,4 @@ Trigger: the first live evening after deployment is still unapproved at 19:00 Be
 ## Decisions requiring owner sign-off
 
 1. The release bar of this change is stricter than #219's pooled 90%: separate bars for the #219 set, the motivating misses and each held-out class. If it is not met, the change is not deployed without a new owner decision.
+2. Release below this change's bar (owner decision, 2026-10-10). The final run on d78abde met the #219, motivating-miss, misattribution and wrong-word bars but caught only 5/9 held-out second-reading trials and blocked held-out clean texts in 18/27 trials. All of those blocks came from two defects in the held-out base texts that the release also blocks; no new-class blocker fired on a near-miss. The owner accepted the release; #225 tracks the gap.
