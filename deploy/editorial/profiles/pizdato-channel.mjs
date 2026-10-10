@@ -8,6 +8,8 @@ export default Object.freeze({
  suggestions:Object.freeze(['wisdom']),contentTypes:Object.freeze({withSource:'source-based-post',withoutSource:'everyday-observation'}),
  // One Telegram message; compose.mjs enforces the 950-character caption earlier.
  maxChars:4096,fields:Object.freeze(['wisdom']),
+ // Printed by the host around every post: findings on them are formatting, and the fixture guard ignores them.
+ hostLines:Object.freeze(['Пиздато:','Хуёво:','Мудрость дня:','Мир ждёт твоего голоса: https://pizdato.net']),
  unique:(fields,history)=>recentWisdoms(history).some(previous=>normalize(previous)===normalize(fields.wisdom))?[{quote:fields.wisdom,problem:'Wisdom repeats a confirmed publication.',fix:'Choose a different subject and wisdom.'}]:[],
  slots:Object.freeze({
   // editor.template.md

@@ -62,6 +62,9 @@ export function validateProfile(p,dir){
  if(!Number.isInteger(p.maxChars)||p.maxChars<1||p.maxChars>4096)throw bad('maxChars must be an integer up to 4096');
  if(!Array.isArray(p.fields)||p.fields.some(f=>!FIELD.test(f)||RESERVED.includes(f))||new Set(p.fields).size!==p.fields.length)throw bad('fields must be distinct identifiers that do not shadow gate inputs');
  if(typeof p.unique!=='function')throw bad('unique(fields, history) is required');
+ if(p.hostLines!==undefined&&!(Array.isArray(p.hostLines)&&p.hostLines.every(h=>typeof h==='string'&&h)))throw bad('hostLines must be a list of strings');
+ // A profile may tighten the release bar, never loosen it below 90% of objective trials.
+ if(p.releaseBar!==undefined&&!(typeof p.releaseBar?.objective==='number'&&p.releaseBar.objective>=0.9&&p.releaseBar.objective<=1))throw bad('releaseBar.objective must be between 0.9 and 1');
  if(!p.slots||typeof p.slots!=='object')throw bad('slots are required');
  for(const [k,v] of Object.entries(p.slots))if(typeof v!=='string')throw bad(`slot ${k} is not text`);
  const used=new Set(TEMPLATES.flatMap(n=>slotNames(n,dir)));
