@@ -14,7 +14,7 @@ This is the `danil` user crontab serviced by the OS cron daemon. Server timezone
 
 Runtime directory: `~/.local/share/pizdato-morning`. Source: `deploy/morning/`. Node >=18, Bash, flock and timeout; no npm installation. The runtime has no Hermes or Codex dependency.
 
-The morning process reads the existing OpenRouter key from `~/.config/pizdato-channel.env` and the existing Composio consumer credential/model from `~/.config/pizdato-evening.env` (0600). Model: `deepseek/deepseek-v4.1-flash`. Telegram account: `pizdato-net-channel`; chat ID: `-1004350521393`.
+The morning process reads `NOUS_API_KEY` from `~/.config/pizdato-channel.env` and the existing Composio consumer credential and model settings from `~/.config/pizdato-evening.env` (0600). Model: `PIZDATO_MORNING_MODEL`, else `PIZDATO_EVENING_MODEL`, else `openai/gpt-6.1-sol`, on Nous Portal; OpenRouter is no longer used (#229). Telegram account: `pizdato-net-channel`; chat ID: `-1004350521393`.
 
 ## Message contract
 
@@ -41,7 +41,7 @@ env -i HOME=/home/danil USER=danil LOGNAME=danil PATH=/usr/local/bin:/usr/bin:/b
 /bin/bash /home/danil/.local/share/pizdato-morning/run.sh --dry-run
 ```
 
-`--check` verifies resources, the exact named Telegram channel and an actual OpenRouter response. `--dry-run` saves only `~/.local/state/pizdato-morning/drafts/morning-YYYY-MM-DD.md`. Both prohibit sending, publication markers and pending intent. No test message is sent to the channel.
+`--check` verifies resources, the exact named Telegram channel and an actual Nous Portal response. `--dry-run` saves only `~/.local/state/pizdato-morning/drafts/morning-YYYY-MM-DD.md`. Both prohibit sending, publication markers and pending intent. No test message is sent to the channel.
 
 Back up the user crontab; remove only any old line ending in `# pizdato-morning`, append the active line from `deploy/morning/pizdato-morning.cron` and install the resulting file using `crontab <file>`. Preserve every other entry, particularly `# pizdato-evening`. Do not run the legacy channel installer.
 

@@ -235,7 +235,7 @@ fn broken_profile_fails_the_morning_check() {
             .env("PIZDATO_MORNING_STATE", c.root.join("state"))
             .env("PIZDATO_CHANNEL_ENV", c.root.join("missing"))
             .env("PIZDATO_EVENING_ENV", c.root.join("missing"))
-            .env("OPENROUTER_API_KEY", "test")
+            .env("NOUS_API_KEY", "test")
             .env("COMPOSIO_CONSUMER_KEY", "test")
             .output()
             .unwrap();

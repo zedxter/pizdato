@@ -3,7 +3,7 @@
  * Evening channel post: pick the most ABSURD / funny news of the day and
  * discuss it as пиздато vs хуёво. Posts to @pizdato_net via StoreSession.
  *
- * Text generation: OpenRouter / DeepSeek via ~/.config/pizdato-channel.env
+ * Text generation: Nous Portal via ~/.config/pizdato-channel.env
  * Fallback: local template on missing credentials or generation failure
  */
 import { resolve } from "node:path";

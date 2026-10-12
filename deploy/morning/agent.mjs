@@ -51,7 +51,7 @@ async function run() {
   const info=await execute([{tool_slug:'TELEGRAM_GET_CHAT',account:ACCOUNT,arguments:{chat_id:CHAT}}]);
   const chatInfo=(info.data||info).results?.[0]?.response?.data;
   if(!chatInfo?.ok||chatInfo.result?.id!==CHAT||chatInfo.result?.username!=='pizdato_net') throw new Error('Channel identity mismatch');
-  const ask=messages=>chat(messages,undefined,{title:'pizdato-morning',model:process.env.PIZDATO_MORNING_MODEL||process.env.PIZDATO_EVENING_MODEL||'deepseek/deepseek-v4.1-flash',maxTokens:3000});
+  const ask=messages=>chat(messages,undefined,{title:'pizdato-morning',model:process.env.PIZDATO_MORNING_MODEL||process.env.PIZDATO_EVENING_MODEL||'openai/gpt-6.1-sol',maxTokens:3000});
   if(mode==='--check') {
     const answer=await ask([{role:'user',content:'Return exactly MODEL_OK. Non-publishing connection check.'}]);
     if(!answer.content?.includes('MODEL_OK')) throw new Error(`Model preflight failed at ${endpointHost()}`);

@@ -10,7 +10,7 @@ for(const slot of ['morning','evening']) for(const verdict of ['budget-success',
  try {
  await mkdir(join(root,'vault/posts'),{recursive:true});await writeFile(trace,'');
  const prefix=`PIZDATO_${slot.toUpperCase()}`;
- const out=spawnSync(process.execPath,['--import',resolve('deploy/editorial/test/fake-network.mjs'),`deploy/${slot}/agent.mjs`,mode],{encoding:'utf8',env:{...process.env,OPENROUTER_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),[`${prefix}_VAULT`]:join(root,'vault'),[`${prefix}_STATE`]:join(root,'state'),TEST_TRACE:trace,TEST_VERDICT:verdict},timeout:10000});
+ const out=spawnSync(process.execPath,['--import',resolve('deploy/editorial/test/fake-network.mjs'),`deploy/${slot}/agent.mjs`,mode],{encoding:'utf8',env:{...process.env,NOUS_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),[`${prefix}_VAULT`]:join(root,'vault'),[`${prefix}_STATE`]:join(root,'state'),TEST_TRACE:trace,TEST_VERDICT:verdict},timeout:10000});
  const events=await readFile(trace,'utf8');
  const pass=['invalid-caption-swap','late-repair','budget-success','invalid-first','source-swap','repair','repair-twice','replace','late-replace','supporting','approve'].includes(verdict);
  assert.equal(out.status,pass?0:1,out.stderr+out.stdout);
@@ -49,3 +49,15 @@ for(const slot of ['morning','evening']) for(const verdict of ['budget-success',
  }finally{await rm(root,{recursive:true,force:true});}
  });
 }
+for(const slot of ['morning','evening']) test(`${slot} --check with only an OpenRouter key fails before any network request`,async()=>{
+ const root=await mkdtemp(join(tmpdir(),'editorial-openrouter-'));const trace=join(root,'trace'),guard=join(root,'record-network.mjs');
+ try {
+ await writeFile(trace,'');
+ await writeFile(guard,`import {appendFileSync} from 'node:fs';globalThis.fetch=async url=>{appendFileSync(${JSON.stringify(trace)},String(url)+'\\n');throw new Error('network disabled');};`);
+ const env={...process.env,OPENROUTER_API_KEY:'or-key',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),[`PIZDATO_${slot.toUpperCase()}_STATE`]:join(root,'state'),[`PIZDATO_${slot.toUpperCase()}_VAULT`]:join(root,'vault')};
+ for(const k of ['NOUS_API_KEY','PIZDATO_LLM_API_KEY','PIZDATO_LLM_BASE_URL'])delete env[k];
+ const out=spawnSync(process.execPath,['--import',guard,`deploy/${slot}/agent.mjs`,'--check'],{encoding:'utf8',env,timeout:20000});
+ assert.notEqual(out.status,0,out.stdout);
+ assert.equal(await readFile(trace,'utf8'),'','no request may be sent without a Nous credential');
+ } finally {await rm(root,{recursive:true,force:true});}
+});

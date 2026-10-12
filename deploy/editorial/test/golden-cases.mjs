@@ -68,7 +68,8 @@ export async function runCase({input,answers},{createGate,review}){
  return {requests:requests.sort((a,b)=>a.key.localeCompare(b.key)),results,records,snapshot:JSON.stringify(gate.snapshot())};
 }
 // The preflight sends real enum schemas; only the HTTP boundary is faked, with fixed credentials and model names.
-const ENV={OPENROUTER_API_KEY:'fixture',COMPOSIO_CONSUMER_KEY:'fixture',PIZDATO_EVENING_MODEL:'writer/model',PIZDATO_EDITOR_MODEL:'editor/model'};
+// Both keys are set: the da0b2ed baseline authenticates with the OpenRouter key, the current transport only with the Nous key.
+const ENV={OPENROUTER_API_KEY:'fixture',NOUS_API_KEY:'fixture',COMPOSIO_CONSUMER_KEY:'fixture',PIZDATO_EVENING_MODEL:'writer/model',PIZDATO_EDITOR_MODEL:'editor/model'};
 export async function runPreflight({createServices,Budget,EditionStore}){
  const saved={...process.env},seq={},requests=[];
  for(const k of Object.keys(process.env))if(/^(PIZDATO_|OPENROUTER|NOUS_|COMPOSIO_)/.test(k))delete process.env[k];
@@ -79,7 +80,8 @@ export async function runPreflight({createServices,Budget,EditionStore}){
    if(u.includes('connect.composio')){const req=JSON.parse(o.body);let payload={};
     if(req.method==='tools/call')payload=req.params.name==='COMPOSIO_SEARCH_TOOLS'?{data:{session:{id:'t'},toolkit_connection_statuses:[{toolkit:'telegram',accounts:[{alias:'pizdato-net-channel',status:'ACTIVE'}]}]}}:{data:{results:[{response:{successful:true,data:{ok:true,result:{id:-1004350521393,username:'pizdato_net'}}}}]}};
     return new Response(JSON.stringify({result:{structuredContent:payload}}));}
-   const title=o.headers['X-Title'],req=JSON.parse(o.body);
+   // The baseline names requests by its OpenRouter X-Title header; the current transport sends none, so its keys are sequential.
+   const title=o.headers['X-Title']||'request',req=JSON.parse(o.body);
    requests.push({key:`${title}#${seq[title]=(seq[title]||0)+1}`,url:u,headers:JSON.stringify(o.headers),body:o.body});
    const name=req.response_format?.json_schema?.name;
    const message=name==='editorial_verdict'?{content:'{"issues":[]}'}:name==='defect_verification'?{content:'{"verdicts":[]}'}:req.response_format?{content:'{"ok":true}'}:req.tools?{tool_calls:[{id:'1',type:'function',function:{name:'ping',arguments:'{"value":"pizdato"}'}}]}:{content:'LLM_OK'};

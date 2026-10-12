@@ -11,7 +11,7 @@ const DIMENSION={spelling:'grammar',grammar:'grammar',punctuation:'grammar','wro
 const TITLES={editor:'pizdato-editor',proofreader:'pizdato-proofreader',verifier:'pizdato-verifier'};
 const reviewerOptions=(title,categories)=>({
   title, temperature:0, maxTokens:16000,
-  // OpenRouter providers may spend the whole token budget on "low" reasoning and return no content.
+  // Kept byte-identical for the da0b2ed goldens; the Nous transport ignores this OpenRouter-era switch (effort follows the title).
   reasoning:{enabled:false,exclude:true},
   responseFormat:{type:'json_schema',json_schema:{name:'editorial_verdict',strict:true,schema:{
     type:'object',additionalProperties:false,required:['issues'],

@@ -17,7 +17,11 @@ const OWN=new Set([
   'golden.test.mjs','goldens/channel.json','install.test.mjs','profiles.test.mjs','profiles/example-column.mjs','profiles/neutral.mjs','system-trace.mjs',
   ...['editor','proofreader','verifier','writer'].map(n=>`profiles/neutral/${n}.md`)].map(f=>T+f),
  'deploy/evening/agent.mjs','deploy/evening/worker.mjs','deploy/evening/network.mjs','deploy/evening/test/runner.rs',
- 'deploy/morning/agent.mjs','deploy/morning/test/agent.test.mjs','deploy/morning/test/runner.rs'
+ 'deploy/morning/agent.mjs','deploy/morning/test/agent.test.mjs','deploy/morning/test/runner.rs',
+ // migrate-llm-nous: provider-only changes outside the gate (Nous Portal instead of OpenRouter).
+ ...['delivery-network.test.mjs','fake-network.mjs','hosts.test.mjs'].map(f=>T+f),
+ 'deploy/evening/test/agent.test.mjs','deploy/evening/pizdato-evening.env.example',
+ ...['lib/generate.js','lib/nous.js','lib/openrouter.js','pizdato-channel.env.example','post-evening.mjs','test/generate.test.js'].map(f=>'deploy/channel/'+f)
 ]);
 export function provenance({head,dirty,gateSource,gateExports,changed}){
  if(head!==BASELINE)throw new Error(`Baseline worktree is at ${head}, expected ${BASELINE}`);

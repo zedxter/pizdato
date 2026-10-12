@@ -10,13 +10,15 @@ const fixture={wisdom:'Если долго искать свободное вр�
 const final={wisdom:'Самый короткий список покупок обычно получается сразу после возвращения из магазина.',wish:'Пусть сегодня всё нужное обнаружится в ближайшем ящике.'};
 const caption=w=>`Дядя Миша оценил находку. Пиздато: вещь пригодилась. Хуёво: пришлось искать.\nМудрость дня: «${w}»\nМир ждёт твоего голоса: https://pizdato.net`;
 globalThis.fetch=async(url,opts={})=>{
- if(String(url).includes('openrouter.ai')) {
+ if(String(url).includes('openrouter.ai')) throw new Error('OpenRouter is disabled: no request may reach openrouter.ai');
+ if(String(url).startsWith('https://inference-api.nousresearch.com/v1/')) {
  const req=JSON.parse(opts.body);
- if((req.reasoning?.effort!=='low'&&req.reasoning?.enabled!==false)||req.tools?.some(t=>t.function.name==='read_context')) throw new Error('Use bounded reasoning and supply full history exactly once');
+ if(['reasoning','provider','max_tokens'].some(k=>k in req)||!req.max_completion_tokens) throw new Error('Send only the OpenAI-compatible request shape');
+ if(req.tools?.some(t=>t.function.name==='read_context')) throw new Error('Supply full history exactly once');
  if(req.messages[0].content.startsWith('# Russian proofreading')) return json({choices:[{message:{content:JSON.stringify({issues:[]})}}]});
  if(req.messages[0].content.startsWith('# Defect verification')) return json({choices:[{message:{content:JSON.stringify({verdicts:JSON.parse(req.messages[1].content).claims.map(c=>({id:c.id,real:true,category:c.category,ground:'confirmed',reason:'confirmed'}))})}}]});
  if(req.messages[0].content.startsWith('# Public message editorial review')) {
- if(req.reasoning?.enabled!==false||req.response_format?.json_schema?.strict!==true) throw new Error('Editor must not spend tokens on optional reasoning and needs a strict output schema');
+ if(('reasoning_effort' in req)!==/(^|\/)(gpt-[5-9]|o\d)/i.test(req.model)||req.response_format?.json_schema?.strict!==true) throw new Error('Only a reasoning editor model gets an effort, and the editor needs a strict output schema');
  reviews++;
  await appendFile(process.env.TEST_TRACE,`REVIEW ${reviews}\n`);
  if(process.env.TEST_VERDICT==='timeout') throw new Error('editor timeout');

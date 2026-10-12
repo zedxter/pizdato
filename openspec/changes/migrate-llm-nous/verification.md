@@ -1,0 +1,7 @@
+## Verification (pre-deployment)
+
+- Channel suite: 33/33 on production `/usr/bin/node` v18.20.4, including Nous endpoint/model/request shape, OpenRouter-key-only fallback without a request, stale `PIZDATO_LLM_MODEL` ignored, blank/non-reasoning overrides, the model classification table, timeouts, HTTP/API/empty/truncated failures and credential-safe diagnostics.
+- Evening, morning and editorial suites: 293/293 on Node 18 (291 on Node 22 before the two new `--check` tests); both new "only an OpenRouter key" `--check` tests fail on the previous transport and pass now. Gate goldens unchanged; the preflight matches the da0b2ed questions through Nous with no OpenRouter fields or headers. Rust runners: evening 15/15, morning 11/11; `rustfmt --check` clean.
+- Live read-only check (2026-10-12) through `generateVerdict` with `NOUS_API_KEY` loaded from the private env file and the OpenRouter variables removed: the five newest stored articles; network hosts were only the news sites and `inference-api.nousresearch.com`. Each verdict took 3.6–4.6 s with no fallback notes. One article was unreachable and was rejected before inference (existing behavior). Compared with the stored DeepSeek verdicts, 2 of 4 agree; Nous judged the Christ the Redeemer construction story and the Ovechkin record as «пиздато» where DeepSeek said «хуёво». Wording drift is expected (idd.md). No news row, vote or Telegram message was created.
+
+Deployment evidence is added after merge.
