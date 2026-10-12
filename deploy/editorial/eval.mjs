@@ -49,12 +49,12 @@ await Promise.all(Array.from({length:Math.min(6,jobs.length)},async()=>{
  }
  }
 }));
-const {base,dialect}=llmConfig();
+const {base}=llmConfig();
 const git=gitArgs=>{try{return execFileSync('git',gitArgs,{cwd:here,encoding:'utf8'}).trim();}catch{return null;}};
 const origin=await provenance(profile,paths.module),bar=barFor(profile);
 const perFixture=Object.fromEntries(fixtures.map(f=>{const r=results.filter(x=>x.id===f.id);return [f.id,{passed:r.filter(x=>x.pass).length,trials:r.length}];}));
 const {byClass,bySet,releaseBar,misses}=summarize(all,fixtures,results,bar);
-const settings={...origin,bar,revision:git(['rev-parse','HEAD'])||'unknown',uncommitted:git(['status','--porcelain'])!=='',final,selection:ids||'all',fixturesSha256:sha(fixtureBytes),heldoutSha256:heldout,endpoint:base,dialect,byClass,bySet,releaseBar,misses,perFixture,model:process.env.PIZDATO_EDITOR_MODEL||process.env.PIZDATO_EVENING_MODEL||'deepseek/deepseek-v4.1-flash',reviewerReasoningEffort:process.env.PIZDATO_EDITOR_REASONING_EFFORT||process.env.PIZDATO_REASONING_EFFORT||'low (reasoning models only)',temperature:0,trials,passed:results.filter(r=>r.pass).length,total:results.length};
+const settings={...origin,bar,revision:git(['rev-parse','HEAD'])||'unknown',uncommitted:git(['status','--porcelain'])!=='',final,selection:ids||'all',fixturesSha256:sha(fixtureBytes),heldoutSha256:heldout,endpoint:base,byClass,bySet,releaseBar,misses,perFixture,model:process.env.PIZDATO_EDITOR_MODEL||process.env.PIZDATO_EVENING_MODEL||'openai/gpt-6.1-sol',reviewerReasoningEffort:process.env.PIZDATO_EDITOR_REASONING_EFFORT||process.env.PIZDATO_REASONING_EFFORT||'low (reasoning models only)',temperature:0,trials,passed:results.filter(r=>r.pass).length,total:results.length};
 console.log(JSON.stringify({...settings,perFixture:undefined,rubricSha256:undefined}));
 await mkdir(dirname(resolve(report)),{recursive:true});
 await writeFile(report,JSON.stringify({...settings,at:new Date().toISOString(),results},null,2));

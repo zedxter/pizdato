@@ -45,7 +45,7 @@ test('a broken profile fails the morning run and its check before any request',a
   for(const [from,to,named] of [['  writerScope:','  writerScopeRenamed:',/EDITORIAL_CONFIG.*writerScope/],["suggestions:Object.freeze(['wisdom'])",'suggestions:null',/EDITORIAL_CONFIG.*suggestion/]])for(const mode of ['--dry-run','--check','publish']){
    assert.ok(good.includes(from));await writeFile(profile,good.replace(from,to));
    await writeFile(join(root,'trace'),'');
-   const r=spawnSync(process.execPath,['--import',join(root,'no-network.mjs'),join(root,'morning/agent.mjs'),mode],{encoding:'utf8',env:{...process.env,OPENROUTER_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),PIZDATO_MORNING_VAULT:join(root,'vault'),PIZDATO_MORNING_STATE:join(root,'state'),TEST_TRACE:join(root,'trace')}});
+   const r=spawnSync(process.execPath,['--import',join(root,'no-network.mjs'),join(root,'morning/agent.mjs'),mode],{encoding:'utf8',env:{...process.env,NOUS_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),PIZDATO_MORNING_VAULT:join(root,'vault'),PIZDATO_MORNING_STATE:join(root,'state'),TEST_TRACE:join(root,'trace')}});
    assert.equal(r.status,1,mode);assert.match(r.stderr,named,mode);assert.doesNotMatch(r.stdout,/PREFLIGHT_OK|DRY_RUN_OK/,mode);
    assert.equal(await readFile(join(root,'trace'),'utf8'),'',`${mode} sent a request`);
   }

@@ -86,19 +86,21 @@ export function unpack(result) {
   }
   throw new Error('Composio result has no structured payload');
 }
-// Model access: OpenRouter (default) or any OpenAI-compatible endpoint such as Nous Portal.
+// Model access: Nous Portal (default) or another HTTPS OpenAI-compatible endpoint with an explicit key. OpenRouter is refused.
 // Keys are bound to their hosts: a secret never travels to an endpoint it was not issued for.
 export function llmConfig(env = process.env) {
-  const base = (env.PIZDATO_LLM_BASE_URL || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
+  const base = (env.PIZDATO_LLM_BASE_URL || 'https://inference-api.nousresearch.com/v1').replace(/\/+$/, '');
   const url = new URL(base);
   if (url.protocol !== 'https:') throw new Error('PIZDATO_LLM_BASE_URL must use https');
-  const openrouter = /(^|\.)openrouter\.ai$/.test(url.hostname), nous = /(^|\.)nousresearch\.com$/.test(url.hostname);
-  const key = env.PIZDATO_LLM_API_KEY || (openrouter ? env.OPENROUTER_API_KEY : nous ? env.NOUS_API_KEY : undefined) || undefined;
-  return { base, key, dialect: env.PIZDATO_LLM_DIALECT || (openrouter ? 'openrouter' : 'openai') };
+  const host = url.hostname.replace(/\.$/, '');
+  if (/(^|\.)openrouter\.ai$/.test(host)) throw new Error('OpenRouter is disabled for pizdato; use Nous Portal');
+  const nous = /(^|\.)nousresearch\.com$/.test(host);
+  const key = env.PIZDATO_LLM_API_KEY || (nous ? env.NOUS_API_KEY : undefined) || undefined;
+  return { base, key };
 }
 // Preflight logs name the host they verified; never the key or the path.
 export const endpointHost = (config = llmConfig()) => new URL(config.base).host;
-// OpenAI reasoning models reject temperature; OpenRouter then finds no endpoint for the request.
+// OpenAI reasoning models reject temperature and take an effort instead.
 const reasoningModel = model => /(^|\/)(gpt-[5-9]|o\d)/i.test(model);
 const REVIEWERS = ['pizdato-editor', 'pizdato-proofreader', 'pizdato-verifier'];
 // Reasoning models respect effort; reviewers may think harder than the writer within the activation budget.
@@ -107,20 +109,14 @@ function effortFor(title, env = process.env) {
   return ['low', 'medium', 'high'].includes(value) ? value : 'low';
 }
 export async function chat(messages, tools, options = {}) {
-  const { base, key, dialect } = llmConfig();
-  const model = options.model || process.env.PIZDATO_EVENING_MODEL || 'deepseek/deepseek-v4.1-flash';
+  const { base, key } = llmConfig();
+  const model = options.model || process.env.PIZDATO_EVENING_MODEL || 'openai/gpt-6.1-sol';
   const reasons = reasoningModel(model);
-  const body = { model, messages, ...(!reasons && { temperature: options.temperature ?? 0.7 }), ...(tools?.length && { tools, tool_choice: 'auto' }) };
+  // options.title routes reasoning effort; OpenRouter-era options.reasoning is ignored.
+  const body = { model, messages, ...(reasons ? { reasoning_effort: effortFor(options.title) } : { temperature: options.temperature ?? 0.7 }), ...(tools?.length && { tools, tool_choice: 'auto' }) };
   if (options.responseFormat) body.response_format = options.responseFormat;
-  if (dialect === 'openrouter') {
-    body.reasoning = reasons ? { effort: effortFor(options.title), exclude: true } : options.reasoning || { effort: 'low', exclude: true };
-    body.max_tokens = options.maxTokens || 5000;
-    if (options.responseFormat) body.provider = { require_parameters: true };
-  } else {
-    if (reasons) body.reasoning_effort = effortFor(options.title);
-    body.max_completion_tokens = options.maxTokens || 5000;
-  }
-  const headers = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(dialect === 'openrouter' && { 'HTTP-Referer': 'https://pizdato.net', 'X-Title': options.title || 'pizdato-evening' }) };
+  body.max_completion_tokens = options.maxTokens || 5000;
+  const headers = { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
   const res = await (options.fetcher || fetch)(`${base}/chat/completions`, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(180000) });
   if (!res.ok) throw new Error(`Model API HTTP ${res.status}`);
   const data = await res.json();

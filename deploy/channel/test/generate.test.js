@@ -13,8 +13,10 @@ const item = {
 const expected = { verdict: 'pizdato', reason: 'Парк бесплатный — прогулки теперь без чека.' };
 const completion = (content, extra = {}) => Response.json({ choices: [{ message: { content }, ...extra }] });
 beforeEach(() => {
-  process.env.OPENROUTER_API_KEY = 'test-secret';
+  process.env.NOUS_API_KEY = 'test-secret';
+  delete process.env.OPENROUTER_API_KEY;
   delete process.env.PIZDATO_LLM_MODEL;
+  delete process.env.PIZDATO_NEWS_MODEL;
   delete process.env.PIZDATO_LLM_TIMEOUT_MS;
   delete process.env.TELEGRAM_ACCOUNT_ID;
   process.env.CURSOR_AGENT_BIN = '/nonexistent/cursor-agent';
@@ -25,14 +27,18 @@ afterEach(() => {
   Object.assign(process.env, originalEnv);
 });
 
-test('hourly verdict uses DeepSeek and supplied article without Cursor or Telegram', async () => {
+test('hourly verdict uses Nous Portal gpt-6.1-sol and the supplied article', async () => {
   let called = false;
   globalThis.fetch = async (url, options) => {
     called = true;
-    assert.equal(url, 'https://openrouter.ai/api/v1/chat/completions');
+    assert.equal(url, 'https://inference-api.nousresearch.com/v1/chat/completions');
     assert.equal(options.headers.Authorization, 'Bearer test-secret');
+    assert.ok(!('HTTP-Referer' in options.headers) && !('X-Title' in options.headers));
     const request = JSON.parse(options.body);
-    assert.equal(request.model, 'deepseek/deepseek-v3.2');
+    assert.equal(request.model, 'openai/gpt-6.1-sol');
+    assert.equal(request.reasoning_effort, 'low');
+    assert.equal(request.max_completion_tokens, 4096);
+    for (const field of ['temperature', 'reasoning', 'provider', 'max_tokens']) assert.ok(!(field in request), field);
     assert.ok(request.messages[1].content.includes(item.articleText));
     assert.ok(options.signal instanceof AbortSignal);
     assert.ok(!request.plugins?.some((p) => p.id === 'web'));
@@ -76,11 +82,11 @@ test('configured deadline aborts a stalled verdict request', async () => {
   assert.ok(result.notes.some((note) => note.includes('эвристика')));
 });
 
-test('evening copy uses the same DeepSeek configuration without Cursor', async () => {
+test('evening copy uses the same Nous configuration', async () => {
   const text = templatePost(item).replace('Не всё то пиздато, что сегодня в топе.', 'Парк пиздато, когда касса в нём не выросла.');
   globalThis.fetch = async (url, options) => {
-    assert.equal(url, 'https://openrouter.ai/api/v1/chat/completions');
-    assert.equal(JSON.parse(options.body).model, 'deepseek/deepseek-v3.2');
+    assert.equal(url, 'https://inference-api.nousresearch.com/v1/chat/completions');
+    assert.equal(JSON.parse(options.body).model, 'openai/gpt-6.1-sol');
     return completion(text);
   };
   const result = await generatePost(item);
@@ -117,27 +123,57 @@ for (const [name, respond] of [
   });
 }
 
-test('missing OpenRouter key uses local fallbacks without another provider', async () => {
-  delete process.env.OPENROUTER_API_KEY;
-  process.env.GROQ_API_KEY = 'unused';
+test('an OpenRouter key alone uses local fallbacks without any provider request', async () => {
+  delete process.env.NOUS_API_KEY;
+  process.env.OPENROUTER_API_KEY = 'unused';
   process.env.OPENAI_API_KEY = 'unused';
-  globalThis.fetch = async () => { assert.fail('No provider request without OpenRouter key'); };
+  globalThis.fetch = async () => { assert.fail('No provider request without a Nous key'); };
   const verdict = await generateVerdict(item);
-  assert.ok(verdict.notes.some((note) => note.includes('OPENROUTER_API_KEY')));
+  assert.ok(verdict.notes.some((note) => note.includes('NOUS_API_KEY')));
   assert.ok(verdict.notes.some((note) => note.includes('эвристика')));
   assert.equal((await generatePost(item)).text, templatePost(item));
 });
 
-test('configured model override applies to both generators', async () => {
-  process.env.PIZDATO_LLM_MODEL = 'deepseek/override';
+test('a non-reasoning model override applies to both generators with their temperatures', async () => {
+  process.env.PIZDATO_NEWS_MODEL = ' mistralai/mistral-large-4-0 ';
+  const temperatures = [];
   globalThis.fetch = async (_, options) => {
     const body = JSON.parse(options.body);
-    assert.equal(body.model, 'deepseek/override');
+    assert.equal(body.model, 'mistralai/mistral-large-4-0');
+    assert.ok(!('reasoning_effort' in body));
+    temperatures.push(body.temperature);
     return completion(body.temperature === 0.3 ? JSON.stringify(expected) : templatePost(item));
   };
   assert.deepEqual((await generateVerdict(item)).notes, []);
   assert.deepEqual((await generatePost(item)).notes, []);
+  assert.deepEqual(temperatures, [0.3, 0.8]);
 });
+
+test('the stale PIZDATO_LLM_MODEL setting and a blank override keep the default model', async () => {
+  process.env.PIZDATO_LLM_MODEL = 'deepseek/deepseek-v3.2';
+  process.env.PIZDATO_NEWS_MODEL = '  ';
+  globalThis.fetch = async (_, options) => {
+    assert.equal(JSON.parse(options.body).model, 'openai/gpt-6.1-sol');
+    return completion(JSON.stringify(expected));
+  };
+  assert.deepEqual((await generateVerdict(item)).notes, []);
+});
+
+for (const [model, reasons] of [
+  ['openai/gpt-6.1-sol', true], ['gpt-5', true], ['openai/o3', true],
+  ['gpt-4o', false], ['gpt-10', false], ['mistralai/mistral-large-4-0', false],
+]) {
+  test(`model ${model} is ${reasons ? '' : 'not '}treated as a reasoning model`, async () => {
+    process.env.PIZDATO_NEWS_MODEL = model;
+    globalThis.fetch = async (_, options) => {
+      const body = JSON.parse(options.body);
+      assert.equal('reasoning_effort' in body, reasons);
+      assert.equal('temperature' in body, !reasons);
+      return completion(JSON.stringify(expected));
+    };
+    assert.deepEqual((await generateVerdict(item)).notes, []);
+  });
+}
 
 for (const timeout of ['NaN', '0', '-1', '1.5', '999999999999']) {
   test(`invalid timeout ${timeout} still allows a bounded request`, async () => {
@@ -163,7 +199,7 @@ test('fetches missing article body and carries its image into the verdict result
   assert.equal(result.reason, expected.reason);
   assert.ok(result.item.articleText.includes('прогулочными дорожками'));
   assert.equal(result.item.imageUrl, 'https://example.com/park.jpg');
-  assert.deepEqual(calls, [item.url, 'https://openrouter.ai/api/v1/chat/completions']);
+  assert.deepEqual(calls, [item.url, 'https://inference-api.nousresearch.com/v1/chat/completions']);
 });
 
 test('unreachable article rejects before requesting inference', async () => {

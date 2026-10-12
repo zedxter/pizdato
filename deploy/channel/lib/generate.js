@@ -1,4 +1,4 @@
-import { openRouterText } from "./openrouter.js";
+import { nousText } from "./nous.js";
 import { sourceFooter, telegramForSource, fetchArticleBody } from "./news.js";
 
 const CTA = [
@@ -139,7 +139,7 @@ export function sanitizePost(raw) {
 }
 
 async function apiLlmPost(item) {
-  return openRouterText({
+  return nousText({
     temperature: 0.8,
     system: "Ты пишешь короткие колонки для канала pizdato.net.",
     prompt: buildPrompt(item),
@@ -149,16 +149,16 @@ async function apiLlmPost(item) {
 export async function generatePost(item) {
   const notes = [];
   try {
-    console.log("generating with OpenRouter...");
+    console.log("generating with Nous...");
     const raw = await apiLlmPost(item);
     const cleaned = sanitizePost(raw);
     // Generated junk is not logged because it may echo private request data.
-    if (cleaned.junk) notes.push("OpenRouter service chatter removed");
+    if (cleaned.junk) notes.push("Nous service chatter removed");
     if (cleaned.ok) return { text: cleaned.text, notes };
-    notes.push("OpenRouter returned an invalid post structure");
+    notes.push("Nous returned an invalid post structure");
   } catch (e) {
-    notes.push(`OpenRouter failed: ${e.message}`);
-    console.warn("OpenRouter failed:", e.message);
+    notes.push(`Nous failed: ${e.message}`);
+    console.warn("Nous failed:", e.message);
   }
 
   notes.push("использован локальный шаблон поста");
@@ -234,7 +234,7 @@ function heuristicVerdict(item) {
 }
 
 async function apiLlmVerdict(item) {
-  return openRouterText({
+  return nousText({
     temperature: 0.3,
     system: 'Отвечай только JSON: {"verdict":"pizdato"|"huyevo","reason":"..."}. Плохие события для людей/стран = huyevo. Reason — короткая ирония по делу, без штампов вроде «без бед и катастроф».',
     prompt: buildVerdictPrompt(item),
@@ -268,14 +268,14 @@ export async function generateVerdict(item) {
   }
 
   try {
-    console.log("verdict with OpenRouter...");
+    console.log("verdict with Nous...");
     const raw = await apiLlmVerdict(enriched);
     const parsed = parseVerdict(raw);
     if (parsed) return { ...parsed, notes, item: enriched };
-    notes.push("OpenRouter verdict JSON parse failed");
+    notes.push("Nous verdict JSON parse failed");
   } catch (e) {
-    notes.push(`OpenRouter failed: ${e.message}`);
-    console.warn("OpenRouter verdict failed:", e.message);
+    notes.push(`Nous failed: ${e.message}`);
+    console.warn("Nous verdict failed:", e.message);
   }
 
   const fallback = heuristicVerdict(enriched);

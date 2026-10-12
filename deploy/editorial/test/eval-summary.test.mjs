@@ -124,13 +124,14 @@ test('eval.mjs runs a profile against a fake model and records its provenance an
  const root=await mkdtemp(join(tmpdir(),'eval-profile-'));
  try{
   // HOME points at an empty directory: the harness must not read real credentials or reach a real model.
-  const env={PATH:process.env.PATH,HOME:root,OPENROUTER_API_KEY:'test',PIZDATO_EVAL_TRIALS:'1',TEST_TRACE:join(root,'trace'),TEST_VERDICT:'approve'};
+  const env={PATH:process.env.PATH,HOME:root,NOUS_API_KEY:'test',PIZDATO_EVAL_TRIALS:'1',TEST_TRACE:join(root,'trace'),TEST_VERDICT:'approve'};
   await writeFile(env.TEST_TRACE,'');
   const r=spawnSync(process.execPath,['--import',resolve('deploy/editorial/test/fake-network.mjs'),'deploy/editorial/eval.mjs',join(root,'report.json'),'agreement','--profile','pizdato-channel'],{encoding:'utf8',env,timeout:20000});
   assert.equal(r.status,1,r.stderr+r.stdout);assert.match(r.stdout,/FAIL agreement trial=1/);
   const report=JSON.parse(await readFile(join(root,'report.json'),'utf8'));
   assert.equal(report.profile,'pizdato-channel');assert.deepEqual(report.bar,DEFAULT_BAR);assert.deepEqual(report.rubricSha256,(await provenance(channel)).rubricSha256);
   assert.equal(report.releaseBar,null,'a subset run never claims the bar');
+  assert.equal(report.endpoint,'https://inference-api.nousresearch.com/v1');assert.equal(report.model,'openai/gpt-6.1-sol');assert.equal('dialect' in report,false);
   const unknown=spawnSync(process.execPath,['--import',resolve('deploy/editorial/test/fake-network.mjs'),'deploy/editorial/eval.mjs',join(root,'other.json'),'--profile','no-such-profile'],{encoding:'utf8',env,timeout:20000});
   assert.notEqual(unknown.status,0);
  }finally{await rm(root,{recursive:true,force:true});}

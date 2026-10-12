@@ -19,7 +19,7 @@ test('discovered source goes straight to a draft and malformed writer output rem
  const root=await mkdtemp(join(tmpdir(),'delivery-network-'));
  try{
  const url='https://www.nasa.gov/test-source';let saved=0,models=0;
- const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async u=>u.includes('openrouter')?(models++,new Response(JSON.stringify({choices:[{message:{content:'invalid draft JSON'}}]}),{headers:{'content-type':'application/json'}})):new Response('<meta property="og:image" content="https://www.nasa.gov/cover.jpg">'+('Evidence '.repeat(30)))});
+ const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async u=>u.includes('inference-api.nousresearch.com')?(models++,new Response(JSON.stringify({choices:[{message:{content:'invalid draft JSON'}}]}),{headers:{'content-type':'application/json'}})):new Response('<meta property="og:image" content="https://www.nasa.gov/cover.jpg">'+('Evidence '.repeat(30)))});
  const e={day:'2026-10-09',candidates:{[url]:{url,covers:['https://www.nasa.gov/cover.jpg']}},searches:[],visited:[],reserve:[],abandoned:[],findings:['Remove unsupported first-observation claim']};
  const deps=createServices({store:new EditionStore(root),vault:root,budget,dryRun:true});
  await assert.rejects(deps.prepare({edition:e,history:[],checkpoint:async()=>{saved++;},now:new Date('2026-10-09T18:00Z')}));
@@ -27,7 +27,7 @@ test('discovered source goes straight to a draft and malformed writer output rem
  }finally{await rm(root,{recursive:true,force:true});}
 });
 test('approved media is staged by content hash and sent by its verified copy URL',async()=>{
- const root=await mkdtemp(join(tmpdir(),'delivery-cover-'));const previous=[process.env.OPENROUTER_API_KEY,process.env.COMPOSIO_CONSUMER_KEY];process.env.OPENROUTER_API_KEY='fixture';process.env.COMPOSIO_CONSUMER_KEY='fixture';
+ const root=await mkdtemp(join(tmpdir(),'delivery-cover-'));const previous=[process.env.NOUS_API_KEY,process.env.COMPOSIO_CONSUMER_KEY];process.env.NOUS_API_KEY='fixture';process.env.COMPOSIO_CONSUMER_KEY='fixture';
  try{
  const bytes=Buffer.from('fixture image bytes');let sent,elapsed=0;
  const budget=new Budget({clock:()=>elapsed,resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
@@ -48,7 +48,7 @@ test('approved media is staged by content hash and sent by its verified copy URL
  const v=await deps.verify(d,{edition:{},checkpoint:async()=>{}});await deps.ready(v.media);await deps.send(d,v.media);
  assert.equal(sent.photo,`https://pizdato.net/channel-covers/${digest(bytes)}.jpg`);assert.deepEqual(await readFile(join(root,'public',`${digest(bytes)}.jpg`)),bytes);
  await chmod(join(root,'public',`${digest(bytes)}.jpg`),0o600);await deps.ready(v.media);assert.equal((await stat(join(root,'public',`${digest(bytes)}.jpg`))).mode&0o777,0o444);
- }finally{for(const [i,k] of ['OPENROUTER_API_KEY','COMPOSIO_CONSUMER_KEY'].entries()){if(previous[i]===undefined)delete process.env[k];else process.env[k]=previous[i];}await rm(root,{recursive:true,force:true});}
+ }finally{for(const [i,k] of ['NOUS_API_KEY','COMPOSIO_CONSUMER_KEY'].entries()){if(previous[i]===undefined)delete process.env[k];else process.env[k]=previous[i];}await rm(root,{recursive:true,force:true});}
 });
 test('network deadline holds even when transport ignores abort signals',async()=>{
  const b=new Budget({networkTimeout:10,fetcher:async()=>new Promise(()=>{})});
@@ -67,12 +67,12 @@ test('drafting after a tool result uses a complete model conversation',async()=>
  const root=await mkdtemp(join(tmpdir(),'delivery-tool-flow-'));let calls=0;
  try{
  const b=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
-  if(u.includes('openrouter')){calls++;const r=JSON.parse(o.body);
+  if(u.includes('inference-api.nousresearch.com')){calls++;const r=JSON.parse(o.body);
    if(calls===1)return new Response(JSON.stringify({choices:[{message:{role:'assistant',tool_calls:[{id:'fetch1',type:'function',function:{name:'fetch_url',arguments:JSON.stringify({url:'https://example.com/story'})}}]}}]}));
    assert.ok(!r.messages.some(m=>m.tool_calls),'incomplete tool transcript must not reach structured writer');
    assert.doesNotMatch(r.messages[0].content,/MUST finish by calling complete_post/);
    assert.match(r.messages[0].content,/Return exactly one JSON object/);
-   assert.equal(r.reasoning.enabled,false,'structured drafting must allocate output to the caption');
+   assert.equal('reasoning' in r,false,'structured drafting sends no OpenRouter reasoning switch');assert.ok(r.max_completion_tokens,'structured drafting keeps an explicit output budget');
    assert.match(r.messages.at(-1).content,/Rewrite caption to 750 characters/);
    assert.deepEqual(r.response_format.json_schema.schema.required,['angle','hook','body','pizdato','huevo','huevo_first','wisdom_options','wisdom','source_url','image_url','supporting_urls']);
    return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({source_url:'https://example.com/story'})}}]}));
@@ -91,7 +91,7 @@ test('three irrelevant searches switch to a feed and produce a verified-source d
  const root=await mkdtemp(join(tmpdir(),'delivery-fallback-'));let searches=0,feeds=0;
  try{
  const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
-  if(u.includes('openrouter')){const req=JSON.parse(o.body);return new Response(JSON.stringify({choices:[{message:req.tools?{role:'assistant',tool_calls:[{id:`search${searches}`,type:'function',function:{name:'search_web',arguments:'{"query":"irrelevant query"}'}}]}:{content:JSON.stringify({source_url:'https://example.com/story'})}}]}));}
+  if(u.includes('inference-api.nousresearch.com')){const req=JSON.parse(o.body);return new Response(JSON.stringify({choices:[{message:req.tools?{role:'assistant',tool_calls:[{id:`search${searches}`,type:'function',function:{name:'search_web',arguments:'{"query":"irrelevant query"}'}}]}:{content:JSON.stringify({source_url:'https://example.com/story'})}}]}));}
   if(u.includes('bing.com')){searches++;return new Response('<rss><item><title>Dictionary result, no usable article</title></item></rss>');}
   if(u.endsWith('/feed/')){feeds++;return new Response('<rss><item><link>https://example.com/story</link></item></rss>');}
   return new Response('<meta property="og:image" content="https://example.com/cover.jpg">'+('verified source evidence '.repeat(25)));
@@ -101,14 +101,15 @@ test('three irrelevant searches switch to a feed and produce a verified-source d
  assert.equal(searches,3);assert.equal(feeds,1);assert.equal(d.source_url,'https://example.com/story');assert.ok(e.candidates[d.source_url]);
  }finally{await rm(root,{recursive:true,force:true});}
 });
-test('evening reviewers spend no tokens on optional reasoning and may use a separate editor model',async()=>{
+test('evening reviewers send no OpenRouter reasoning switch, use title-routed effort only on reasoning models and may use a separate editor model',async()=>{
  const messages=[{role:'system',content:'Independently review the candidate'},{role:'user',content:'Full candidate and original evidence'}];
  const expected={issues:[{category:'wisdom',quote:'Ближнее работает линзой',problem:'Predictable',fix:'Sharper turn'}]};
  const previous=process.env.PIZDATO_EDITOR_MODEL;
  const models=[];
  const budget=new Budget({fetcher:async(u,o)=>{
-  const req=JSON.parse(o.body);assert.deepEqual(req.messages,messages);assert.equal(req.reasoning.enabled,false);models.push(req.model);
-  assert.deepEqual(req.response_format.json_schema.schema.required,['issues']);assert.equal(req.temperature,0);
+  const req=JSON.parse(o.body);assert.deepEqual(req.messages,messages);assert.equal('reasoning' in req,false);models.push(req.model);
+  assert.deepEqual(req.response_format.json_schema.schema.required,['issues']);
+  if(/(^|\/)(gpt-[5-9]|o\d)/i.test(req.model)){assert.equal(req.reasoning_effort,'low');assert.equal('temperature' in req,false);}else{assert.equal(req.temperature,0);assert.equal('reasoning_effort' in req,false);}
   return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify(expected)}}]}));
  }});
  try{
@@ -123,7 +124,7 @@ test('repair request names unlocked sections, every blocker, one-time suggestion
  try{
  const url='https://example.com/story';
  const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
-  if(u.includes('openrouter')){request=JSON.parse(o.body);return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({source_url:url})}}]}));}
+  if(u.includes('inference-api.nousresearch.com')){request=JSON.parse(o.body);return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify({source_url:url})}}]}));}
   return new Response('<meta property="og:image" content="https://example.com/cover.jpg">'+('evidence '.repeat(50)));
  }});
  const draft={hook:'Хук.',body:['Первый абзац.','Второй абзац.'],pizdato:'хорошо.',huevo:'плохо.',wisdom:'Старая мудрость',source_url:url,image_url:'https://example.com/cover.jpg',caption:'rendered'};
@@ -138,7 +139,7 @@ test('discovery cannot submit its own caption: complete_post only names an alrea
  const root=await mkdtemp(join(tmpdir(),'delivery-choose-'));let writes=0,turns=0;
  try{
  const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
-  if(u.includes('openrouter')){const req=JSON.parse(o.body);
+  if(u.includes('inference-api.nousresearch.com')){const req=JSON.parse(o.body);
    if(!req.tools){writes++;return new Response(JSON.stringify({choices:[{message:{content:'{}'}}]}));}
    turns++;assert.deepEqual(req.tools.find(t=>t.function.name==='complete_post').function.parameters.required,['source_url']);
    if(turns>1)assert.match(JSON.stringify(req.messages.at(-1)),/invalid/);
@@ -159,7 +160,7 @@ test('Telegram delivery through Composio gets a longer deadline than ordinary ne
  assert.equal(timers[0],90000);assert.equal(timers[1],15000);assert.deepEqual(seen,[undefined,undefined]);
 });
 test('preflight proves plain replies, strict JSON and tool calls for every configured model before a switch',async()=>{
- const previous={...process.env};process.env.OPENROUTER_API_KEY='fixture';process.env.COMPOSIO_CONSUMER_KEY='fixture';process.env.PIZDATO_EVENING_MODEL='writer/model';process.env.PIZDATO_EDITOR_MODEL='editor/model';
+ const previous={...process.env};process.env.NOUS_API_KEY='fixture';process.env.COMPOSIO_CONSUMER_KEY='fixture';process.env.PIZDATO_EVENING_MODEL='writer/model';process.env.PIZDATO_EDITOR_MODEL='editor/model';
  const run=async toolsWork=>{const seen=[];
   const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
    if(u.includes('connect.composio')){const req=JSON.parse(o.body);let payload={};
@@ -185,7 +186,7 @@ test('discovery searches news and never re-drafts an abandoned or published sour
  const root=await mkdtemp(join(tmpdir(),'delivery-news-'));const urls=[];let writes=0,turn=0;
  try{
  const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{urls.push(u);
-  if(u.includes('openrouter')){const req=JSON.parse(o.body);
+  if(u.includes('inference-api.nousresearch.com')){const req=JSON.parse(o.body);
    if(!req.tools){writes++;return new Response(JSON.stringify({choices:[{message:{content:'{}'}}]}));}
    turn++;const call=turn===1?{name:'search_web',arguments:JSON.stringify({query:'capybara escaped'})}:{name:'fetch_url',arguments:JSON.stringify({url:'https://example.com/abandoned'})};
    return new Response(JSON.stringify({choices:[{message:{role:'assistant',tool_calls:[{id:`c${turn}`,type:'function',function:call}]}}]}));}

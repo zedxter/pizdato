@@ -33,4 +33,4 @@ Nous Portal outage → the existing heuristic verdict/template fallbacks and the
 Issue: https://github.com/zedxter/pizdato/issues/229
 
 ## Blocking decision
-Owner approval of the spec PR before implementation (AGENTS.md).
+Owner review of the single PR that carries this spec and its implementation (owner decision, 2026-10-12).

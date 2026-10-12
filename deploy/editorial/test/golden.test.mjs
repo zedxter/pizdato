@@ -35,10 +35,21 @@ for(const golden of goldens.cases) test(`golden: ${golden.name}`,async()=>{
  assert.equal(actual.records.length,golden.records.length);actual.records.forEach((r,i)=>assert.equal(r,golden.records[i],`record ${i}`));
  assert.equal(actual.snapshot,golden.snapshot);
 });
-test('golden: network.check preflight requests',async()=>{
+// The da0b2ed preflight went to OpenRouter; the provider moved to Nous Portal (migrate-llm-nous, design 3). Everything the
+// models are asked stays identical; only the provider-specific envelope differs, and it must carry nothing OpenRouter-only.
+const NEUTRAL=['model','messages','temperature','response_format','tools','tool_choice'];
+const neutral=body=>JSON.stringify(Object.fromEntries(NEUTRAL.filter(k=>k in body).map(k=>[k,body[k]])));
+test('golden: network.check preflight requests ask the da0b2ed questions through Nous Portal',async()=>{
  const actual=await runPreflight({createServices,Budget,EditionStore});
  assert.equal(actual.error,goldens.preflight.error);assert.equal(actual.requests.length,goldens.preflight.requests.length);
- actual.requests.forEach((r,i)=>{const g=goldens.preflight.requests[i];assert.equal(r.key,g.key);assert.equal(r.url,g.url);assert.equal(r.headers,g.headers,`${r.key} headers`);assert.equal(r.body,g.body,`${r.key} body`);});
+ actual.requests.forEach((r,i)=>{
+  const g=goldens.preflight.requests[i],body=JSON.parse(r.body),golden=JSON.parse(g.body),headers=JSON.parse(r.headers);
+  assert.equal(r.url,'https://inference-api.nousresearch.com/v1/chat/completions',g.key);
+  assert.equal(neutral(body),neutral(golden),`${g.key} body`);
+  assert.equal(body.max_completion_tokens,golden.max_tokens,`${g.key} token budget`);
+  for(const k of ['reasoning','provider','max_tokens','reasoning_effort'])assert.equal(k in body,false,`${g.key} ${k}`);
+  assert.deepEqual(headers,{Authorization:'Bearer fixture','Content-Type':'application/json'},`${g.key} headers`);
+ });
 });
 test('capture refuses a wrong commit, a dirty baseline, a profile gate and foreign deploy changes',()=>{
  const ok={head:BASELINE,dirty:false,gateSource:'export function createGate({request,history}){}',gateExports:['createGate'],changed:['deploy/editorial/gate.mjs','deploy/evening/worker.mjs','deploy/morning/agent.mjs']};
@@ -68,7 +79,7 @@ const polish=composeRubric('writer',channel);
 test('the evening network writer receives the da0b2ed polish',async()=>{
  const systems=[];
  const budget=new Budget({resolver:async()=>[{address:'8.8.8.8'}],fetcher:async(u,o)=>{
-  if(u.includes('openrouter')){const r=JSON.parse(o.body);systems.push(r.messages[0].content);
+  if(u.includes('inference-api.nousresearch.com')){const r=JSON.parse(o.body);systems.push(r.messages[0].content);
    return new Response(JSON.stringify({choices:[{message:r.tools?{role:'assistant',tool_calls:[{id:'f',type:'function',function:{name:'fetch_url',arguments:'{"url":"https://example.com/story"}'}}]}:{content:JSON.stringify({source_url:'https://example.com/story'})}}]}));}
   return new Response('<meta property="og:image" content="https://example.com/cover.jpg">'+('evidence '.repeat(50)));
  }});
@@ -82,7 +93,7 @@ for(const slot of ['morning','evening']) test(`the ${slot} agent writer receives
  try{
   await mkdir(join(root,'vault/posts'),{recursive:true});await writeFile(join(root,'trace'),'');
   const prefix=`PIZDATO_${slot.toUpperCase()}`;
-  const r=spawnSync(process.execPath,['--import',resolve('deploy/editorial/test/fake-network.mjs'),'--import',resolve('deploy/editorial/test/system-trace.mjs'),`deploy/${slot}/agent.mjs`,'--dry-run'],{encoding:'utf8',timeout:20000,env:{...process.env,OPENROUTER_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),[`${prefix}_VAULT`]:join(root,'vault'),[`${prefix}_STATE`]:join(root,'state'),TEST_TRACE:join(root,'trace'),TEST_SYSTEM:join(root,'system'),TEST_VERDICT:'approve'}});
+  const r=spawnSync(process.execPath,['--import',resolve('deploy/editorial/test/fake-network.mjs'),'--import',resolve('deploy/editorial/test/system-trace.mjs'),`deploy/${slot}/agent.mjs`,'--dry-run'],{encoding:'utf8',timeout:20000,env:{...process.env,NOUS_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),[`${prefix}_VAULT`]:join(root,'vault'),[`${prefix}_STATE`]:join(root,'state'),TEST_TRACE:join(root,'trace'),TEST_SYSTEM:join(root,'system'),TEST_VERDICT:'approve'}});
   assert.equal(r.status,0,r.stderr+r.stdout);
   const systems=(await readFile(join(root,'system'),'utf8')).trim().split('\n').map(l=>JSON.parse(l));
   assert.ok(systems.length>0);for(const s of systems)assert.ok(s.endsWith(`Post-polish resources:\n${polish}`)||s.includes(`\nPost-polish resources:\n${polish}`),s.slice(-200));

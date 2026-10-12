@@ -15,7 +15,7 @@ The server timezone MUST be Europe/Berlin; `TZ` in the runner governs dates, not
 ## Runtime and credentials
 
 - Runtime: `/home/danil/.local/share/pizdato-evening/{run.sh,agent.mjs,prompt.md}`; Node >=18 with built-in fetch, Bash, flock and timeout. No npm installation required.
-- OpenRouter: existing `OPENROUTER_API_KEY` from `~/.config/pizdato-channel.env`; dedicated model `deepseek/deepseek-v4.1-flash` in `~/.config/pizdato-evening.env`.
+- Model: Nous Portal with `NOUS_API_KEY` from `~/.config/pizdato-channel.env`; model settings in `~/.config/pizdato-evening.env` (see `docs/evening-delivery.md`). OpenRouter is no longer used (#229).
 - Composio: existing working consumer credential copied into `~/.config/pizdato-evening.env`, mode 0600. No new account/key was created. MCP endpoint: `https://connect.composio.dev/mcp`; Telegram alias `pizdato-net-channel`, chat `-1004350521393`.
 - Polish resources: standalone copies of `SKILL.md`, `KNOWN_PATTERNS.md`, `STYLE_PATTERNS.md` and `REFERENCE_CORRECTNESS.md` in `resources/post-polish/` inside the runtime directory. The original local resources were copied during migration; the runtime has no symlink/read dependency on Hermes. Retain this resource bundle when backing up or reinstalling.
 - Archives: `/home/danil/vault/pizdato/posts/evening-YYYY-MM-DD.md`; success markers: `/home/danil/vault/pizdato/published/telegram/evening-YYYY-MM-DD.md`.
@@ -37,7 +37,7 @@ Run a real connection preflight using the cron environment:
 env -i HOME=/home/danil USER=danil LOGNAME=danil PATH=/usr/local/bin:/usr/bin:/bin /bin/bash /home/danil/.local/share/pizdato-evening/run.sh --check
 ```
 
-`--check` reads Telegram metadata, verifies polish resources and makes a minimal OpenRouter request. `--dry-run` researches and saves a draft under `~/.local/state/pizdato-evening/drafts/`; it cannot reach host publication. Neither mode sends a message or writes a publication marker. Run without a flag only for an authorized live publication. It skips an existing daily success marker.
+`--check` reads Telegram metadata, verifies polish resources and makes a minimal model request to Nous Portal. `--dry-run` researches and saves a draft under `~/.local/state/pizdato-evening/drafts/`; it cannot reach host publication. Neither mode sends a message or writes a publication marker. Run without a flag only for an authorized live publication. It skips an existing daily success marker.
 
 Tests:
 

@@ -32,10 +32,15 @@ See idd.md. Two independent code paths call models:
 
 Backups go to `~/.local/share/pizdato/channel-backups/<timestamp>/` (directory 0700, env copies 0600).
 
-1. Spec PR approved by the owner and merged.
-2. **PR 1 (channel).** TDD; live read-only verdicts on a few recent stored articles, compared with their stored verdicts; merge.
-   Deploy: record the checksum of `/etc/cron.d/pizdato-channel`; back up `/opt/pizdato/channel/lib/{generate.js,openrouter.js}`, `pizdato-channel.env.example`, `post-evening.mjs` and both env files; copy only the changed files into `/opt/pizdato/channel` by hand (never `deploy/install-channel.sh`, which rewrites cron); add `NOUS_API_KEY` to `pizdato-channel.env` (copied from the evening env); remove `OPENROUTER_API_KEY` and `PIZDATO_LLM_MODEL`. The live eb3380 release keeps working because `PIZDATO_LLM_BASE_URL` is still set. Verify: cron checksum unchanged, evening and morning `--check` pass, next hourly run logs a Nous verdict.
-   Rollback: restore the backed-up `/opt` files and re-add only `OPENROUTER_API_KEY` and `PIZDATO_LLM_MODEL`; keep `NOUS_API_KEY`.
-3. **PR 2 (agent).** TDD; merge; install the new release with `deploy/editorial/install.py`. Only after the `pizdato-evening` and `pizdato-morning` links point to it, remove `PIZDATO_LLM_BASE_URL` and `NOUS_API_KEY` from `pizdato-evening.env` (the evening tick runs every 5 minutes, and the old release would fall back to OpenRouter). Verify both `--check`.
-   Rollback: first re-add `PIZDATO_LLM_BASE_URL` to `pizdato-evening.env`, then switch the links back to the eb3380 release (older releases require `OPENROUTER_API_KEY` and are not rollback targets).
+The owner asked for one PR containing the spec and the whole implementation (2026-10-12).
+
+1. TDD for the channel adapter and the agent transport; full Node 18 suite, Rust runners, live read-only Nous verdicts for a few recent stored articles compared with their stored verdicts. Owner review, green CI, merge.
+2. Deploy in this order, outside minutes :04–:06:
+   1. Record the checksum of `/etc/cron.d/pizdato-channel`; back up the replaced `/opt/pizdato/channel` files and both env files.
+   2. Add `NOUS_API_KEY` to `pizdato-channel.env` (copied from the evening env, never printed). Both releases keep working: the old one still has `PIZDATO_LLM_BASE_URL`.
+   3. Copy only the changed channel files into `/opt/pizdato/channel` by hand (never `deploy/install-channel.sh`, which rewrites cron).
+   4. Install the new evening/morning release with `deploy/editorial/install.py` and confirm the `pizdato-evening` and `pizdato-morning` links point to it.
+   5. Only then remove `OPENROUTER_API_KEY` and `PIZDATO_LLM_MODEL` from `pizdato-channel.env`, and `PIZDATO_LLM_BASE_URL` and `NOUS_API_KEY` from `pizdato-evening.env` (the old release would fall back to OpenRouter without the base URL).
+   6. Verify: cron checksum unchanged, evening and morning `--check` pass, the next hourly run logs a Nous verdict and no OpenRouter call.
+3. Rollback, in reverse: re-add `PIZDATO_LLM_BASE_URL` to `pizdato-evening.env`; switch the links back to the eb3380 release (older releases require `OPENROUTER_API_KEY` and are not rollback targets); restore the backed-up `/opt` files and re-add only `OPENROUTER_API_KEY` and `PIZDATO_LLM_MODEL`. Keep `NOUS_API_KEY` in place throughout.
 4. Follow-up (owner): revoke the OpenRouter key in the OpenRouter dashboard after a one-week soak, then delete the backups that contain it.
