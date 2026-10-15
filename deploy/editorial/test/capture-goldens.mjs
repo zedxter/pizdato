@@ -18,6 +18,10 @@ const OWN=new Set([
   ...['editor','proofreader','verifier','writer'].map(n=>`profiles/neutral/${n}.md`)].map(f=>T+f),
  'deploy/evening/agent.mjs','deploy/evening/worker.mjs','deploy/evening/network.mjs','deploy/evening/test/runner.rs',
  'deploy/morning/agent.mjs','deploy/morning/test/agent.test.mjs','deploy/morning/test/runner.rs',
+ // #234 gives morning its own evaluated profile; the legacy channel/evening golden remains unchanged.
+ 'deploy/morning/material.mjs','deploy/morning/prompt.md','deploy/morning/test/material.test.mjs',
+ E+'profiles/pizdato-morning.mjs',T+'eval-scheduling.test.mjs',
+ ...['fixtures.json','fixtures-heldout.json','fixtures-heldout.sha256','report.json'].map(f=>E+'profiles/pizdato-morning/'+f),
  // migrate-llm-nous: provider-only changes outside the gate (Nous Portal instead of OpenRouter).
  ...['delivery-network.test.mjs','fake-network.mjs','hosts.test.mjs'].map(f=>T+f),
  'deploy/evening/test/agent.test.mjs','deploy/evening/pizdato-evening.env.example',

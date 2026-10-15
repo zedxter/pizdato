@@ -1,0 +1,798 @@
+{
+  "profile": "pizdato-morning",
+  "profileSha256": "7bedbe351145a3de64e5a67876d9aa566477c14cdac2745f3c7229be2d07357d",
+  "rubricSha256": {
+    "editorial/editor.md": "0a7d910df67f6df13641899a9e8993c69b05a4c031eb6fadff3caa66d5e35ece",
+    "editorial/proofreader.md": "bedb08d681365ef2a23966db6c57592f96f5a329a6af76711791087a21b9a288",
+    "editorial/verifier.md": "bf4fea0347c80d98dc07300e390945bcde89eb7a132428152643574c797bf364",
+    "editorial/writer.md": "0dc8a47313849994ed32a481473634a847a8a481e38d51a2ece1b13fc37f1fb7",
+    "morning/prompt.md": "7c81f7eb4fb70418885ade4f5b394b668ebdb1df51bace9a38eb8cdba09972da"
+  },
+  "bar": {
+    "clean": 1,
+    "objective": 0.9
+  },
+  "revision": "04e9370d489639c970dd2c9c08e9b8316b27e16b",
+  "uncommitted": false,
+  "final": true,
+  "selection": "all",
+  "fixturesSha256": "0c2ab70731ba5e17358751290b3f46a5ba70af7fcfd629ecfad46046287dc45f",
+  "heldoutSha256": "f90fe454907435660111fd4a89bc3931b68cdb55f1947cb644648ec4a62541dd",
+  "endpoint": "https://inference-api.nousresearch.com/v1",
+  "byClass": {
+    "clean": {
+      "passed": 12,
+      "total": 12
+    },
+    "objective": {
+      "passed": 16,
+      "total": 16
+    },
+    "borderline": {
+      "passed": 0,
+      "total": 0
+    }
+  },
+  "bySet": {
+    "held-out-morning": {
+      "clean": {
+        "passed": 6,
+        "total": 6
+      },
+      "objective": {
+        "passed": 6,
+        "total": 6
+      }
+    }
+  },
+  "releaseBar": true,
+  "misses": [],
+  "perFixture": {
+    "first-person-miniature": {
+      "passed": 2,
+      "trials": 2
+    },
+    "dialogue-emoji": {
+      "passed": 2,
+      "trials": 2
+    },
+    "connected-ending": {
+      "passed": 2,
+      "trials": 2
+    },
+    "disconnected-wish": {
+      "passed": 2,
+      "trials": 2
+    },
+    "explains-punchline": {
+      "passed": 2,
+      "trials": 2
+    },
+    "fabricated-news": {
+      "passed": 2,
+      "trials": 2
+    },
+    "grammar-persists": {
+      "passed": 2,
+      "trials": 2
+    },
+    "repeated-premise": {
+      "passed": 2,
+      "trials": 2
+    },
+    "heldout-dialogue": {
+      "passed": 2,
+      "trials": 2
+    },
+    "heldout-first-person": {
+      "passed": 2,
+      "trials": 2
+    },
+    "heldout-disconnected": {
+      "passed": 2,
+      "trials": 2
+    },
+    "heldout-explanation": {
+      "passed": 2,
+      "trials": 2
+    },
+    "heldout-unfounded": {
+      "passed": 2,
+      "trials": 2
+    },
+    "heldout-source-anecdote": {
+      "passed": 2,
+      "trials": 2
+    }
+  },
+  "model": "openai/gpt-6.1-sol",
+  "reviewerReasoningEffort": "high",
+  "temperature": 0,
+  "trials": 2,
+  "concurrency": 1,
+  "passed": 28,
+  "total": 28,
+  "at": "2026-10-15T09:04:22.785Z",
+  "results": [
+    {
+      "id": "first-person-miniature",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "first-person-miniature",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "dialogue-emoji",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "dialogue-emoji",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "connected-ending",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "connected-ending",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "disconnected-wish",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «✨ Пусть в булочке будет побольше начинки, а на свитере — поменьше крошек.» — Пожелание о булочке и крошках не связано со сценой у двери и переключает миниатюру на постороннюю тему. Fix: Удалить этот абзац и закончить пост словами «никуда не тороплюсь»."
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "✨ Пусть в булочке будет побольше начинки, а на свитере — поменьше крошек.",
+            "problem": "Пожелание о булочке и крошках не связано со сценой у двери и переключает миниатюру на постороннюю тему.",
+            "fix": "Удалить этот абзац и закончить пост словами «никуда не тороплюсь».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "disconnected-wish",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «Пусть в булочке будет побольше начинки, а на свитере — поменьше крошек.» — Пожелание о булочке и крошках не завершает сцену у двери, а переключает пост на несвязанную тему. Fix: Удалить заключительный абзац вместе с ✨ и закончить пост словами «делаю вид, что никуда не тороплюсь»."
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "Пусть в булочке будет побольше начинки, а на свитере — поменьше крошек.",
+            "problem": "Пожелание о булочке и крошках не завершает сцену у двери, а переключает пост на несвязанную тему.",
+            "fix": "Удалить заключительный абзац вместе с ✨ и закончить пост словами «делаю вид, что никуда не тороплюсь».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "explains-punchline",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «Шутка в том, что приложение вместо тишины снова привлекает моё внимание, поэтому это смешно.» — Второй абзац объясняет уже понятную шутку и лишает финал комического эффекта. Fix: Удалить второй абзац и закончить пост словами «Получил уведомление: уведомления отключены.»"
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Шутка в том, что приложение вместо тишины снова привлекает моё внимание, поэтому это смешно.",
+            "problem": "Второй абзац объясняет уже понятную шутку и лишает финал комического эффекта.",
+            "fix": "Удалить второй абзац и закончить пост словами «Получил уведомление: уведомления отключены.»",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "explains-punchline",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «Шутка в том, что приложение вместо тишины снова привлекает моё внимание, поэтому это смешно.» — Последний абзац объясняет уже понятную шутку и уничтожает эффект финальной реплики. Fix: Удалить последний абзац и закончить пост на «Получил уведомление: уведомления отключены.»"
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Шутка в том, что приложение вместо тишины снова привлекает моё внимание, поэтому это смешно.",
+            "problem": "Последний абзац объясняет уже понятную шутку и уничтожает эффект финальной реплики.",
+            "fix": "Удалить последний абзац и закончить пост на «Получил уведомление: уведомления отключены.»",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "fabricated-news",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «Сегодня министерство труда Германии запретило рабочие чаты до одиннадцати утра.» — Запрет реального министерства подан как сегодняшняя новость, но подтверждающего источника нет. Fix: Заменить пост вымышленной рабочей сценой: «📵 У нас на работе запретили рабочие чаты до одиннадцати утра. Начальники уже обсуждают, как назвать новый чат, чтобы запрет на него не распространялся»."
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Сегодня министерство труда Германии запретило рабочие чаты до одиннадцати утра.",
+            "problem": "Запрет реального министерства подан как сегодняшняя новость, но подтверждающего источника нет.",
+            "fix": "Заменить пост вымышленной рабочей сценой: «📵 У нас на работе запретили рабочие чаты до одиннадцати утра. Начальники уже обсуждают, как назвать новый чат, чтобы запрет на него не распространялся».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "fabricated-news",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «Сегодня министерство труда Германии запретило рабочие чаты до одиннадцати утра.» — Сегодняшний запрет немецкого министерства и существование соответствующего закона поданы как реальные факты, но источник не предоставлен. Fix: Заменить новость вымышленной офисной сценой: «📵 У нас в офисе запретили рабочие чаты до одиннадцати утра. В девять начальник создал группу „Это не работа, просто спрошу“»."
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Сегодня министерство труда Германии запретило рабочие чаты до одиннадцати утра.",
+            "problem": "Сегодняшний запрет немецкого министерства и существование соответствующего закона поданы как реальные факты, но источник не предоставлен.",
+            "fix": "Заменить новость вымышленной офисной сценой: «📵 У нас в офисе запретили рабочие чаты до одиннадцати утра. В девять начальник создал группу „Это не работа, просто спрошу“».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "grammar-persists",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «будильник зазвонила» — Сказуемое «зазвонила» стоит в женском роде, а подлежащее «будильник» — мужского рода. Fix: будильник зазвонил",
+          "grammar: «зазвонила» — Сказуемое не согласовано с существительным «будильник» мужского рода. Fix: зазвонил"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "будильник зазвонила",
+            "problem": "Сказуемое «зазвонила» стоит в женском роде, а подлежащее «будильник» — мужского рода.",
+            "fix": "будильник зазвонил",
+            "by": "proofreader"
+          },
+          {
+            "category": "grammar",
+            "quote": "зазвонила",
+            "problem": "Сказуемое не согласовано с существительным «будильник» мужского рода.",
+            "fix": "зазвонил",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "grammar-persists",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": false,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "grammar: «будильник зазвонила» — Сказуемое «зазвонила» не согласовано в роде с подлежащим «будильник». Fix: будильник зазвонил",
+          "grammar: «зазвонила» — Сказуемое не согласовано с подлежащим «будильник» мужского рода. Fix: зазвонил"
+        ],
+        "blockers": [
+          {
+            "category": "grammar",
+            "quote": "будильник зазвонила",
+            "problem": "Сказуемое «зазвонила» не согласовано в роде с подлежащим «будильник».",
+            "fix": "будильник зазвонил",
+            "by": "proofreader"
+          },
+          {
+            "category": "grammar",
+            "quote": "зазвонила",
+            "problem": "Сказуемое не согласовано с подлежащим «будильник» мужского рода.",
+            "fix": "зазвонил",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "repeated-premise",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": false,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "repetition: «Теперь заказываю вторую коробку.» — Пост повторяет сюжет и развязку morning-2026-10-14.md: покупка ёмкости для хранения сопровождается покупкой лишних вещей, поэтому нужна ещё одна ёмкость. Fix: Заменить историю целиком: отказаться от сюжета «купил средство для хранения — набрал новых вещей — понадобилось ещё одно», а не просто менять органайзер на коробку."
+        ],
+        "blockers": [
+          {
+            "category": "repetition",
+            "quote": "Теперь заказываю вторую коробку.",
+            "problem": "Пост повторяет сюжет и развязку morning-2026-10-14.md: покупка ёмкости для хранения сопровождается покупкой лишних вещей, поэтому нужна ещё одна ёмкость.",
+            "fix": "Заменить историю целиком: отказаться от сюжета «купил средство для хранения — набрал новых вещей — понадобилось ещё одно», а не просто менять органайзер на коробку.",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "repeated-premise",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "replace",
+        "grammar": true,
+        "meaning": true,
+        "freshness": false,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "repetition: «Теперь заказываю вторую коробку.» — Сюжет повторяет пост из history: покупка ёмкости для порядка приводит к покупке лишних вещей и необходимости ещё одной ёмкости. Fix: Заменить весь сюжет, например: «☕ Поставил будильник на пять минут раньше, чтобы спокойно выпить кофе. Теперь спокойно пять минут лежу и думаю о кофе»."
+        ],
+        "blockers": [
+          {
+            "category": "repetition",
+            "quote": "Теперь заказываю вторую коробку.",
+            "problem": "Сюжет повторяет пост из history: покупка ёмкости для порядка приводит к покупке лишних вещей и необходимости ещё одной ёмкости.",
+            "fix": "Заменить весь сюжет, например: «☕ Поставил будильник на пять минут раньше, чтобы спокойно выпить кофе. Теперь спокойно пять минут лежу и думаю о кофе».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "replace"
+      }
+    },
+    {
+      "id": "heldout-dialogue",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "heldout-dialogue",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "heldout-first-person",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "heldout-first-person",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "heldout-disconnected",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «А ещё пусть батарейки в пульте никогда не заканчиваются.» — Пожелание про батарейки переключает текст на тему, не связанную с шуткой о повторном вызове лифта. Fix: Удалить последний абзац вместе с 🍪 и закончить миниатюру фразой «Пусть знает, что дело серьёзное»."
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "А ещё пусть батарейки в пульте никогда не заканчиваются.",
+            "problem": "Пожелание про батарейки переключает текст на тему, не связанную с шуткой о повторном вызове лифта.",
+            "fix": "Удалить последний абзац вместе с 🍪 и закончить миниатюру фразой «Пусть знает, что дело серьёзное».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "heldout-disconnected",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": false,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [
+          "meaning: «🍪 А ещё пусть батарейки в пульте никогда не заканчиваются.» — Пожелание о батарейках в пульте переключает тему и не завершает шутку о повторном вызове лифта. Fix: Удалить этот абзац и закончить пост фразой «Пусть знает, что дело серьёзное.»"
+        ],
+        "blockers": [
+          {
+            "category": "meaning",
+            "quote": "🍪 А ещё пусть батарейки в пульте никогда не заканчиваются.",
+            "problem": "Пожелание о батарейках в пульте переключает тему и не завершает шутку о повторном вызове лифта.",
+            "fix": "Удалить этот абзац и закончить пост фразой «Пусть знает, что дело серьёзное.»",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "heldout-explanation",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «в этом юмористический эффект.» — Заключительный абзац объясняет шутку после уже состоявшегося панчлайна. Fix: Удалить заключительный абзац и закончить пост словом «Повышение.»."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "в этом юмористический эффект.",
+            "problem": "Заключительный абзац объясняет шутку после уже состоявшегося панчлайна.",
+            "fix": "Удалить заключительный абзац и закончить пост словом «Повышение.».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "heldout-explanation",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": false,
+        "grounding": true,
+        "issues": [
+          "ai-slop: «Ирония заключается в том, что проблему беспорядка я не решил, а лишь изменил её категорию — в этом юмористический эффект.» — Последний абзац объясняет уже сработавшую шутку и звучит как редакторский разбор, а не реплика рассказчика. Fix: Удалить последний абзац и закончить пост словом «Повышение.»."
+        ],
+        "blockers": [
+          {
+            "category": "ai-slop",
+            "quote": "Ирония заключается в том, что проблему беспорядка я не решил, а лишь изменил её категорию — в этом юмористический эффект.",
+            "problem": "Последний абзац объясняет уже сработавшую шутку и звучит как редакторский разбор, а не реплика рассказчика.",
+            "fix": "Удалить последний абзац и закончить пост словом «Повышение.».",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "heldout-unfounded",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «Оксфордский университет вчера опубликовал исследование: сон после обеда продлевает жизнь на десять лет.» — Публикация исследования Оксфордским университетом вчера и прибавка десяти лет жизни заявлены как реальные факты, но источник не предоставлен. Fix: Заменить новость вымышленным диалогом: «😴 — Миша, после обеда рабочая встреча.\n— А у меня сон для долголетия. Кто компенсирует потерянные годы?»"
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Оксфордский университет вчера опубликовал исследование: сон после обеда продлевает жизнь на десять лет.",
+            "problem": "Публикация исследования Оксфордским университетом вчера и прибавка десяти лет жизни заявлены как реальные факты, но источник не предоставлен.",
+            "fix": "Заменить новость вымышленным диалогом: «😴 — Миша, после обеда рабочая встреча.\n— А у меня сон для долголетия. Кто компенсирует потерянные годы?»",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "heldout-unfounded",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "revise",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": false,
+        "issues": [
+          "unsupported-claim: «Оксфордский университет вчера опубликовал исследование: сон после обеда продлевает жизнь на десять лет.» — Сообщение о вчерашнем исследовании Оксфорда и продлении жизни на десять лет не подтверждено источником и подано как реальная новость. Fix: Заменить первое предложение на явно шуточное наблюдение: «😴 После обеда я сплю так, будто за каждый час начисляют десять лет жизни.»"
+        ],
+        "blockers": [
+          {
+            "category": "unsupported-claim",
+            "quote": "Оксфордский университет вчера опубликовал исследование: сон после обеда продлевает жизнь на десять лет.",
+            "problem": "Сообщение о вчерашнем исследовании Оксфорда и продлении жизни на десять лет не подтверждено источником и подано как реальная новость.",
+            "fix": "Заменить первое предложение на явно шуточное наблюдение: «😴 После обеда я сплю так, будто за каждый час начисляют десять лет жизни.»",
+            "by": "editor"
+          }
+        ],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "repair"
+      }
+    },
+    {
+      "id": "heldout-source-anecdote",
+      "trial": 1,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    },
+    {
+      "id": "heldout-source-anecdote",
+      "trial": 2,
+      "pass": true,
+      "verdict": {
+        "decision": "approve",
+        "grammar": true,
+        "meaning": true,
+        "freshness": true,
+        "voice": true,
+        "grounding": true,
+        "issues": [],
+        "blockers": [],
+        "suggestions": [],
+        "dismissed": [],
+        "nextAction": "publish"
+      }
+    }
+  ]
+}
