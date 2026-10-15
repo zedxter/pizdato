@@ -12,6 +12,7 @@ import {provenance} from './capture-goldens.mjs';
 import {createGate} from '../gate.mjs';
 import {composeRubric} from '../compose-rubric.mjs';
 import channel from '../profiles/pizdato-channel.mjs';
+import morning from '../profiles/pizdato-morning.mjs';
 import {createServices,Budget} from '../../evening/network.mjs';
 import {EditionStore} from '../../evening/store.mjs';
 // sha256 of the da0b2ed rubric files, pinned independently of the goldens file.
@@ -88,7 +89,7 @@ test('the evening network writer receives the da0b2ed polish',async()=>{
  assert.equal(sha(polish),PINNED['writer.md']);assert.equal(systems.length,2);
  for(const s of systems)assert.ok(s.includes(`\n${polish}\n`),'discovery and drafting prompts carry the exact polish');
 });
-for(const slot of ['morning','evening']) test(`the ${slot} agent writer receives the da0b2ed polish`,async()=>{
+for(const slot of ['morning','evening']) test(`the ${slot} agent writer receives its own profile polish`,async()=>{
  const root=await mkdtemp(join(tmpdir(),'golden-polish-'));
  try{
   await mkdir(join(root,'vault/posts'),{recursive:true});await writeFile(join(root,'trace'),'');
@@ -96,7 +97,8 @@ for(const slot of ['morning','evening']) test(`the ${slot} agent writer receives
   const r=spawnSync(process.execPath,['--import',resolve('deploy/editorial/test/fake-network.mjs'),'--import',resolve('deploy/editorial/test/system-trace.mjs'),`deploy/${slot}/agent.mjs`,'--dry-run'],{encoding:'utf8',timeout:20000,env:{...process.env,NOUS_API_KEY:'test',COMPOSIO_CONSUMER_KEY:'test',PIZDATO_CHANNEL_ENV:join(root,'missing'),PIZDATO_EVENING_ENV:join(root,'missing'),[`${prefix}_VAULT`]:join(root,'vault'),[`${prefix}_STATE`]:join(root,'state'),TEST_TRACE:join(root,'trace'),TEST_SYSTEM:join(root,'system'),TEST_VERDICT:'approve'}});
   assert.equal(r.status,0,r.stderr+r.stdout);
   const systems=(await readFile(join(root,'system'),'utf8')).trim().split('\n').map(l=>JSON.parse(l));
-  assert.ok(systems.length>0);for(const s of systems)assert.ok(s.endsWith(`Post-polish resources:\n${polish}`)||s.includes(`\nPost-polish resources:\n${polish}`),s.slice(-200));
+  const expectedPolish=slot==='morning'?composeRubric('writer',morning):polish;
+  assert.ok(systems.length>0);for(const s of systems)assert.ok(s.endsWith(`Post-polish resources:\n${expectedPolish}`)||s.includes(`\nPost-polish resources:\n${expectedPolish}`),s.slice(-200));
  }finally{await rm(root,{recursive:true,force:true});}
 });
 test('no production code reads a rubric template or a stale rubric file directly',async()=>{

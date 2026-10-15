@@ -1,8 +1,8 @@
 import {readFile} from 'node:fs/promises';
 import {composeRubric,TEMPLATES} from './compose-rubric.mjs';
 // Keeps evaluation fixtures out of everything a model is shown, so the evaluation measures rules, not memorized examples.
-// The prompts the channel's callers add around the composed rubrics; other profiles have none yet.
-const CALLER_PROMPTS={'pizdato-channel':['evening/draft.md','evening/prompt.md','evening/legacy-prompt.md','morning/prompt.md']};
+// The prompts the channel's callers add around the composed rubrics; each production profile names only the prompts its callers use.
+const CALLER_PROMPTS={'pizdato-channel':['evening/draft.md','evening/prompt.md','evening/legacy-prompt.md'],'pizdato-morning':['morning/prompt.md']};
 // The guard reads what a model is sent: the profile's composed rubrics, never the templates.
 export async function guardedTexts(profile){
  const prompts=await Promise.all((CALLER_PROMPTS[profile.id]||[]).map(async path=>[path,await readFile(new URL(`../${path}`,import.meta.url),'utf8')]));

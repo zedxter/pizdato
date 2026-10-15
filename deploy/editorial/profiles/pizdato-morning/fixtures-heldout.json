@@ -1,0 +1,64 @@
+[
+  {
+    "id": "heldout-dialogue",
+    "set": "held-out-morning",
+    "class": "clean",
+    "expected": "approve",
+    "text": "🧹 — Ты убрался?\n— Да.\n— А почему вещи лежат под кроватью?\n— Я же убрался, а не избавился от имущества."
+  },
+  {
+    "id": "heldout-first-person",
+    "set": "held-out-morning",
+    "class": "clean",
+    "expected": "approve",
+    "text": "📝 Написал список дел на завтра. Посмотрел на него. Дописал первым пунктом: найти человека, который всё это обещал."
+  },
+  {
+    "id": "heldout-disconnected",
+    "set": "held-out-morning",
+    "class": "objective",
+    "expected": "reject",
+    "categories": [
+      "meaning"
+    ],
+    "expectedQuote": "батарейк|пульт",
+    "text": "🛗 Вызвал лифт и зачем-то нажал кнопку ещё раз. Пусть знает, что дело серьёзное.\n\n🍪 А ещё пусть батарейки в пульте никогда не заканчиваются."
+  },
+  {
+    "id": "heldout-explanation",
+    "set": "held-out-morning",
+    "class": "objective",
+    "expected": "reject",
+    "categories": [
+      "ai-slop"
+    ],
+    "expectedQuote": "Ирония заключается|юмористический",
+    "text": "🧺 Купил корзину для грязного белья. Теперь стул в спальне держит только чистое, которое лень убрать. Повышение.\n\nИрония заключается в том, что проблему беспорядка я не решил, а лишь изменил её категорию — в этом юмористический эффект."
+  },
+  {
+    "id": "heldout-unfounded",
+    "set": "held-out-morning",
+    "class": "objective",
+    "expected": "reject",
+    "categories": [
+      "unsupported-claim"
+    ],
+    "expectedQuote": "вчера|исследован|часов",
+    "text": "😴 Оксфордский университет вчера опубликовал исследование: сон после обеда продлевает жизнь на десять лет. Теперь за каждую рабочую встречу после двух часов можно требовать компенсацию."
+  },
+  {
+    "id": "heldout-source-anecdote",
+    "set": "held-out-morning",
+    "class": "clean",
+    "expected": "approve",
+    "text": "🪴 — Почему ты разговариваешь с кактусом?\n— Он единственный в доме, кто не перебивает.\n\nИсточник: https://example.org/joke",
+    "source": {
+      "kind": "anecdote",
+      "primary": {
+        "url": "https://example.org/joke",
+        "text": "A fictional joke: Why do you talk to the cactus? It is the only one at home who does not interrupt."
+      },
+      "supporting": []
+    }
+  }
+]

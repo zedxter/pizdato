@@ -42,7 +42,7 @@ test('the revealed held-out set is independent of the dev and #219 fixtures',asy
 });
 test('the guard reads the composed rubrics of a profile and the prompts its callers add',async()=>{
  const texts=await guardedTexts(channel);
- assert.deepEqual(Object.keys(texts),['editorial/editor.md','editorial/proofreader.md','editorial/verifier.md','editorial/writer.md','evening/draft.md','evening/prompt.md','evening/legacy-prompt.md','morning/prompt.md']);
+ assert.deepEqual(Object.keys(texts),['editorial/editor.md','editorial/proofreader.md','editorial/verifier.md','editorial/writer.md','evening/draft.md','evening/prompt.md','evening/legacy-prompt.md']);
  assert.deepEqual(Object.keys(await guardedTexts(neutral)),['editorial/editor.md','editorial/proofreader.md','editorial/verifier.md','editorial/writer.md']);
  assert.doesNotMatch(texts['editorial/editor.md'],/\{\{/);
 });
@@ -58,4 +58,10 @@ test('host lines are per profile: lines of another publication are fixture text'
  // No default: a caller that forgets its profile's lines must not silently get the channel's.
  assert.throws(()=>contamination([{id:'h',text:'Пиздато: да'}],{'r.md':'«Пиздато: да»'}),/host lines/);
  assert.throws(()=>overlap([],[]),/host lines/);
+});
+
+test('morning contamination guard includes its writer prompt',async()=>{
+ const morning=(await import('../profiles/pizdato-morning.mjs')).default;
+ const texts=await guardedTexts(morning);
+ assert.ok(texts['morning/prompt.md']);assert.equal(texts['evening/prompt.md'],undefined);
 });
