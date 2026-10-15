@@ -18,9 +18,9 @@ audience).
 
 - **PR-only to main.** Never commit or push directly to `main`. Every change:
   branch -> PR -> review -> merge.
-- **Full spec-driven cycle** (per team rules for all GitHub projects): Issue ->
-  IDD brief -> spec (OpenSpec) -> spec-PR (review by 5 reviewers) ->
-  implementation PR -> QA -> merge -> deploy.
+- **Delivery cycle:** Issue -> implementation PR -> review -> QA -> merge -> deploy.
+  IDD briefs, OpenSpec specifications, and separate spec PRs are optional. Create
+  or seek approval for them only when the user explicitly requests that workflow.
 - **GitHub Issues cover every change.** If no Issue exists, create one before
   starting work. Direct commits to main without a backing Issue are not allowed.
 - **TDD mandatory** for code changes (Rust tests). No production code without a
@@ -66,7 +66,7 @@ force-push to feat/a (branch has PR open)
 
 ## 4. Rules that never get violated
 
-1. The spec comes before the code (OpenSpec).
+1. Follow the delivery cycle in section 2; specifications are optional.
 2. The test comes before the production code (TDD).
 3. All repo content in English.
 4. No PR merge without passing CI.
@@ -99,7 +99,7 @@ See also: `/home/danil/vault/pizdato/docs/conventions-core.md` § "Локаль�
 
 ## 6. Roles
 
-- **Owner — Danil (zedxter).** Green-lights work, approves spec-PRs.
+- **Owner — Danil (zedxter).** Green-lights work and approves scope.
 - **Geralt** — CTO: architecture, code review, CI/CD.
 - **Yennefer** — PM/PO: scope review, priority coordination.
 - **Vesemir** — QA: regression testing, BDD traceability.
