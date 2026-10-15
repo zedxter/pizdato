@@ -172,19 +172,20 @@ fn preflight_is_read_only() {
 }
 
 #[test]
-fn morning_message_has_restrained_decoration_without_promotion() {
+fn morning_message_preserves_a_cohesive_story_and_contextual_emoji() {
     let result = Command::new("node")
-        .args(["--input-type=module", "-e", "import {renderWisdom} from './deploy/morning/agent.mjs'; process.stdout.write(renderWisdom('wisdom', 'wish'));"])
+        .args(["--input-type=module", "-e", "import {validateMorningPost} from './deploy/morning/agent.mjs'; const text='📱 Решил посмотреть только время. Прочитал новости, прогноз погоды и спор о том, как правильно варить яйца. Теперь могу вести утренний эфир. Который час — пока не знаю.'; process.stdout.write(validateMorningPost({text,sourceId:null}).text);"])
         .output().unwrap();
     assert!(
         result.status.success(),
-        "Node rendering failed: {}",
+        "Node validation failed: {}",
         String::from_utf8_lossy(&result.stderr)
     );
     let text = String::from_utf8(result.stdout).unwrap();
-    assert!(text.starts_with("☕ "));
-    assert!(text.contains("\n\n✨ wish"));
-    assert!(!text.contains("http"));
+    assert!(text.starts_with("📱 "));
+    assert!(text.ends_with("пока не знаю."));
+    assert!(!text.contains("Мудрость дня"));
+    assert!(!text.contains("✨ Пусть"));
 }
 
 #[test]

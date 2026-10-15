@@ -1,37 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateWisdom,renderWisdom} from '../agent.mjs';
-const clean='Будильник не делает утро добрым, он просто первым берёт на себя вину';
-test('renders only attribution and quoted 10–15-word wisdom',()=>{
- assert.equal(renderWisdom(validateWisdom(clean)), `☕ Мудрость дня от дяди Миши:\n«${clean}»`);
+import {validateMorningPost} from '../agent.mjs';
+const clean='📱 Решил посмотреть только время.\n\nПрочитал новости, прогноз погоды и спор о том, как правильно варить яйца. Теперь могу вести утренний эфир.\n\nКоторый час — пока не знаю.';
+test('preserves a complete first-person miniature with contextual emoji',()=>{
+ assert.deepEqual(validateMorningPost({text:clean,sourceId:null}),{text:clean,source:null});
 });
-test('rejects links, statistics, voting CTA and first-person copy',()=>{
- for(const bad of [clean+' https://pizdato.net',clean+' pizdato.net',clean+' Проголосуй!',clean+' 42', 'Я думаю, будильник не делает утро добрым и первым берёт на себя вину']) assert.throws(()=>validateWisdom(bad));
+test('rejects old wisdom/wish objects, missing decoration, emoji spam and promotion',()=>{
+ for(const candidate of [{wisdom:'thought',wish:'wish'},{text:clean.replace('📱',''),sourceId:null},{text:clean+' 😂😂😂',sourceId:null},{text:clean+' https://pizdato.net',sourceId:null},{text:clean+' Подписывайтесь на канал!',sourceId:null},{text:'🙂 short',sourceId:null}])assert.throws(()=>validateMorningPost(candidate));
 });
-test('rejects missing wisdom, wrong word range and additional sections',()=>{
- for(const bad of ['',null,'Кофе решает всё',clean+'\n\nДоброе утро!',clean+'; '+clean]) assert.throws(()=>validateWisdom(bad));
-});
-test('rejects recently published wisdom regardless of punctuation or case',()=>assert.throws(()=>validateWisdom(clean,[clean.toUpperCase()+'.'])));
-test('adds a short witty wish and rejects promotional or first-person wishes',async()=>{
- const {validateWish}=await import('../agent.mjs');
- const wish='Пусть сегодня сбудутся планы, а уведомления хотя бы постесняются.';
- assert.equal(renderWisdom(clean,validateWish(wish)),`☕ Мудрость дня от дяди Миши:\n«${clean}»\n\n✨ ${wish}`);
- for(const bad of [wish+' https://pizdato.net', 'Я желаю всем подписаться и проголосовать на нашем сайте', wish+'\nПодписывайтесь!', 'Доброе утро', Array(26).fill('планы').join(' ')]) assert.throws(()=>validateWish(bad));
-});
-test('keeps generated fields emoji-free so only host decoration appears',async()=>{
- const {validateWish}=await import('../agent.mjs');
- assert.throws(()=>validateWisdom(clean+' ☕'));
- assert.throws(()=>validateWish('Пусть сегодня сбудутся планы, а уведомления хотя бы постесняются. ✨'));
-});
-test('rejects first-person wish verbs even without a pronoun',async()=>{
- const {validateWish}=await import('../agent.mjs');
- assert.throws(()=>validateWish('Желаю, чтобы будильник проиграл без боя, а кофе дождался тебя горячим.'));
-});
-
-test('places the final full stop outside Russian quotation marks', () => {
-  const message = renderWisdom('Готовая мысль.', 'Хорошего дня.');
-  assert.ok(message.includes('«Готовая мысль».'));
-  assert.ok(!message.includes('мысль.»'));
+test('binds attribution and evidence to a fetched source, never a model-provided URL',()=>{
+ const sources=[{id:'joke-1',kind:'anecdote',primary:{url:'https://www.anekdot.ru/id/123/',text:'Source joke',fetchedAt:'2026-10-15T08:00:00Z'},supporting:[]}];
+ const result=validateMorningPost({text:clean,sourceId:'joke-1'},sources);
+ assert.equal(result.source,sources[0]);assert.ok(result.text.endsWith('Источник: https://www.anekdot.ru/id/123/'));
+ assert.throws(()=>validateMorningPost({text:clean,sourceId:'invented'},sources));
 });
 test('a broken profile fails the morning run and its check before any request',async()=>{
  const {mkdtemp,cp,readFile,writeFile,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const {join,resolve}=await import('node:path');const {spawnSync}=await import('node:child_process');
@@ -50,4 +31,10 @@ test('a broken profile fails the morning run and its check before any request',a
    assert.equal(await readFile(join(root,'trace'),'utf8'),'',`${mode} sent a request`);
   }
  }finally{await rm(root,{recursive:true,force:true});}
+});
+test('repair cannot drop or swap the source that grounds the current story',()=>{
+ const source={id:'joke-1',kind:'anecdote',primary:{url:'https://www.anekdot.ru/id/123/',text:'Fetched joke'},supporting:[]};
+ assert.throws(()=>validateMorningPost({text:clean,sourceId:null},[source],'joke-1'));
+ assert.throws(()=>validateMorningPost({text:clean,sourceId:'joke-1'},[source],null));
+ assert.equal(validateMorningPost({text:clean,sourceId:'joke-1'},[source],'joke-1').source,source);
 });

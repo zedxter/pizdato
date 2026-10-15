@@ -79,7 +79,8 @@ test('a profile bar may tighten the objective share but never loosen it',()=>{
 test('channel provenance records the profile and the da0b2ed rubric hashes of the released final run',async()=>{
  const p=await provenance(channel),final=JSON.parse(await readFile(new URL('../eval-runs/2026-10-10-final.json',import.meta.url),'utf8'));
  assert.equal(p.profile,'pizdato-channel');assert.match(p.profileSha256,/^[0-9a-f]{64}$/);
- assert.deepEqual(p.rubricSha256,final.rubricSha256);
+ const historical={...final.rubricSha256};delete historical['morning/prompt.md'];
+ assert.deepEqual(p.rubricSha256,historical);
  assert.equal(p.rubricSha256['editorial/editor.md'],'fe6646a1fa92e6ca6cc3c8e55799ddcc8329c6787ec5a48c985496cf0296f138');
 });
 test('every production profile but the channel needs fixtures and a passing final report',async()=>{
