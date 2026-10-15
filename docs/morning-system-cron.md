@@ -75,3 +75,5 @@ The owner requested restrained emojis and a livelier conversational voice. The h
 ## Morning format validation (#234)
 
 Run `node --test deploy/morning/test/*.test.mjs deploy/editorial/test/*.test.mjs` and the Rust runner tests. The morning profile has its own development fixtures, sealed held-out fixtures and final evaluation report in `deploy/editorial/profiles/pizdato-morning/`. The evening golden prompts remain byte-identical; morning caller prompts are tracked separately. Live dry runs must not send test posts or clear publication markers. Verify the first scheduled receipt after installation separately.
+
+For provider-limited evaluation, use `PIZDATO_EVAL_CONCURRENCY=1` (default 6). Each fixture still uses the independent proofreader and editor; only concurrent trials are limited.

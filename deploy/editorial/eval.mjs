@@ -32,8 +32,9 @@ const fixtures=selectFixtures(all,ids?ids.split(',').filter(Boolean):null,final)
 const results=[];
 const trials=Math.max(1,Number(process.env.PIZDATO_EVAL_TRIALS)||3);
 const jobs=fixtures.flatMap(fixture=>Array.from({length:trials},(_,i)=>({fixture,trial:i+1})));
+const concurrency=Math.max(1,Math.min(6,Math.floor(Number(process.env.PIZDATO_EVAL_CONCURRENCY)||6)));
 let next=0;
-await Promise.all(Array.from({length:Math.min(6,jobs.length)},async()=>{
+await Promise.all(Array.from({length:Math.min(concurrency,jobs.length)},async()=>{
  while(next<jobs.length) {
  const {fixture,trial}=jobs[next++];
  try {
@@ -54,7 +55,7 @@ const git=gitArgs=>{try{return execFileSync('git',gitArgs,{cwd:here,encoding:'ut
 const origin=await provenance(profile,paths.module),bar=barFor(profile);
 const perFixture=Object.fromEntries(fixtures.map(f=>{const r=results.filter(x=>x.id===f.id);return [f.id,{passed:r.filter(x=>x.pass).length,trials:r.length}];}));
 const {byClass,bySet,releaseBar,misses}=summarize(all,fixtures,results,bar);
-const settings={...origin,bar,revision:git(['rev-parse','HEAD'])||'unknown',uncommitted:git(['status','--porcelain'])!=='',final,selection:ids||'all',fixturesSha256:sha(fixtureBytes),heldoutSha256:heldout,endpoint:base,byClass,bySet,releaseBar,misses,perFixture,model:process.env.PIZDATO_EDITOR_MODEL||process.env.PIZDATO_EVENING_MODEL||'openai/gpt-6.1-sol',reviewerReasoningEffort:process.env.PIZDATO_EDITOR_REASONING_EFFORT||process.env.PIZDATO_REASONING_EFFORT||'low (reasoning models only)',temperature:0,trials,passed:results.filter(r=>r.pass).length,total:results.length};
+const settings={...origin,bar,revision:git(['rev-parse','HEAD'])||'unknown',uncommitted:git(['status','--porcelain'])!=='',final,selection:ids||'all',fixturesSha256:sha(fixtureBytes),heldoutSha256:heldout,endpoint:base,byClass,bySet,releaseBar,misses,perFixture,model:process.env.PIZDATO_EDITOR_MODEL||process.env.PIZDATO_EVENING_MODEL||'openai/gpt-6.1-sol',reviewerReasoningEffort:process.env.PIZDATO_EDITOR_REASONING_EFFORT||process.env.PIZDATO_REASONING_EFFORT||'low (reasoning models only)',temperature:0,trials,concurrency,passed:results.filter(r=>r.pass).length,total:results.length};
 console.log(JSON.stringify({...settings,perFixture:undefined,rubricSha256:undefined}));
 await mkdir(dirname(resolve(report)),{recursive:true});
 await writeFile(report,JSON.stringify({...settings,at:new Date().toISOString(),results},null,2));
