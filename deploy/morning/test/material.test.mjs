@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {loadMaterial,preferredFormat} from '../material.mjs';
+import {readFile} from 'node:fs/promises';
+import {loadMaterial,preferredFormat,FORMATS} from '../material.mjs';
 const xml='<rss><channel><item><link>https://www.anekdot.ru/id/123/</link><description><![CDATA[An ordinary joke with a complete setup and punchline, long enough to judge on its merits without inventing any missing details.]]></description></item></channel></rss>';
 test('supplies fetched jokes as attributed fiction, not reported facts',async()=>{
  const material=await loadMaterial([],async(url)=>url.includes('anekdot.ru')?new Response(xml):new Response('blocked',{status:403}));
@@ -13,6 +14,12 @@ test('skips recent sources, foreign links, HTML error pages and unavailable feed
  for(const body of ['<html>Access denied</html>',xml.replace('https://www.anekdot.ru/id/123/','https://localhost/secret')])assert.equal((await loadMaterial([],async()=>new Response(body))).sources.length,0);
  assert.equal((await loadMaterial([],async()=>{throw new Error('unavailable');})).sources.length,0);
 });
-test('varies the preferred format across three consecutive days',()=>{
- assert.equal(new Set(['2026-10-15','2026-10-16','2026-10-17'].map(preferredFormat)).size,3);
+test('rotates every format, including a third-person Uncle Misha story, across consecutive days',()=>{
+ const days=['2026-10-15','2026-10-16','2026-10-17','2026-10-18'].map(preferredFormat);
+ assert.equal(new Set(days).size,FORMATS.length);
+ assert.ok(days.some(format=>/third-person.*Uncle Misha/i.test(format)));
+});
+test('the writer prompt describes every rotating format',async()=>{
+ const prompt=await readFile(new URL('../prompt.md',import.meta.url),'utf8');
+ for(const format of FORMATS)assert.ok(prompt.toLowerCase().includes(format.toLowerCase()),format);
 });
