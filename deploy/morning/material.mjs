@@ -6,7 +6,8 @@ const feeds = [
 const decode=s=>s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;|&#39;/g,"'").replace(/&amp;/g,'&').replace(/&#(\d+);/g,(_,n)=>Number(n)<=0x10ffff?String.fromCodePoint(Number(n)):'');
 const plain=s=>decode(s).replace(/<script\b[\s\S]*?<\/script>/gi,'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'').trim();
 const tag=(item,name)=>item.match(new RegExp(`<${name}\\b[^>]*>([\\s\\S]*?)<\\/${name}>`,'i'))?.[1]||'';
-export const preferredFormat=day=>['everyday miniature','short fictional dialogue','found anecdote or sourced small absurdity'][Math.floor(Date.parse(day+'T00:00:00Z')/86400000)%3];
+export const FORMATS=Object.freeze(['everyday miniature','short fictional dialogue','found anecdote or sourced small absurdity','third-person story about Uncle Misha']);
+export const preferredFormat=day=>FORMATS[Math.floor(Date.parse(day+'T00:00:00Z')/86400000)%FORMATS.length];
 export async function loadMaterial(history=[],fetcher=fetch) {
  const sources=[],notes=[];
  const batches=await Promise.all(feeds.map(async feed=>{
